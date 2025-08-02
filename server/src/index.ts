@@ -20,5 +20,5 @@ connectDB()
   })
   .catch((err) => {
     console.error('Failed to connect to database:', err);
-    // TODO: handle connection errors (e.g., retry logic, shutdown)
+    process.exit(1);
   });

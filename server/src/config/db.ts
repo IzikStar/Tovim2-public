@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 
-// TODO: Add additional connection options if needed
 export const connectDB = async (
   uri: string | undefined = process.env.MONGO_URI
 ): Promise<void> => {
@@ -9,7 +8,7 @@ export const connectDB = async (
   }
 
   try {
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, { autoIndex: true });
     console.log('Connected to MongoDB');
   } catch (err) {
     console.error('MongoDB connection error:', err);

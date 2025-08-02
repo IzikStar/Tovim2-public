@@ -1,7 +1,6 @@
 export enum Gender {
   MALE = 'MALE',
   FEMALE = 'FEMALE',
-  // TODO: Extend genders if required
 }
 
 export enum Sector {
@@ -9,5 +8,36 @@ export enum Sector {
   DATI_LEUMI = 'DATI_LEUMI',
   MASORTI = 'MASORTI',
   HILONI = 'HILONI',
-  // TODO: Add additional sectors relevant to your application
+  OTHER = 'OTHER',
+}
+
+export enum MarriageStatus {
+  SINGLE = 'SINGLE',
+  DIVORCED = 'DIVORCED',
+  WIDOWED = 'WIDOWED',
+}
+
+export enum Ethnicity {
+  ASHKENAZI = 'ASHKENAZI',
+  SEPHARDI = 'SEPHARDI',
+  YEMENITE = 'YEMENITE',
+  MIXED = 'MIXED',
+  OTHER = 'OTHER',
+}
+
+export enum Interest {
+  TORAH = 'TORAH',
+  SPORTS = 'SPORTS',
+  MUSIC = 'MUSIC',
+  ART = 'ART',
+  TECH = 'TECH',
+  TRAVEL = 'TRAVEL',
+  COOKING = 'COOKING',
+  VOLUNTEERING = 'VOLUNTEERING',
+}
+
+export enum ProposePreference {
+  SELF = 'SELF',
+  OTHER = 'OTHER',
+  NO_PREFERENCE = 'NO_PREFERENCE',
 }
