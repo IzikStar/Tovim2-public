@@ -1,6 +1,6 @@
-import { baseURL } from '../config';
-import { Single } from '../utils/fakeData';
-import { getCookie } from '../utils/cookies';
+import { baseURL } from "../config";
+import { Single } from "../utils/fakeData";
+import { getCookie } from "../utils/cookies";
 
 interface LoginResponse {
   token: string;
@@ -10,7 +10,7 @@ class ApiService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = baseURL || 'http://localhost:3000';
+    this.baseUrl = baseURL || "http://localhost:3000";
   }
 
   private async request<T>(
@@ -18,19 +18,21 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     const config: RequestInit = {
-      credentials: 'include',
+      credentials: "include",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options.headers,
       },
       ...options,
     };
 
-    const token = getCookie('token');
+    const token = getCookie("token");
     if (token) {
-      (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+      (
+        config.headers as Record<string, string>
+      ).Authorization = `Bearer ${token}`;
     }
 
     const response = await fetch(url, config);
@@ -44,24 +46,24 @@ class ApiService {
 
   // Auth endpoints
   async login(email: string, password: string): Promise<LoginResponse> {
-    return this.request<LoginResponse>('/auth/login', {
-      method: 'POST',
+    return this.request<LoginResponse>("/auth/login", {
+      method: "POST",
       body: JSON.stringify({ email, password }),
     });
   }
 
   // Singles endpoints
   async getPublicSingles(): Promise<Single[]> {
-    return this.request<Single[]>('/singles/public');
+    return this.request<Single[]>("/singles/public");
   }
 
   // Add more endpoints as needed
   async getMatchmakers() {
-    return this.request('/matchmakers');
+    return this.request("/matchmakers");
   }
 
   async getRequests() {
-    return this.request('/requests');
+    return this.request("/requests");
   }
 }
 

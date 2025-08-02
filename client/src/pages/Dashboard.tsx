@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import FilterBar, { FilterState } from '../components/FilterBar';
-import SingleCard from '../components/SingleCard';
-import { fakeSingles, Single } from '../utils/fakeData';
-import apiService from '../services/api';
+import { useEffect, useState } from "react";
+import FilterBar, { FilterState } from "../components/FilterBar";
+import SingleCard from "../components/SingleCard";
+import { fakeSingles, Single } from "../utils/fakeData";
+import apiService from "../services/api";
 
 const Dashboard: React.FC = () => {
   const [singles, setSingles] = useState<Single[]>([]);
@@ -21,13 +21,16 @@ const Dashboard: React.FC = () => {
     load();
   }, []);
 
-  const filtered = singles.filter((s) =>
-    (!filters.gender || s.gender === filters.gender) &&
-    (!filters.sector || s.sector === filters.sector) &&
-    (!filters.marriageStatus || s.marriageStatus === filters.marriageStatus) &&
-    (!filters.ethnicity || s.ethnicity === filters.ethnicity) &&
-    (!filters.interest || s.interests.includes(filters.interest)) &&
-    (!filters.proposePreference || s.proposePreference === filters.proposePreference)
+  const filtered = singles.filter(
+    (s) =>
+      (!filters.gender || s.gender === filters.gender) &&
+      (!filters.sector || s.sector === filters.sector) &&
+      (!filters.marriageStatus ||
+        s.marriageStatus === filters.marriageStatus) &&
+      (!filters.ethnicity || s.ethnicity === filters.ethnicity) &&
+      (!filters.interest || s.interests.includes(filters.interest)) &&
+      (!filters.proposePreference ||
+        s.proposePreference === filters.proposePreference)
   );
 
   const showRandom = () => {
@@ -44,7 +47,7 @@ const Dashboard: React.FC = () => {
     <div>
       <FilterBar filters={filters} onChange={setFilters} />
       <button onClick={showRandom}>כרטיס רנדומלי</button>
-      <div style={{ marginTop: '1rem' }}>
+      <div style={{ marginTop: "1rem" }}>
         {list.map((s) => (
           <SingleCard key={s.id} single={s} />
         ))}
