@@ -7,6 +7,80 @@ interface Props {
   onClose: () => void;
 }
 
+const fieldLabels: Record<string, string> = {
+  firstName: "שם פרטי",
+  lastName: "שם משפחה",
+  phoneNumber: "טלפון",
+  email: "אימייל",
+  city: "עיר",
+  gender: "מגדר",
+  sector: "מגזר",
+  customSector: "מגזר מותאם",
+  birthYear: "שנת לידה",
+  marriageStatus: "מצב משפחתי",
+  numOfChildren: "מספר ילדים",
+  ethnicity: "עדה",
+  customEthnicity: "עדה מותאמת",
+  workAndStudyPlaces: "מקומות לימוד ועבודה",
+  currentOccupation: "עיסוק נוכחי",
+  basicDescription: "תיאור בסיסי",
+  freeDescription: "תיאור חופשי",
+  attributes: "תכונות",
+  lookingForAttributes: "תכונות מבוקשות",
+  nonCompromisableAttributes: "תכונות לא מתפשר עליהן",
+  desiredSectors: "מגזרים רצויים",
+  matchMakers: "שדכנים",
+  isPublic: "פרופיל ציבורי",
+  height: "גובה",
+  appearanceDescription: "תיאור מראה",
+  appearanceMustHave: "חייב במראה",
+  appearanceMustNotHave: "אסור במראה",
+  generalDealBreakers: "קווים אדומים",
+  interests: "תחומי עניין",
+  otherInterests: "תחומי עניין נוספים",
+  futureVision: "חזון עתידי",
+  existingMatchProfile: "פרופיל קיים",
+  shareInWhatsappGroups: "שיתוף בקבוצות וואטסאפ",
+  proposePreference: "העדפת הצעה",
+  referencePhones: "טלפונים להפניות",
+  nameForPrayer: "שם לתפילה",
+  referralSource: "מקור הפניה",
+  matchmakerExpectations: "ציפיות מהשדכן",
+  desiredAgeRange: "טווח גיל רצוי",
+  searchText: "טקסט חיפוש",
+};
+
+const formatValue = (key: string, value: any): string | null => {
+  if (value === undefined || value === null) return null;
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+  if (typeof value === "boolean") {
+    return value ? "כן" : "לא";
+  }
+  if (typeof value === "object") {
+    if (key === "desiredAgeRange") {
+      return `${value.min ?? ""}-${value.max ?? ""}`;
+    }
+    return JSON.stringify(value);
+  }
+  return String(value);
+};
+
+const gatherDetails = (single: Single) => {
+  const lines: string[] = [];
+  Object.entries(fieldLabels).forEach(([key, label]) => {
+    const value = formatValue(key, (single as any)[key]);
+    if (value) {
+      lines.push(`${label}: ${value}`);
+    }
+  });
+  single.images.forEach((img, i) =>
+    lines.push(`תמונה ${i + 1}: ${img}`)
+  );
+  return lines.join("\n");
+};
+
 const SingleModal: React.FC<Props> = ({ single, onClose }) => {
   const [index, setIndex] = useState(0);
 
@@ -16,12 +90,12 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
     setIndex((i) => (i - 1 + (single.images.length || 1)) % (single.images.length || 1));
 
   const copy = () => {
-    const text = `${single.firstName} ${single.lastName} - ${single.phoneNumber}`;
+    const text = gatherDetails(single);
     navigator.clipboard.writeText(text);
   };
 
   const shareWhatsapp = () => {
-    const text = `${single.firstName} ${single.lastName}`;
+    const text = gatherDetails(single);
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
   };
@@ -38,24 +112,15 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
           <button onClick={next}>›</button>
         </div>
         <div className={styles.details}>
-          <p>
-            <strong>מגזר:</strong> {single.sector}
-          </p>
-          <p>
-            <strong>מצב משפחתי:</strong> {single.marriageStatus}
-          </p>
-          <p>
-            <strong>עדה:</strong> {single.ethnicity}
-          </p>
-          <p>
-            <strong>תחומי עניין:</strong> {single.interests.join(", ")}
-          </p>
-          <p>
-            <strong>העדפת הצעה:</strong> {single.proposePreference}
-          </p>
-          <p>
-            <strong>טלפון:</strong> {single.phoneNumber}
-          </p>
+          {Object.entries(fieldLabels).map(([key, label]) => {
+            const value = formatValue(key, (single as any)[key]);
+            if (!value) return null;
+            return (
+              <p key={key}>
+                <strong>{label}:</strong> {value}
+              </p>
+            );
+          })}
         </div>
         <div className={styles.actions}>
           <button onClick={copy}>העתק</button>
