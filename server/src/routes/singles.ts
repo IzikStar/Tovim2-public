@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { Single } from '../models/single';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { Single } from '../models/single.js';
+import { authenticate, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 

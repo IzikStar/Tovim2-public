@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { MatchMaker } from '../models/matchMaker';
-import { Single } from '../models/single';
-import { authenticate, AuthRequest } from '../middleware/auth';
-import { Token } from '../models/token';
+import { MatchMaker } from '../models/matchMaker.js';
+import { Single } from '../models/single.js';
+import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { Token } from '../models/token.js';
 
 const router = Router();
 

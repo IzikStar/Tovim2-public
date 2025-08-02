@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { MatchMaker } from '../models/matchMaker';
-import { Token } from '../models/token';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { MatchMaker } from '../models/matchMaker.js';
+import { Token } from '../models/token.js';
+import { authenticate, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 

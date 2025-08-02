@@ -5,7 +5,7 @@ import {
   CallbackWithoutResultAndOptionalError,
 } from 'mongoose';
 import crypto from 'crypto';
-import { Gender, Sector } from './enums';
+import { Gender, Sector } from './enums.js';
 
 export interface IMatchMaker {
   firstName: string;

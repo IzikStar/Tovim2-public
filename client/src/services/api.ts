@@ -20,6 +20,7 @@ class ApiService {
     const url = `${this.baseUrl}${endpoint}`;
     
     const config: RequestInit = {
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
