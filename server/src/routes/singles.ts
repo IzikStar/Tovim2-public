@@ -4,6 +4,19 @@ import { authenticate, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
+router.post('/register/:matchMakerId', async (req, res) => {
+  const { matchMakerId } = req.params;
+  try {
+    const single = await Single.create({
+      ...req.body,
+      matchMakers: [matchMakerId],
+    });
+    res.status(201).json(single);
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to create single' });
+  }
+});
+
 router.post('/', authenticate, async (req: AuthRequest, res) => {
   const { matchMakerId, ...data } = req.body;
   if (req.matchMakerId !== matchMakerId) {
