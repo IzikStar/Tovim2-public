@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import apiService from '../services/api';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -11,16 +12,7 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        setError('Login failed');
-        return;
-      }
-      const data = await res.json();
+      const data = await apiService.login(email, password);
       login(data.token);
     } catch {
       setError('Login failed');

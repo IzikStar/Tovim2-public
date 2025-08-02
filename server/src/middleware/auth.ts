@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import { Token } from '../models/token.js';
+import { Token } from '../models/token';
 
 export interface AuthRequest extends Request {
   matchMakerId?: string;

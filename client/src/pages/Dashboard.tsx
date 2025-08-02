@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import FilterBar, { FilterState } from '../components/FilterBar';
 import SingleCard from '../components/SingleCard';
 import { fakeSingles, Single } from '../utils/fakeData';
+import apiService from '../services/api';
 
 const Dashboard: React.FC = () => {
   const [singles, setSingles] = useState<Single[]>([]);
@@ -12,8 +13,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch('/singles/public');
-        const data = await res.json();
+        const data = await apiService.getPublicSingles();
         setSingles([...data, ...fakeSingles]);
       } catch {
         setSingles(fakeSingles);
