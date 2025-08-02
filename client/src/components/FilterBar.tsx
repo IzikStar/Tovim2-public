@@ -24,7 +24,7 @@ const makeHandler = (
 };
 
 const FilterBar: React.FC<Props> = ({ filters, onChange }) => (
-  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+  <div className="filter-bar">
     <select value={filters.gender || ''} onChange={makeHandler('gender', filters, onChange)}>
       <option value=''>כל המינים</option>
       {genders.map((g) => (

@@ -23,17 +23,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.5rem",
-        maxWidth: "300px",
-        margin: "auto",
-      }}
-    >
-      {error && <div style={{ color: "red" }}>{error}</div>}
+    <form onSubmit={handleSubmit} className="login-form">
+      {error && <div className="error">{error}</div>}
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
