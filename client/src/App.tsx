@@ -1,10 +1,17 @@
-import styles from './App.module.css';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+
+function Main() {
+  const { token } = useAuth();
+  return token ? <Dashboard /> : <Login />;
+}
 
 function App() {
   return (
-    <div className={styles.container}>
-      <h1>Vite + React + TS</h1>
-    </div>
+    <AuthProvider>
+      <Main />
+    </AuthProvider>
   );
 }
 
