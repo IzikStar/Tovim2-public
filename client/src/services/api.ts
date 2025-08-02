@@ -4,6 +4,7 @@ import { getCookie } from "../utils/cookies";
 
 interface LoginResponse {
   token: string;
+  matchMakerId: string;
 }
 
 class ApiService {
@@ -57,11 +58,18 @@ class ApiService {
     return this.request<Single[]>("/singles/public");
   }
 
-  async addToPrivate(single: Single): Promise<Single> {
-    return this.request<Single>("/singles", {
-      method: "POST",
-      body: JSON.stringify(single),
-    });
+  async getPrivateSingles(matchMakerId: string): Promise<Single[]> {
+    return this.request<Single[]>(`/matchmakers/${matchMakerId}/singles`);
+  }
+
+  async addSingleToMatchmaker(
+    matchMakerId: string,
+    singleId: string
+  ): Promise<Single> {
+    return this.request<Single>(
+      `/matchmakers/${matchMakerId}/add-single/${singleId}`,
+      { method: "POST" }
+    );
   }
 
   // Add more endpoints as needed

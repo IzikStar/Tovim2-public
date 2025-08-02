@@ -13,7 +13,10 @@ const AppRoutes: React.FC = () => {
         path="/"
         element={<Navigate to={token ? "/dashboard" : "/login"} replace />}
       />
-      <Route path="/public" element={<Public />} />
+      <Route
+        path="/public"
+        element={token ? <Public /> : <Navigate to="/login" replace />}
+      />
       <Route
         path="/login"
         element={token ? <Navigate to="/dashboard" replace /> : <Login />}
