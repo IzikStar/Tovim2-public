@@ -8,6 +8,7 @@ import { genders } from "../utils/enums";
 
 const Dashboard: React.FC = () => {
   const [singles, setSingles] = useState<Single[]>([]);
+  const [allSingles, setAllSingles] = useState<Single[]>([]);
   const [filters, setFilters] = useState<FilterState>({});
   const [highlight, setHighlight] = useState<Single | null>(null);
   const [couple, setCouple] = useState<[Single, Single] | null>(null);
@@ -17,9 +18,12 @@ const Dashboard: React.FC = () => {
     const load = async () => {
       try {
         const data = await apiService.getPublicSingles();
-        setSingles([...data, ...fakeSingles]);
+        const all = [...data, ...fakeSingles];
+        setSingles(all);
+        setAllSingles(all);
       } catch {
         setSingles(fakeSingles);
+        setAllSingles(fakeSingles);
       }
     };
     load();
@@ -32,8 +36,7 @@ const Dashboard: React.FC = () => {
       (!filters.marriageStatus || s.marriageStatus === filters.marriageStatus) &&
       (!filters.ethnicity || s.ethnicity === filters.ethnicity) &&
       (!filters.interests?.length ||
-        filters.interests.some((i) => s.interests?.includes(i))) &&
-      (!filters.proposePreference || s.proposePreference === filters.proposePreference)
+        filters.interests.some((i) => s.interests?.includes(i)))
   );
 
   const showRandom = () => {
@@ -59,6 +62,13 @@ const Dashboard: React.FC = () => {
     setCouple(null);
   };
 
+  const handleFiltersChange = (f: FilterState) => {
+    setFilters(f);
+    setSingles(allSingles);
+    setHighlight(null);
+    setCouple(null);
+  };
+
   const rest = filtered.filter((s) => {
     if (highlight) return s.id !== highlight.id;
     if (couple) return !couple.some((c) => c.id === s.id);
@@ -67,7 +77,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <FilterBar filters={filters} onChange={setFilters} />
+      <FilterBar filters={filters} onChange={handleFiltersChange} />
       <button className="random-btn" onClick={showRandom}>כרטיס רנדומלי</button>
       <button className="random-btn" onClick={showRandomCouple}>זוג רנדומלי</button>
       <button className="random-btn" onClick={shuffleSingles}>ערבב</button>

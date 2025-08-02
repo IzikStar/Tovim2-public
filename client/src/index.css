@@ -89,6 +89,20 @@ select {
   margin-bottom: 0.25rem;
 }
 
+.interests-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.interests-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .filter-bar .reset-btn {
   background-color: var(--light-blue);
   color: #333;
