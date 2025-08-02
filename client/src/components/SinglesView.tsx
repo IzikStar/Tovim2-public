@@ -22,8 +22,8 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
     const load = async () => {
       try {
         const data = await fetchSingles();
-        setSingles(data);
-        setAllSingles(data);
+        setSingles([...data, ...fakeSingles]);
+        setAllSingles([...data, ...fakeSingles]);
       } catch {
         setSingles(fakeSingles);
         setAllSingles(fakeSingles);
@@ -36,7 +36,8 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
     (s) =>
       (!filters.gender || s.gender === filters.gender) &&
       (!filters.sector || s.sector === filters.sector) &&
-      (!filters.marriageStatus || s.marriageStatus === filters.marriageStatus) &&
+      (!filters.marriageStatus ||
+        s.marriageStatus === filters.marriageStatus) &&
       (!filters.ethnicity || s.ethnicity === filters.ethnicity) &&
       (!filters.interests?.length ||
         filters.interests.some((i) => s.interests?.includes(i)))
@@ -50,8 +51,12 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   };
 
   const showRandomCouple = () => {
-    const males = filtered.filter((s) => s.gender === genders[0] || s.gender === "זכר");
-    const females = filtered.filter((s) => s.gender === genders[1] || s.gender === "נקבה");
+    const males = filtered.filter(
+      (s) => s.gender === genders[0] || s.gender === "זכר"
+    );
+    const females = filtered.filter(
+      (s) => s.gender === genders[1] || s.gender === "נקבה"
+    );
     if (males.length === 0 || females.length === 0) return;
     const male = males[Math.floor(Math.random() * males.length)];
     const female = females[Math.floor(Math.random() * females.length)];
@@ -91,9 +96,17 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   return (
     <div>
       <FilterBar filters={filters} onChange={handleFiltersChange} />
-      <button className="random-btn" onClick={showRandom}>כרטיס רנדומלי</button>
-      <button className="random-btn" onClick={showRandomCouple}>זוג רנדומלי</button>
-      <button className="random-btn" onClick={shuffleSingles}>ערבב</button>
+      <div className="random-btns-container">
+        <button className="random-btn" onClick={showRandom}>
+          כרטיס רנדומלי
+        </button>
+        <button className="random-btn" onClick={showRandomCouple}>
+          זוג רנדומלי
+        </button>
+        <button className="random-btn" onClick={shuffleSingles}>
+          ערבב
+        </button>
+      </div>
       <div className="singles-grid">
         {highlight && (
           <>
