@@ -1,7 +1,18 @@
 import { Schema, model } from 'mongoose';
 import { Gender, Sector } from './enums.js';
 
-const matchMakerSchema = new Schema(
+export interface IMatchMaker {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  email: string;
+  password: string;
+  city: string;
+  gender: Gender;
+  sector: Sector;
+}
+
+const matchMakerSchema = new Schema<IMatchMaker>(
   {
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
@@ -16,4 +27,4 @@ const matchMakerSchema = new Schema(
   { timestamps: true }
 );
 
-export const MatchMaker = model('MatchMaker', matchMakerSchema);
+export const MatchMaker = model<IMatchMaker>('MatchMaker', matchMakerSchema);

@@ -1,7 +1,29 @@
 import { Schema, model, Types } from 'mongoose';
 import { Gender, Sector } from './enums.js';
 
-const singleSchema = new Schema(
+export interface ISingle {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  email: string;
+  city: string;
+  gender: Gender;
+  sector: Sector;
+  birthYear: number;
+  description?: string;
+  attributes: string[];
+  lookingForAttributes: string[];
+  nonCompromisableAttributes: string[];
+  desiredSectors: Sector[];
+  matchMakers: Types.ObjectId[];
+  isPublic: boolean;
+  images: string[];
+  height?: number;
+  appearanceDescription?: string;
+  searchText?: string;
+}
+
+const singleSchema = new Schema<ISingle>(
   {
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
@@ -30,4 +52,4 @@ const singleSchema = new Schema(
   { timestamps: true }
 );
 
-export const Single = model('Single', singleSchema);
+export const Single = model<ISingle>('Single', singleSchema);
