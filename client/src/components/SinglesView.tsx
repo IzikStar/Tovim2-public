@@ -107,31 +107,37 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
           ערבב
         </button>
       </div>
-      <div className="singles-grid">
-        {highlight && (
-          <>
-            <SingleCard
-              key={highlight.id}
-              single={highlight}
-              onSelect={(single) => setSelected(single)}
-              onAddToPrivate={addHandler}
-            />
-            <div className="grid-break" />
-          </>
-        )}
-        {couple && (
-          <>
-            {couple.map((s) => (
+      {highlight && (
+        <>
+          <div className="single-grid">
+            <div style={{ width: "320px" }}>
               <SingleCard
-                key={s.id}
-                single={s}
+                key={highlight.id}
+                single={highlight}
                 onSelect={(single) => setSelected(single)}
                 onAddToPrivate={addHandler}
               />
+            </div>
+          </div>
+        </>
+      )}
+      {couple && (
+        <>
+          <div className="single-grid">
+            {couple.map((s) => (
+              <div style={{ width: "320px" }}>
+                <SingleCard
+                  key={s.id}
+                  single={s}
+                  onSelect={(single) => setSelected(single)}
+                  onAddToPrivate={addHandler}
+                />
+              </div>
             ))}
-            <div className="grid-break" />
-          </>
-        )}
+          </div>
+        </>
+      )}
+      <div className="singles-grid">
         {rest.map((s) => (
           <SingleCard
             key={s.id}
