@@ -5,7 +5,7 @@ export interface Single {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  image: string;
+  images: string[];
   gender: string;
   sector: string;
   marriageStatus: string;
@@ -20,7 +20,7 @@ export const fakeSingles: Single[] = [
     firstName: 'דוד',
     lastName: 'כהן',
     phoneNumber: '0500000000',
-    image: 'https://via.placeholder.com/150',
+    images: ['https://via.placeholder.com/150'],
     gender: genders[0],
     sector: sectors[3],
     marriageStatus: marriageStatuses[0],
@@ -33,7 +33,7 @@ export const fakeSingles: Single[] = [
     firstName: 'שרה',
     lastName: 'לוי',
     phoneNumber: '0500000001',
-    image: 'https://via.placeholder.com/150',
+    images: ['https://via.placeholder.com/150'],
     gender: genders[1],
     sector: sectors[1],
     marriageStatus: marriageStatuses[0],

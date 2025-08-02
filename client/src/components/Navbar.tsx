@@ -7,14 +7,14 @@ const Navbar: React.FC = () => {
     <nav className="navbar">
       {token && (
         <div className="nav-links">
-          <Link to="/public">Public</Link>
-          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/public">ציבורי</Link>
+          <Link to="/dashboard">דשבורד</Link>
         </div>
       )}
       {token ? (
-        <button onClick={logout}>Logout</button>
+        <button onClick={logout}>התנתק</button>
       ) : (
-        <Link to="/login">Login</Link>
+        <Link to="/login">התחבר</Link>
       )}
     </nav>
   );

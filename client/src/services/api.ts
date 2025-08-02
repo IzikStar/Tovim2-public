@@ -57,6 +57,13 @@ class ApiService {
     return this.request<Single[]>("/singles/public");
   }
 
+  async addToPrivate(single: Single): Promise<Single> {
+    return this.request<Single>("/singles", {
+      method: "POST",
+      body: JSON.stringify(single),
+    });
+  }
+
   // Add more endpoints as needed
   async getMatchmakers() {
     return this.request("/matchmakers");
