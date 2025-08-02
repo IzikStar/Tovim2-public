@@ -4,9 +4,9 @@ import { useAuth } from "../context/AuthContext";
 const Navbar: React.FC = () => {
   const { token, logout } = useAuth();
   return (
-    <nav style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+    <nav className="navbar">
       {token && (
-        <div>
+        <div className="nav-links">
           <Link to="/public">Public</Link>
           <Link to="/dashboard">Dashboard</Link>
         </div>

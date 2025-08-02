@@ -1,4 +1,5 @@
 import { Single } from '../utils/fakeData';
+import styles from './SingleCard.module.css';
 
 interface Props {
   single: Single;
@@ -12,10 +13,25 @@ const SingleCard: React.FC<Props> = ({ single }) => {
   };
 
   return (
-    <div style={{ border: '1px solid #ccc', padding: '0.5rem', marginBottom: '0.5rem' }}>
-      <img src={single.image} alt={single.firstName} style={{ width: '100px', height: '100px', objectFit: 'cover' }} />
-      <div>{single.firstName} {single.lastName}</div>
-      <button onClick={sendWhatsapp}>שלח בוואטסאפ</button>
+    <div className={styles.card}>
+      <img className={styles.image} src={single.image} alt={single.firstName} />
+      <div className={styles.info}>
+        <h3 className={styles.name}>
+          {single.firstName} {single.lastName}
+        </h3>
+        <ul className={styles.details}>
+          <li><strong>מין:</strong> {single.gender}</li>
+          <li><strong>מגזר:</strong> {single.sector}</li>
+          <li><strong>מצב משפחתי:</strong> {single.marriageStatus}</li>
+          <li><strong>עדה:</strong> {single.ethnicity}</li>
+          <li><strong>תחומי עניין:</strong> {single.interests.join(', ')}</li>
+          <li><strong>העדפת הצעה:</strong> {single.proposePreference}</li>
+          <li><strong>טלפון:</strong> {single.phoneNumber}</li>
+        </ul>
+        <button className={styles.whatsappButton} onClick={sendWhatsapp}>
+          שלח בוואטסאפ
+        </button>
+      </div>
     </div>
   );
 };

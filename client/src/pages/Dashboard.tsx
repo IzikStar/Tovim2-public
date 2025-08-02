@@ -25,12 +25,10 @@ const Dashboard: React.FC = () => {
     (s) =>
       (!filters.gender || s.gender === filters.gender) &&
       (!filters.sector || s.sector === filters.sector) &&
-      (!filters.marriageStatus ||
-        s.marriageStatus === filters.marriageStatus) &&
+      (!filters.marriageStatus || s.marriageStatus === filters.marriageStatus) &&
       (!filters.ethnicity || s.ethnicity === filters.ethnicity) &&
       (!filters.interest || s.interests.includes(filters.interest)) &&
-      (!filters.proposePreference ||
-        s.proposePreference === filters.proposePreference)
+      (!filters.proposePreference || s.proposePreference === filters.proposePreference)
   );
 
   const showRandom = () => {
@@ -46,8 +44,8 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       <FilterBar filters={filters} onChange={setFilters} />
-      <button onClick={showRandom}>כרטיס רנדומלי</button>
-      <div style={{ marginTop: "1rem" }}>
+      <button className="random-btn" onClick={showRandom}>כרטיס רנדומלי</button>
+      <div className="singles-grid">
         {list.map((s) => (
           <SingleCard key={s.id} single={s} />
         ))}

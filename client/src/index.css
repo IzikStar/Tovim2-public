@@ -1,4 +1,100 @@
+:root {
+  --pink: #ff9ad5;
+  --light-blue: #9ad5ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
+  background: linear-gradient(180deg, var(--light-blue) 0%, var(--pink) 100%);
+  min-height: 100vh;
+  color: #333;
+}
+
+a {
+  color: inherit;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--light-blue);
+  flex-wrap: wrap;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.navbar a {
+  color: #333;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.navbar a:hover {
+  text-decoration: underline;
+}
+
+button {
+  background-color: var(--pink);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #ff7ac1;
+}
+
+input,
+select {
+  padding: 0.4rem;
+  border: 1px solid var(--light-blue);
+  border-radius: 4px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.filter-bar select {
+  flex: 1;
+  min-width: 120px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 300px;
+  margin: 2rem auto;
+}
+
+.login-form .error {
+  color: red;
+}
+
+.random-btn {
+  margin-bottom: 1rem;
+}
+
+.singles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  width: 100%;
 }
