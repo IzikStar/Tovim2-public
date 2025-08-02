@@ -1,14 +1,19 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
+import { Request, Response } from 'express';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get('/', (_req, res) => {
-  res.send('Hello from Express + TypeScript');
+interface HelloResponse {
+  message: string;
+}
+
+app.get('/', (_req: Request, res: Response<HelloResponse>) => {
+  res.send({ message: 'Hello from Express + TypeScript' });
 });
 
 // Establish MongoDB connection before starting the server
