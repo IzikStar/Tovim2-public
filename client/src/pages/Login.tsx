@@ -15,7 +15,7 @@ const Login: React.FC = () => {
     setError("");
     try {
       const data = await apiService.login(email, password);
-      login(data.token);
+      login(data.token, data.matchMakerId);
       navigate("/dashboard");
     } catch {
       setError("התחברות נכשלה");
