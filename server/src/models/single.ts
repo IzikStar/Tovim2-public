@@ -1,4 +1,4 @@
-import { Schema, model, Types } from 'mongoose';
+import { Schema, model, Types } from "mongoose";
 import {
   Gender,
   Sector,
@@ -6,7 +6,7 @@ import {
   Ethnicity,
   Interest,
   ProposePreference,
-} from './enums.js';
+} from "./enums.js";
 
 const phoneRegex = /^\+?\d{7,15}$/;
 const emailRegex = /.+@.+\..+/;
@@ -28,6 +28,7 @@ export interface ISingle {
   customSector?: string;
   birthYear: number;
   marriageStatus: MarriageStatus;
+  numOfChildren: number;
   ethnicity: Ethnicity;
   customEthnicity?: string;
   workAndStudyPlaces: string[];
@@ -84,6 +85,7 @@ const singleSchema = new Schema<ISingle>(
       enum: Object.values(MarriageStatus),
       required: true,
     },
+    numOfChildren: { type: Number, default: 0 },
     ethnicity: { type: String, enum: Object.values(Ethnicity), required: true },
     customEthnicity: { type: String },
     workAndStudyPlaces: { type: [String], default: [] },
@@ -97,7 +99,7 @@ const singleSchema = new Schema<ISingle>(
       default: [],
       validate: {
         validator: (v: string[]) => v.length === 4,
-        message: 'Exactly four attributes required',
+        message: "Exactly four attributes required",
       },
     },
     desiredSectors: {
@@ -105,14 +107,14 @@ const singleSchema = new Schema<ISingle>(
       enum: Object.values(Sector),
       default: [],
     },
-    matchMakers: [{ type: Types.ObjectId, ref: 'MatchMaker' }],
+    matchMakers: [{ type: Types.ObjectId, ref: "MatchMaker" }],
     isPublic: { type: Boolean, default: false },
     images: {
       type: [String],
       default: [],
       validate: {
         validator: (arr: string[]) => arr.every((u) => urlRegex.test(u)),
-        message: 'Invalid image URL',
+        message: "Invalid image URL",
       },
     },
     height: { type: Number, min: 50, max: 250 },
@@ -139,7 +141,7 @@ const singleSchema = new Schema<ISingle>(
       default: [],
       validate: {
         validator: (arr: string[]) => arr.every((p) => phoneRegex.test(p)),
-        message: 'Invalid phone number',
+        message: "Invalid phone number",
       },
     },
     nameForPrayer: { type: String },
@@ -149,7 +151,7 @@ const singleSchema = new Schema<ISingle>(
       type: ageRangeSchema,
       validate: {
         validator: (v: AgeRange) => v.min <= v.max,
-        message: 'desiredAgeRange.min must be <= max',
+        message: "desiredAgeRange.min must be <= max",
       },
     },
     searchText: { type: String },
@@ -157,4 +159,4 @@ const singleSchema = new Schema<ISingle>(
   { timestamps: true }
 );
 
-export const Single = model<ISingle>('Single', singleSchema);
+export const Single = model<ISingle>("Single", singleSchema);
