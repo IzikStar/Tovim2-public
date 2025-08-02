@@ -4,7 +4,7 @@ export interface ITransferRequest {
   single: Types.ObjectId;
   from: Types.ObjectId;
   to: Types.ObjectId;
-  status: 'pending' | 'approved';
+  status: 'pending' | 'approved' | 'rejected';
 }
 
 const transferRequestSchema = new Schema<ITransferRequest>({
