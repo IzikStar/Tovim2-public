@@ -5,10 +5,14 @@ import matchmakerRoutes from './routes/matchmakers.js';
 import singleRoutes from './routes/singles.js';
 import authRoutes from './routes/auth.js';
 import requestRoutes from './routes/requests.js';
+import requestLogger from './middleware/logger.js';
+import errorHandler from './middleware/errorHandler.js';
+import logger from './utils/logger.js';
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 app.use(express.json());
+app.use(requestLogger);
 app.use('/auth', authRoutes);
 app.use('/matchmakers', matchmakerRoutes);
 app.use('/singles', singleRoutes);
@@ -16,14 +20,15 @@ app.use('/requests', requestRoutes);
 app.get('/', (_req, res) => {
     res.send({ message: 'Hello from Express + TypeScript' });
 });
+app.use(errorHandler);
 // Establish MongoDB connection before starting the server
 connectDB()
     .then(() => {
     app.listen(port, () => {
-        console.log(`Server listening on port ${port}`);
+        logger.info(`Server listening on port ${port}`);
     });
 })
     .catch((err) => {
-    console.error('Failed to connect to database:', err);
+    logger.error('Failed to connect to database', { error: err });
     process.exit(1);
 });
