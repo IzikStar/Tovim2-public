@@ -1,9 +1,18 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
+import matchmakerRoutes from './routes/matchmakers.js';
+import singleRoutes from './routes/singles.js';
+import authRoutes from './routes/auth.js';
+import requestRoutes from './routes/requests.js';
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
+app.use(express.json());
+app.use('/auth', authRoutes);
+app.use('/matchmakers', matchmakerRoutes);
+app.use('/singles', singleRoutes);
+app.use('/requests', requestRoutes);
 app.get('/', (_req, res) => {
     res.send({ message: 'Hello from Express + TypeScript' });
 });
