@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
 import FilterBar, { FilterState } from '../components/FilterBar';
 import SingleCard from '../components/SingleCard';
 import { fakeSingles, Single } from '../utils/fakeData';
@@ -43,7 +42,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <Navbar />
       <FilterBar filters={filters} onChange={setFilters} />
       <button onClick={showRandom}>כרטיס רנדומלי</button>
       <div style={{ marginTop: '1rem' }}>
