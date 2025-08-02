@@ -32,7 +32,6 @@ export interface Single {
   nonCompromisableAttributes?: string[];
   desiredSectors?: string[];
   matchMakers?: string[];
-  isPublic?: boolean;
   height?: number;
   appearanceDescription?: string;
   appearanceMustHave?: string;
@@ -78,7 +77,6 @@ export const fakeSingles: Single[] = [
     ],
     desiredSectors: [sectors[3]],
     matchMakers: [],
-    isPublic: true,
     shareInWhatsappGroups: false,
     referencePhones: ["0501111111"],
     otherInterests: [],
@@ -108,7 +106,6 @@ export const fakeSingles: Single[] = [
     ],
     desiredSectors: [sectors[1]],
     matchMakers: [],
-    isPublic: true,
     shareInWhatsappGroups: false,
     referencePhones: ["0502222222"],
     otherInterests: [],

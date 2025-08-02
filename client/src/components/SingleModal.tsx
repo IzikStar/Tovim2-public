@@ -15,12 +15,10 @@ const fieldLabels: Record<string, string> = {
   city: "עיר",
   gender: "מגדר",
   sector: "מגזר",
-  customSector: "מגזר מותאם",
   birthYear: "שנת לידה",
   marriageStatus: "מצב משפחתי",
   numOfChildren: "מספר ילדים",
   ethnicity: "עדה",
-  customEthnicity: "עדה מותאמת",
   workAndStudyPlaces: "מקומות לימוד ועבודה",
   currentOccupation: "עיסוק נוכחי",
   basicDescription: "תיאור בסיסי",
@@ -30,14 +28,12 @@ const fieldLabels: Record<string, string> = {
   nonCompromisableAttributes: "תכונות לא מתפשר עליהן",
   desiredSectors: "מגזרים רצויים",
   matchMakers: "שדכנים",
-  isPublic: "פרופיל ציבורי",
   height: "גובה",
   appearanceDescription: "תיאור מראה",
   appearanceMustHave: "חייב במראה",
   appearanceMustNotHave: "אסור במראה",
   generalDealBreakers: "קווים אדומים",
   interests: "תחומי עניין",
-  otherInterests: "תחומי עניין נוספים",
   futureVision: "חזון עתידי",
   existingMatchProfile: "פרופיל קיים",
   shareInWhatsappGroups: "שיתוף בקבוצות וואטסאפ",
@@ -50,8 +46,24 @@ const fieldLabels: Record<string, string> = {
   searchText: "טקסט חיפוש",
 };
 
-const formatValue = (key: string, value: any): string | null => {
+const formatValue = (key: string, value: any, single: Single): string | null => {
   if (value === undefined || value === null) return null;
+  if (key === "sector" && value === "אחר/ת") {
+    return single.customSector || null;
+  }
+  if (key === "ethnicity" && value === "אחר/ת") {
+    return single.customEthnicity || null;
+  }
+  if (key === "interests") {
+    const arr = Array.isArray(value) ? value : [value];
+    return arr
+      .map((i) =>
+        i === "אחר/ת" && single.otherInterests?.length
+          ? single.otherInterests.join(", ")
+          : i
+      )
+      .join(", ");
+  }
   if (Array.isArray(value)) {
     return value.join(", ");
   }
@@ -70,7 +82,7 @@ const formatValue = (key: string, value: any): string | null => {
 const gatherDetails = (single: Single) => {
   const lines: string[] = [];
   Object.entries(fieldLabels).forEach(([key, label]) => {
-    const value = formatValue(key, (single as any)[key]);
+    const value = formatValue(key, (single as any)[key], single);
     if (value) {
       lines.push(`${label}: ${value}`);
     }
@@ -113,7 +125,7 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
         </div>
         <div className={styles.details}>
           {Object.entries(fieldLabels).map(([key, label]) => {
-            const value = formatValue(key, (single as any)[key]);
+            const value = formatValue(key, (single as any)[key], single);
             if (!value) return null;
             return (
               <p key={key}>
