@@ -5,6 +5,7 @@ import matchmakerRoutes from './routes/matchmakers.js';
 import singleRoutes from './routes/singles.js';
 import authRoutes from './routes/auth.js';
 import requestRoutes from './routes/requests.js';
+import { Request, Response } from 'express';
 
 dotenv.config();
 
@@ -18,8 +19,12 @@ app.use('/matchmakers', matchmakerRoutes);
 app.use('/singles', singleRoutes);
 app.use('/requests', requestRoutes);
 
-app.get('/', (_req, res) => {
-  res.send('Hello from Express + TypeScript');
+interface HelloResponse {
+  message: string;
+}
+
+app.get('/', (_req: Request, res: Response<HelloResponse>) => {
+  res.send({ message: 'Hello from Express + TypeScript' });
 });
 
 // Establish MongoDB connection before starting the server
