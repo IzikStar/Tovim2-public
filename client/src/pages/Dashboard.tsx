@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import FilterBar, { FilterState } from "../components/FilterBar";
 import SingleCard from "../components/SingleCard";
+import SingleModal from "../components/SingleModal";
 import { fakeSingles, Single } from "../utils/fakeData";
 import apiService from "../services/api";
 
@@ -8,6 +9,7 @@ const Dashboard: React.FC = () => {
   const [singles, setSingles] = useState<Single[]>([]);
   const [filters, setFilters] = useState<FilterState>({});
   const [highlight, setHighlight] = useState<Single | null>(null);
+  const [selected, setSelected] = useState<Single | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -47,9 +49,12 @@ const Dashboard: React.FC = () => {
       <button className="random-btn" onClick={showRandom}>כרטיס רנדומלי</button>
       <div className="singles-grid">
         {list.map((s) => (
-          <SingleCard key={s.id} single={s} />
+          <SingleCard key={s.id} single={s} onSelect={(single) => setSelected(single)} />
         ))}
       </div>
+      {selected && (
+        <SingleModal single={selected} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 };

@@ -18,7 +18,7 @@ const Login: React.FC = () => {
       login(data.token);
       navigate("/dashboard");
     } catch {
-      setError("Login failed");
+      setError("התחברות נכשלה");
     }
   };
 
@@ -28,15 +28,15 @@ const Login: React.FC = () => {
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
+        placeholder="אימייל"
       />
       <input
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
+        placeholder="סיסמה"
       />
-      <button type="submit">Login</button>
+      <button type="submit">התחבר</button>
     </form>
   );
 };

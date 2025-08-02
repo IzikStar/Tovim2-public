@@ -13,6 +13,8 @@ body {
   background: linear-gradient(180deg, var(--light-blue) 0%, var(--pink) 100%);
   min-height: 100vh;
   color: #333;
+  direction: rtl;
+  text-align: right;
 }
 
 a {
@@ -94,7 +96,13 @@ select {
 
 .singles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1rem;
   width: 100%;
+}
+
+@media (min-width: 1200px) {
+  .singles-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
