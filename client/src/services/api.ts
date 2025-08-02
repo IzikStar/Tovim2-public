@@ -1,5 +1,6 @@
 import { baseURL } from '../config';
 import { Single } from '../utils/fakeData';
+import { getCookie } from '../utils/cookies';
 
 interface LoginResponse {
   token: string;
@@ -25,6 +26,11 @@ class ApiService {
       },
       ...options,
     };
+
+    const token = getCookie('token');
+    if (token) {
+      (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+    }
 
     const response = await fetch(url, config);
 

@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiService from '../services/api';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -14,6 +16,7 @@ const Login: React.FC = () => {
     try {
       const data = await apiService.login(email, password);
       login(data.token);
+      navigate('/dashboard');
     } catch {
       setError('Login failed');
     }
