@@ -5,13 +5,16 @@ interface Props {
   matchmakerId: string;
 }
 
+const placeholderImage =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=';
+
 const sampleSingles: Single[] = [
   {
     id: '1',
     name: 'Leah',
     age: 25,
     gender: 'female',
-    image: 'https://via.placeholder.com/150',
+    image: placeholderImage,
     details: 'Loves hiking and books'
   },
   {
@@ -19,7 +22,7 @@ const sampleSingles: Single[] = [
     name: 'David',
     age: 27,
     gender: 'male',
-    image: 'https://via.placeholder.com/150',
+    image: placeholderImage,
     details: 'Enjoys music and travel'
   },
   {
@@ -27,7 +30,7 @@ const sampleSingles: Single[] = [
     name: 'Rachel',
     age: 23,
     gender: 'female',
-    image: 'https://via.placeholder.com/150',
+    image: placeholderImage,
     details: 'Artist and designer'
   }
 ];
