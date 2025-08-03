@@ -65,8 +65,20 @@ router.get('/:id/singles', authenticate, async (req: AuthRequest, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const singles = await Single.find({ matchMakers: req.params.id });
+  const singles = await Single.find({
+    matchMakers: req.params.id,
+    isTaken: false,
+    marriedMatchmaker: { $exists: false },
+  });
   res.json(singles);
+});
+
+router.get('/:id/married', authenticate, async (req: AuthRequest, res) => {
+  if (req.matchMakerId !== req.params.id) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const married = await Single.find({ marriedMatchmaker: req.params.id });
+  res.json(married);
 });
 
 router.get('/:id/others', authenticate, async (req: AuthRequest, res) => {

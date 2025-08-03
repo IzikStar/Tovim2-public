@@ -42,6 +42,8 @@ export interface ISingle {
   desiredSectors: Sector[];
   matchMakers: Types.ObjectId[];
   isPublic: boolean;
+  isTaken: boolean;
+  marriedMatchmaker?: Types.ObjectId;
   /** Base64-encoded image strings */
   images: string[];
   height?: number;
@@ -111,6 +113,8 @@ const singleSchema = new Schema<ISingle>(
     },
     matchMakers: [{ type: Types.ObjectId, ref: "MatchMaker" }],
     isPublic: { type: Boolean, default: false },
+    isTaken: { type: Boolean, default: false },
+    marriedMatchmaker: { type: Types.ObjectId, ref: "MatchMaker" },
     images: {
       type: [String],
       default: [],

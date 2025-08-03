@@ -47,6 +47,8 @@ const singleSchema = new Schema({
     },
     matchMakers: [{ type: Types.ObjectId, ref: "MatchMaker" }],
     isPublic: { type: Boolean, default: false },
+    isTaken: { type: Boolean, default: false },
+    marriedMatchmaker: { type: Types.ObjectId, ref: "MatchMaker" },
     images: {
         type: [String],
         default: [],

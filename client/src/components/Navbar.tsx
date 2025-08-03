@@ -51,6 +51,38 @@ const ShareIcon = () => (
   </svg>
 );
 
+const HeartIcon = () => (
+  <svg
+    className={styles.navIcon}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.637l1.318-1.319a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
+    />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg
+    className={styles.navIcon}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"
+    />
+  </svg>
+);
+
 const LogoutIcon = () => (
   <svg
     className={styles.logoutIcon}
@@ -114,6 +146,24 @@ const Navbar: React.FC = () => {
               <span>טופס סינגל</span>
             </a>
           )}
+          <NavLink
+            to="/couples"
+            className={({ isActive }) =>
+              `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
+            }
+          >
+            <HeartIcon />
+            <span>זוגות שחיתנתי</span>
+          </NavLink>
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
+            }
+          >
+            <EditIcon />
+            <span>עריכת פרטים</span>
+          </NavLink>
         </div>
       )}
 

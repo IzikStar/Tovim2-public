@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Single } from "../utils/fakeData";
 import styles from "./SingleModal.module.css";
+import apiService from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 interface Props {
   single: Single;
   onClose: () => void;
+  onRefresh: () => void;
 }
 
 const questions: { key: keyof Single; text: string }[] = [
@@ -122,7 +125,8 @@ const gatherDetails = (single: Single) => {
   return lines.join("\n");
 };
 
-const SingleModal: React.FC<Props> = ({ single, onClose }) => {
+const SingleModal: React.FC<Props> = ({ single, onClose, onRefresh }) => {
+  const { matchMakerId } = useAuth();
   const [index, setIndex] = useState(0);
 
   const next = () => setIndex((i) => (i + 1) % (single.images.length || 1));
@@ -142,6 +146,29 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
       text
     )}`;
     window.open(url, "_blank");
+  };
+
+  const markTaken = async () => {
+    await apiService.updateSingle(single.id, { isTaken: true });
+    onRefresh();
+    onClose();
+  };
+
+  const markMarried = async () => {
+    if (!matchMakerId) return;
+    await apiService.updateSingle(single.id, {
+      marriedMatchmaker: matchMakerId,
+    });
+    onRefresh();
+    onClose();
+  };
+
+  const deleteSingle = async () => {
+    if (window.confirm("האם למחוק את הכרטיס?")) {
+      await apiService.deleteSingle(single.id);
+      onRefresh();
+      onClose();
+    }
   };
 
   return (
@@ -194,6 +221,21 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
           })}
         </div>
         <div className={styles.actions}>
+          <button
+            className={styles.maleCarouselButton}
+            onClick={markTaken}
+          >
+            סמן כתפוס
+          </button>
+          <button
+            className={styles.maleCarouselButton}
+            onClick={markMarried}
+          >
+            נשוי בזכותי
+          </button>
+          <button className={styles.deleteBtn} onClick={deleteSingle}>
+            מחק
+          </button>
           <button
             className={
               single.gender === "זכר"

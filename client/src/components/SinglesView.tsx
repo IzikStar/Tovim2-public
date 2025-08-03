@@ -22,20 +22,21 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showFilters, setShowFilters] = useState(window.innerWidth >= 768);
 
+  const load = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchSingles();
+      setSingles([...data, ...fakeSingles]);
+      setAllSingles([...data, ...fakeSingles]);
+    } catch {
+      setSingles(fakeSingles);
+      setAllSingles(fakeSingles);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchSingles();
-        setSingles([...data, ...fakeSingles]);
-        setAllSingles([...data, ...fakeSingles]);
-      } catch {
-        setSingles(fakeSingles);
-        setAllSingles(fakeSingles);
-      } finally {
-        setLoading(false);
-      }
-    };
     load();
   }, [fetchSingles]);
 
@@ -224,7 +225,11 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
       </div>
 
       {selected && (
-        <SingleModal single={selected} onClose={() => setSelected(null)} />
+        <SingleModal
+          single={selected}
+          onClose={() => setSelected(null)}
+          onRefresh={load}
+        />
       )}
     </div>
   );
