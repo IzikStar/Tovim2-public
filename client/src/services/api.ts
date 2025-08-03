@@ -1,5 +1,5 @@
 import { baseURL } from "../config";
-import { Single } from "../utils/fakeData";
+import { Single } from "../utils/types";
 import { getCookie } from "../utils/cookies";
 
 export interface MatchMaker {
@@ -11,8 +11,8 @@ export interface MatchMaker {
   gender: string;
   sector: string;
   expertSectors: string[];
-  ageRange?: { min: number; max: number };
-  priceRange?: { min: number; max: number };
+  ageRange?: { min?: number; max?: number };
+  priceRange?: { min?: number; max?: number };
 }
 
 interface LoginResponse {

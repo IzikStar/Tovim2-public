@@ -1,0 +1,47 @@
+export interface Single {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  images: string[];
+  email?: string;
+  city?: string;
+  gender?: string;
+  sectors?: string[];
+  customSector?: string;
+  birthDate?: string;
+  marriageStatus?: string;
+  numOfChildren?: number;
+  ethnicity?: string;
+  customEthnicity?: string;
+  workAndStudyPlaces?: string[];
+  currentOccupation?: string;
+  basicDescription?: string;
+  freeDescription?: string;
+  attributes?: string[];
+  lookingForAttributes?: string[];
+  nonCompromisableAttributes?: string[];
+  desiredSectors?: string[];
+  matchMakers?: string[];
+  isPublic?: boolean;
+  isTaken?: boolean;
+  marriedMatchmaker?: string;
+  height?: number;
+  appearanceDescription?: string;
+  appearanceMustHave?: string;
+  appearanceMustNotHave?: string;
+  generalDealBreakers?: string;
+  interests?: string[];
+  otherInterests?: string[];
+  futureVision?: string;
+  existingMatchProfile?: string;
+  shareInWhatsappGroups?: boolean;
+  proposePreference?: string;
+  referencePhones?: string[];
+  nameForPrayer?: string;
+  referralSource?: string;
+  matchmakerExpectations?: string;
+  desiredAgeRange?: { min: number; max: number };
+  searchText?: string;
+}
+

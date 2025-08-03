@@ -1,4 +1,4 @@
-import { Single } from "../utils/fakeData";
+import { Single } from "../utils/types";
 import styles from "./SingleCard.module.css";
 
 interface Props {

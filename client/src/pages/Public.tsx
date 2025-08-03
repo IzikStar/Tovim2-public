@@ -1,7 +1,7 @@
 import SinglesView from "../components/SinglesView";
 import apiService from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { Single } from "../utils/fakeData";
+import { Single } from "../utils/types";
 
 const Public: React.FC = () => {
   const { matchMakerId } = useAuth();
