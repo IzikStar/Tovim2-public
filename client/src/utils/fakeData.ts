@@ -59,6 +59,11 @@ export const fakeSingles: Single[] = [
     phoneNumber: "0500000000",
     email: "david@example.com",
     city: "ירושלים",
+    workAndStudyPlaces: ["ישיבת מרכז הרב", "חברת הייטק XYZ"],
+    currentOccupation: "מפתח תוכנה",
+    basicDescription: "בחור דתי לאומי אוהב תורה וספורט",
+    freeDescription: "חובב טיולים וספרים",
+    futureVision: "מחפש להקים בית תורני בארץ ישראל",
     images: [
       "https://placehold.co/400x400?text=Photo",
       "https://placehold.co/400x400?text=Photo",
@@ -86,6 +91,11 @@ export const fakeSingles: Single[] = [
     phoneNumber: "0500000001",
     email: "sara@example.com",
     city: "בני ברק",
+    workAndStudyPlaces: ["סמינר בית יעקב", "חברת עיצוב"],
+    currentOccupation: "מעצבת גרפית",
+    basicDescription: "בחורה חסידית רצינית ושמחה",
+    freeDescription: "אוהבת לבשל ולשיר",
+    futureVision: "שואפת לבית מלא בשמחה ואהבת תורה",
     images: [
       "https://placehold.co/400x400?text=Photo",
     ],

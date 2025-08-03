@@ -6,6 +6,7 @@ import {
   ethnicities,
   interests,
   proposePreferences,
+  sectorLabels,
 } from '../utils/enums';
 import apiService, { MatchMaker } from '../services/api';
 import styles from './SingleForm.module.css';
@@ -21,7 +22,7 @@ interface FormData {
   ethnicity: string;
   customEthnicity: string;
   city: string;
-  sectors: string[];
+  sector: string;
   customSector: string;
   workAndStudyPlaces: string[];
   currentOccupation: string;
@@ -55,7 +56,7 @@ const initialForm: FormData = {
   ethnicity: ethnicities[0],
   customEthnicity: '',
   city: '',
-  sectors: [sectors[0]],
+  sector: sectors[0],
   customSector: '',
   workAndStudyPlaces: [''],
   currentOccupation: '',
@@ -149,7 +150,7 @@ const SingleForm: React.FC = () => {
       ethnicity: form.ethnicity,
       customEthnicity: form.customEthnicity || undefined,
       city: form.city,
-      sectors: form.sectors.filter(Boolean),
+      sectors: [form.sector].filter(Boolean),
       customSector: form.customSector || undefined,
       workAndStudyPlaces: form.workAndStudyPlaces.filter(Boolean),
       currentOccupation: form.currentOccupation || undefined,
@@ -197,7 +198,7 @@ const SingleForm: React.FC = () => {
       'height',
       'ethnicity',
       'city',
-      'sectors',
+      'sector',
       'workAndStudyPlaces',
       'currentOccupation',
       'basicDescription',
@@ -240,7 +241,18 @@ const SingleForm: React.FC = () => {
       {matchmaker && (
         <div style={{ whiteSpace: 'pre-line', marginBottom: '1rem' }}>
           <p>
-            שלום לך,\nאנחנו שמחים שהגעת למאגר שלנו\n\nבנינו כאן במחשבה רבה ומעמיקה שאלון הכרות לא־שגרתי, עם כמה שאלות שאולי לא נשאלת עד היום.\nנשמח שתקדיש/י את הזמן הנדרש כדי לענות בצורה כנה ומדויקת כמה שיותר על השאלות – בשבילך ובשבילנו, כך תכיר/י את עצמך יותר טוב, וגם אנחנו נכיר אותך.\n\nמגזרי התמחות: {matchmaker.expertSectors.join(', ')}.\nחשוב לציין שטווח הגילאים שאנחנו משדכים הינו לרוב {matchmaker.ageRange?.min}-{matchmaker.ageRange?.max}.\nכאן בשבילך. {matchmaker.firstName}- {matchmaker.phoneNumber}
+            {`שלום לך,
+אנחנו שמחים שהגעת למאגר שלנו.
+
+בנינו במחשבה רבה ומעמיקה שאלון הכרות לא-שגרתי, עם כמה שאלות שאולי לא נשאלת עד היום.
+נשמח שתקדיש/י את הזמן הנדרש כדי לענות בצורה כנה ומדויקת – בשבילך ובשבילנו. כך תכיר/י את עצמך יותר טוב, וגם אנחנו נכיר אותך.
+
+מגזרי התמחות: ${matchmaker.expertSectors
+              .map((s) => sectorLabels[s] || s)
+              .join(', ')}.
+חשוב לציין שטווח הגילאים שאנחנו משדכים הינו לרוב ${matchmaker.ageRange?.min}-${matchmaker.ageRange?.max}.
+כאן בשבילך,
+${matchmaker.firstName} - ${matchmaker.phoneNumber}`}
           </p>
         </div>
       )}
@@ -286,22 +298,12 @@ const SingleForm: React.FC = () => {
         </QuestionBlock>
         <QuestionBlock label="🫱🏿‍🫲🏻 סגנון דתי:">
           <>
-            {form.sectors.map((s, idx) => (
-              <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                <select
-                  value={s}
-                  onChange={(e) => updateArray('sectors', idx, e.target.value)}
-                >
-                  {sectors.map((opt) => (
-                    <option key={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-            <button type="button" onClick={() => addArrayItem('sectors', sectors[0])}>
-              הוסף מגזר
-            </button>
-            {form.sectors.includes('אחר/ת') && (
+            <select name="sector" value={form.sector} onChange={handleChange}>
+              {sectors.map((opt) => (
+                <option key={opt}>{opt}</option>
+              ))}
+            </select>
+            {form.sector === 'אחר/ת' && (
               <input
                 name="customSector"
                 value={form.customSector}
@@ -323,10 +325,11 @@ const SingleForm: React.FC = () => {
             ))}
             <button
               type="button"
-              className={styles.addButton}
+              className={styles.iconButton}
               onClick={() => addArrayItem('workAndStudyPlaces', '')}
+              aria-label="הוסף מקום"
             >
-              הוסף מקום
+              ➕
             </button>
           </>
         </QuestionBlock>
@@ -368,8 +371,13 @@ const SingleForm: React.FC = () => {
                 </select>
               </div>
             ))}
-            <button type="button" onClick={() => addArrayItem('interests', interests[0])}>
-              הוסף תחום עניין
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={() => addArrayItem('interests', interests[0])}
+              aria-label="הוסף תחום עניין"
+            >
+              ➕
             </button>
             {form.interests.includes('אחר/ת') && (
               <>
@@ -384,10 +392,11 @@ const SingleForm: React.FC = () => {
                 ))}
                 <button
                   type="button"
-                  className={styles.addButton}
+                  className={styles.iconButton}
                   onClick={() => addArrayItem('otherInterests', '')}
+                  aria-label="הוסף תחום נוסף"
                 >
-                  הוסף תחום נוסף
+                  ➕
                 </button>
               </>
             )}
@@ -427,10 +436,11 @@ const SingleForm: React.FC = () => {
             ))}
             <button
               type="button"
-              className={styles.addButton}
+              className={styles.iconButton}
               onClick={() => addArrayItem('lookingForAttributes', '')}
+              aria-label="הוסף תכונה"
             >
-              הוסף תכונה
+              ➕
             </button>
           </>
         </QuestionBlock>
@@ -507,10 +517,11 @@ const SingleForm: React.FC = () => {
             ))}
             <button
               type="button"
-              className={styles.addButton}
+              className={styles.iconButton}
               onClick={() => addArrayItem('referencePhones', '')}
+              aria-label="הוסף מספר"
             >
-              הוסף מספר
+              ➕
             </button>
           </>
         </QuestionBlock>
