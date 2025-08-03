@@ -6,9 +6,12 @@ interface Props {
 }
 
 const ProgressBar: React.FC<Props> = ({ percent }) => (
-  <div className={styles.wrapper}>
-    <div className={styles.bar} style={{ width: `${percent}%` }} />
-  </div>
+  <>
+    <div className={styles.wrapper}>
+      <div className={styles.bar} style={{ width: `${percent}%` }} />
+    </div>
+    <span className={styles.label}>{percent}%</span>
+  </>
 );
 
 export default ProgressBar;

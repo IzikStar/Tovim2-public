@@ -14,6 +14,17 @@ export const sectors = [
   'אחר/ת',
 ];
 
+export const sectorLabels: Record<string, string> = {
+  HAREDI: 'חרדי/ת',
+  HAREDI_CHASIDUT: 'חסידי/ת',
+  HAREDI_LITVAK: 'ליטאי/ת',
+  DATI_LEUMI: 'דתי/ה לאומי/ת',
+  DATI_LEUMI_HARDAL: 'חרדלי/ת',
+  MASORTI: 'מסורתי/ת',
+  HILONI: 'חילוני/ת',
+  OTHER: 'אחר/ת',
+};
+
 export const marriageStatuses = [
   'רווק/ה',
   'גרוש/ה',
