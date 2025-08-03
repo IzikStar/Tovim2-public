@@ -10,7 +10,8 @@ import {
 
 const phoneRegex = /^\+?\d{7,15}$/;
 const emailRegex = /.+@.+\..+/;
-const urlRegex = /^https?:\/\//;
+// Images are expected to be sent as base64 data URIs
+const base64ImagePrefix = /^data:image\//;
 
 interface AgeRange {
   min: number;
@@ -41,6 +42,7 @@ export interface ISingle {
   desiredSectors: Sector[];
   matchMakers: Types.ObjectId[];
   isPublic: boolean;
+  /** Base64-encoded image strings */
   images: string[];
   height?: number;
   appearanceDescription?: string;
@@ -113,8 +115,9 @@ const singleSchema = new Schema<ISingle>(
       type: [String],
       default: [],
       validate: {
-        validator: (arr: string[]) => arr.every((u) => urlRegex.test(u)),
-        message: "Invalid image URL",
+        validator: (arr: string[]) =>
+          arr.every((img) => base64ImagePrefix.test(img)),
+        message: "Invalid base64 image",
       },
     },
     height: { type: Number, min: 50, max: 250 },
