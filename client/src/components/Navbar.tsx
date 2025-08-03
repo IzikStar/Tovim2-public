@@ -1,9 +1,8 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import styles from "./Navbar.module.css"; // ייבוא CSS Module
+import styles from "./Navbar.module.css";
 
-// אייקונים פשוטים כ-SVG
 const HomeIcon = () => (
   <svg
     className={styles.navIcon}
