@@ -22,12 +22,12 @@ export interface ISingle {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  email: string;
+  email?: string;
   city: string;
-  gender: Gender;
-  sector: Sector;
+  gender?: Gender;
+  sectors: Sector[];
   customSector?: string;
-  birthYear: number;
+  birthDate: Date;
   marriageStatus: MarriageStatus;
   numOfChildren: number;
   ethnicity: Ethnicity;
@@ -76,12 +76,12 @@ const singleSchema = new Schema<ISingle>(
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     phoneNumber: { type: String, required: true, match: phoneRegex },
-    email: { type: String, required: true, unique: true, match: emailRegex },
+    email: { type: String, unique: true, match: emailRegex },
     city: { type: String, required: true },
-    gender: { type: String, enum: Object.values(Gender), required: true },
-    sector: { type: String, enum: Object.values(Sector), required: true },
+    gender: { type: String, enum: Object.values(Gender) },
+    sectors: { type: [String], enum: Object.values(Sector), default: [] },
     customSector: { type: String },
-    birthYear: { type: Number, required: true },
+    birthDate: { type: Date, required: true },
     marriageStatus: {
       type: String,
       enum: Object.values(MarriageStatus),

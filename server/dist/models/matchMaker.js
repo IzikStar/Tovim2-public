@@ -24,6 +24,12 @@ const matchMakerSchema = new Schema({
         enum: Object.values(Sector),
         default: [],
     },
+    ageRange: {
+        type: new Schema({
+            min: { type: Number, min: 18 },
+            max: { type: Number, min: 18 },
+        }, { _id: false }),
+    },
     // MongoDB provides an _id field by default
 }, { timestamps: true });
 matchMakerSchema.pre('save', function (next) {

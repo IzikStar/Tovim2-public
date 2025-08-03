@@ -1,6 +1,6 @@
 import {
   genders,
-  sectors,
+  sectors as sectorOptions,
   marriageStatuses,
   ethnicities,
   interests,
@@ -16,9 +16,9 @@ export interface Single {
   email?: string;
   city?: string;
   gender?: string;
-  sector?: string;
+  sectors?: string[];
   customSector?: string;
-  birthYear?: number;
+  birthDate?: string;
   marriageStatus?: string;
   numOfChildren?: number;
   ethnicity?: string;
@@ -64,8 +64,8 @@ export const fakeSingles: Single[] = [
       "https://placehold.co/400x400?text=Photo",
     ],
     gender: genders[0],
-    sector: sectors[3],
-    birthYear: 1990,
+    sectors: [sectorOptions[3]],
+    birthDate: new Date(1990, 0, 1).toISOString(),
     marriageStatus: marriageStatuses[0],
     ethnicity: ethnicities[0],
     interests: [interests[0], interests[1]],
@@ -73,7 +73,7 @@ export const fakeSingles: Single[] = [
     attributes: ["חכם", "נדיב"],
     lookingForAttributes: ["נעימה", "חמה"],
     nonCompromisableAttributes: ["יראת שמים", "חסד", "משפחה", "שמחה"],
-    desiredSectors: [sectors[3]],
+    desiredSectors: [sectorOptions[3]],
     matchMakers: [],
     shareInWhatsappGroups: false,
     referencePhones: ["0501111111"],
@@ -90,8 +90,8 @@ export const fakeSingles: Single[] = [
       "https://placehold.co/400x400?text=Photo",
     ],
     gender: genders[1],
-    sector: sectors[1],
-    birthYear: 1992,
+    sectors: [sectorOptions[1]],
+    birthDate: new Date(1992, 0, 1).toISOString(),
     marriageStatus: marriageStatuses[0],
     ethnicity: ethnicities[1],
     interests: [interests[2]],
@@ -99,7 +99,7 @@ export const fakeSingles: Single[] = [
     attributes: ["אחראית"],
     lookingForAttributes: ["נעים", "משקיע"],
     nonCompromisableAttributes: ["אמונה", "משפחה", "שמחה", "חברות"],
-    desiredSectors: [sectors[1]],
+    desiredSectors: [sectorOptions[1]],
     matchMakers: [],
     shareInWhatsappGroups: false,
     referencePhones: ["0502222222"],

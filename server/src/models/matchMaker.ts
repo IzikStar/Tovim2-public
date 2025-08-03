@@ -7,6 +7,11 @@ import {
 import crypto from 'crypto';
 import { Gender, Sector } from './enums.js';
 
+interface AgeRange {
+  min: number;
+  max: number;
+}
+
 export interface IMatchMaker {
   firstName: string;
   lastName: string;
@@ -17,6 +22,7 @@ export interface IMatchMaker {
   gender: Gender;
   sector: Sector;
   expertSectors: Sector[];
+  ageRange?: AgeRange;
 }
 
 const matchMakerSchema = new Schema<IMatchMaker>(
@@ -42,6 +48,15 @@ const matchMakerSchema = new Schema<IMatchMaker>(
       type: [String],
       enum: Object.values(Sector),
       default: [],
+    },
+    ageRange: {
+      type: new Schema<AgeRange>(
+        {
+          min: { type: Number, min: 18 },
+          max: { type: Number, min: 18 },
+        },
+        { _id: false }
+      ),
     },
     // MongoDB provides an _id field by default
   },

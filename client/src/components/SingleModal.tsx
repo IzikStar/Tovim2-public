@@ -14,8 +14,8 @@ const fieldLabels: Record<string, string> = {
   email: "אימייל",
   city: "עיר",
   gender: "מגדר",
-  sector: "מגזר",
-  birthYear: "שנת לידה",
+  sectors: "סגנון דתי",
+  birthDate: "גיל",
   marriageStatus: "מצב משפחתי",
   numOfChildren: "מספר ילדים",
   ethnicity: "עדה",
@@ -52,8 +52,16 @@ const formatValue = (
   single: Single
 ): string | null => {
   if (value === undefined || value === null) return null;
-  if (key === "sector" && value === "אחר/ת") {
-    return single.customSector || null;
+  if (key === "sectors") {
+    const arr = Array.isArray(value) ? value : [value];
+    return arr
+      .map((s) => (s === "אחר/ת" ? single.customSector || s : s))
+      .join(", ");
+  }
+  if (key === "birthDate") {
+    return String(
+      new Date().getFullYear() - new Date(value as string).getFullYear()
+    );
   }
   if (key === "ethnicity" && value === "אחר/ת") {
     return single.customEthnicity || null;
