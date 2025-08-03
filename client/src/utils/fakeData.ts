@@ -32,6 +32,9 @@ export interface Single {
   nonCompromisableAttributes?: string[];
   desiredSectors?: string[];
   matchMakers?: string[];
+  isPublic?: boolean;
+  isTaken?: boolean;
+  marriedMatchmaker?: string;
   height?: number;
   appearanceDescription?: string;
   appearanceMustHave?: string;

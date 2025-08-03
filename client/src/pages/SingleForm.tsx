@@ -46,6 +46,7 @@ interface FormData {
   nameForPrayer: string;
   referralSource: string;
   matchmakerExpectations: string;
+  addToPublic: string;
 }
 
 const initialForm: FormData = {
@@ -80,6 +81,7 @@ const initialForm: FormData = {
   nameForPrayer: '',
   referralSource: '',
   matchmakerExpectations: '',
+  addToPublic: 'לא',
 };
 
 const SingleForm: React.FC = () => {
@@ -174,6 +176,7 @@ const SingleForm: React.FC = () => {
       nameForPrayer: form.nameForPrayer || undefined,
       referralSource: form.referralSource || undefined,
       matchmakerExpectations: form.matchmakerExpectations || undefined,
+      isPublic: form.addToPublic === 'כן',
     };
     try {
       const res = await fetch(
@@ -216,6 +219,7 @@ const SingleForm: React.FC = () => {
       'generalDealBreakers',
       'existingMatchProfile',
       'shareInWhatsappGroups',
+      'addToPublic',
       'proposePreference',
       'phoneNumber',
       'referencePhones',
@@ -484,6 +488,16 @@ ${matchmaker.firstName} - ${matchmaker.phoneNumber}`}
           <select
             name="shareInWhatsappGroups"
             value={form.shareInWhatsappGroups}
+            onChange={handleChange}
+          >
+            <option>כן</option>
+            <option>לא</option>
+          </select>
+        </QuestionBlock>
+        <QuestionBlock label="📂 האם להוסיף למאגר הציבורי של השדכנים?">
+          <select
+            name="addToPublic"
+            value={form.addToPublic}
             onChange={handleChange}
           >
             <option>כן</option>

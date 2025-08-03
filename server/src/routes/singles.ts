@@ -67,7 +67,11 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
 });
 
 router.get('/public', async (_req, res) => {
-  const singles = await Single.find({ isPublic: true });
+  const singles = await Single.find({
+    isPublic: true,
+    isTaken: false,
+    marriedMatchmaker: { $exists: false },
+  });
   res.json(singles);
 });
 

@@ -11,6 +11,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Public from "./pages/Public";
 import SingleForm from "./pages/SingleForm";
+import Couples from "./pages/Couples";
+import EditProfile from "./pages/EditProfile";
 
 const AppRoutes: React.FC = () => {
   const { token } = useAuth();
@@ -35,6 +37,14 @@ const AppRoutes: React.FC = () => {
         <Route
           path="/dashboard"
           element={token ? <Dashboard /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/couples"
+          element={token ? <Couples /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/profile"
+          element={token ? <EditProfile /> : <Navigate to="/login" replace />}
         />
       </Routes>
     </>

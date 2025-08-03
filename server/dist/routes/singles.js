@@ -60,7 +60,11 @@ router.delete('/:id', authenticate, async (req, res) => {
     res.json({ message: 'Deleted' });
 });
 router.get('/public', async (_req, res) => {
-    const singles = await Single.find({ isPublic: true });
+    const singles = await Single.find({
+        isPublic: true,
+        isTaken: false,
+        marriedMatchmaker: { $exists: false },
+    });
     res.json(singles);
 });
 export default router;

@@ -85,6 +85,31 @@ class ApiService {
     );
   }
 
+  async updateSingle(id: string, data: Partial<Single>): Promise<Single> {
+    return this.request<Single>(`/singles/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteSingle(id: string): Promise<void> {
+    await this.request(`/singles/${id}`, { method: "DELETE" });
+  }
+
+  async getMarriedSingles(matchMakerId: string): Promise<Single[]> {
+    return this.request<Single[]>(`/matchmakers/${matchMakerId}/married`);
+  }
+
+  async updateMatchmaker(
+    id: string,
+    data: Partial<MatchMaker>
+  ): Promise<MatchMaker> {
+    return this.request<MatchMaker>(`/matchmakers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
   async createSinglesBulk(
     matchMakerId: string,
     singles: Single[]

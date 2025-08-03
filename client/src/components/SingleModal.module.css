@@ -56,6 +56,8 @@
 .actions {
   margin-top: 1rem;
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   justify-content: space-between;
 }
 
@@ -68,6 +70,11 @@
 
 .whatsapp {
   background-color: #25d366;
+  color: #fff;
+}
+
+.deleteBtn {
+  background-color: #d9534f;
   color: #fff;
 }
 
