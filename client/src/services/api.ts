@@ -85,6 +85,16 @@ class ApiService {
     );
   }
 
+  async createSinglesBulk(
+    matchMakerId: string,
+    singles: Single[]
+  ): Promise<Single[]> {
+    return this.request<Single[]>("/singles/bulk", {
+      method: "POST",
+      body: JSON.stringify({ matchMakerId, singles }),
+    });
+  }
+
   // Add more endpoints as needed
   async getMatchmakers() {
     return this.request("/matchmakers");

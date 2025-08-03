@@ -26,6 +26,21 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
   res.status(201).json(single);
 });
 
+router.post('/bulk', authenticate, async (req: AuthRequest, res) => {
+  const { matchMakerId, singles } = req.body;
+  if (req.matchMakerId !== matchMakerId) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  try {
+    const docs = await Single.insertMany(
+      singles.map((s: any) => ({ ...s, matchMakers: [matchMakerId] }))
+    );
+    res.status(201).json(docs);
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to create singles' });
+  }
+});
+
 router.put('/:id', authenticate, async (req: AuthRequest, res) => {
   const single = await Single.findById(req.params.id);
   if (!single) {
