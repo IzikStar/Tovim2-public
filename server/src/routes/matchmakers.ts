@@ -3,6 +3,7 @@ import { MatchMaker } from '../models/matchMaker.js';
 import { Single } from '../models/single.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { Token } from '../models/token.js';
+import crypto from 'crypto';
 
 const router = Router();
 
@@ -14,6 +15,11 @@ router.post('/', async (req, res) => {
   } catch (err) {
     res.status(400).json({ error: 'Failed to create matchmaker' });
   }
+});
+
+router.get('/', async (_req, res) => {
+  const matchMakers = await MatchMaker.find().select('-password');
+  res.json(matchMakers);
 });
 
 router.get('/:id', async (req, res) => {
@@ -28,9 +34,18 @@ router.put('/:id', authenticate, async (req: AuthRequest, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const updated = await MatchMaker.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
+  const updateData = { ...req.body };
+  if (updateData.password) {
+    updateData.password = crypto
+      .createHash('sha256')
+      .update(updateData.password)
+      .digest('hex');
+  }
+  const updated = await MatchMaker.findByIdAndUpdate(
+    req.params.id,
+    updateData,
+    { new: true }
+  ).select('-password');
   if (!updated) {
     return res.status(404).json({ error: 'Not found' });
   }

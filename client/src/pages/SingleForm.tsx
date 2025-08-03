@@ -9,6 +9,7 @@ import {
   sectorLabels,
 } from '../utils/enums';
 import apiService, { MatchMaker } from '../services/api';
+import { baseURL } from '../config';
 import styles from './SingleForm.module.css';
 import ProgressBar from '../components/ProgressBar';
 import QuestionBlock from '../components/QuestionBlock';
@@ -175,11 +176,14 @@ const SingleForm: React.FC = () => {
       matchmakerExpectations: form.matchmakerExpectations || undefined,
     };
     try {
-      const res = await fetch(`/singles/register/${matchmakerId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `${baseURL || 'http://localhost:3000'}/singles/register/${matchmakerId}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
       if (!res.ok) throw new Error('Failed to submit');
       alert('פרטים נשלחו לשדכן');
       setForm(initialForm);
