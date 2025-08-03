@@ -8,7 +8,7 @@
   gap: 1.5rem;
   flex-wrap: wrap;
   padding: 1.25rem 2rem;
-  background: linear-gradient(135deg, rgba(224, 242, 254, 0.95), rgba(252, 231, 243, 0.95));
+  background: rgba(224, 242, 254, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(229, 231, 235, 0.6);
@@ -71,6 +71,29 @@
   transition: all 0.3s ease;
   cursor: pointer;
   direction: rtl;
+}
+
+.filterItem input {
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(209, 213, 219, 0.6);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  color: #374151;
+  transition: all 0.3s ease;
+  direction: rtl;
+}
+
+.filterItem input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.filterItem input:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: white;
 }
 
 .filterItem select:focus {
@@ -234,6 +257,11 @@
   }
 
   .filterItem select {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .filterItem input {
     padding: 0.6rem 0.8rem;
     font-size: 0.8rem;
   }

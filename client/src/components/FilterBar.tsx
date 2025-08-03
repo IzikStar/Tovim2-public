@@ -14,6 +14,7 @@ export interface FilterState {
   marriageStatus?: string;
   ethnicity?: string;
   interests?: string[];
+  search?: string;
 }
 
 interface Props {
@@ -56,6 +57,17 @@ const FilterBar: React.FC<Props> = ({ filters, onChange, onClose }) => (
         ✕
       </button>
     )}
+    <div className={styles.filterItem}>
+      <label>חיפוש שם</label>
+      <input
+        type="text"
+        value={filters.search || ""}
+        onChange={(e) =>
+          onChange({ ...filters, search: e.target.value || undefined })
+        }
+        placeholder="שם פרטי או משפחה"
+      />
+    </div>
     <div className={styles.filterItem}>
       <label>מין</label>
       <select

@@ -19,7 +19,8 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   const [couple, setCouple] = useState<[Single, Single] | null>(null);
   const [selected, setSelected] = useState<Single | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showFilters, setShowFilters] = useState(window.innerWidth >= 768);
 
   useEffect(() => {
     const load = async () => {
@@ -36,8 +37,17 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
       }
     };
     load();
-    if (window.innerWidth < 768) setShowFilters(false);
   }, [fetchSingles]);
+
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setShowFilters(true);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const filtered = singles.filter(
     (s) =>
@@ -47,7 +57,10 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
         s.marriageStatus === filters.marriageStatus) &&
       (!filters.ethnicity || s.ethnicity === filters.ethnicity) &&
       (!filters.interests?.length ||
-        filters.interests.some((i) => s.interests?.includes(i)))
+        filters.interests.some((i) => s.interests?.includes(i))) &&
+      (!filters.search ||
+        s.firstName.toLowerCase().includes(filters.search.toLowerCase()) ||
+        s.lastName.toLowerCase().includes(filters.search.toLowerCase()))
   );
 
   const showRandom = () => {
@@ -117,10 +130,10 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
             פילטרים
           </button>
         )}
-        <div
-          className={styles.contentWrapper}
-          style={{ paddingTop: showFilters ? undefined : "100px" }}
-        >
+          <div
+            className={styles.contentWrapper}
+            style={{ paddingTop: showFilters ? (isMobile ? "200px" : undefined) : "100px" }}
+          >
           <div className={styles.loadingState}>טוען נתונים...</div>
         </div>
       </div>
@@ -146,7 +159,7 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
 
       <div
         className={styles.contentWrapper}
-        style={{ paddingTop: showFilters ? undefined : "100px" }}
+        style={{ paddingTop: showFilters ? (isMobile ? "200px" : undefined) : "100px" }}
       >
         <div className={styles.randomBtnsContainer}>
           <button className={styles.randomBtn} onClick={showRandom}>

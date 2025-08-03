@@ -58,7 +58,7 @@ const Navbar: React.FC = () => {
   return (
     <nav className={styles.navbar}>
       {/* לוגו/מותג */}
-      <div className={styles.navbarBrand}>טובים השניים מן האחד</div>
+      <div className={styles.navbarBrand}>טובים השניים</div>
 
       {/* קישורי ניווט */}
       {token && (

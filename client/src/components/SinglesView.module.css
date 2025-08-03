@@ -183,7 +183,7 @@
 
 @media (max-width: 768px) {
   .contentWrapper {
-    padding-top: 140px; /* הרבה פחות רווח במובייל */
+    padding-top: 200px; /* מרווח גדול יותר כשהפילטר בר פתוח במובייל */
   }
 
   .randomBtnsContainer {
