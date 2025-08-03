@@ -16,6 +16,7 @@ const questions: { key: keyof Single; text: string }[] = [
   { key: "gender", text: "👤 מגדר:" },
   { key: "sectors", text: "🫱🏿‍🫲🏻 סגנון דתי:" },
   { key: "birthDate", text: "🎂 גיל:" },
+  { key: "height", text: "🌱 גובה:" },
   { key: "marriageStatus", text: "👤 סטטוס:" },
   { key: "numOfChildren", text: "מספר ילדים" },
   { key: "ethnicity", text: "🕍 עדה:" },
