@@ -8,6 +8,7 @@ import {
   proposePreferences,
 } from '../utils/enums';
 import apiService, { MatchMaker } from '../services/api';
+import styles from './SingleForm.module.css';
 
 interface FormData {
   firstName: string;
@@ -20,15 +21,15 @@ interface FormData {
   city: string;
   sectors: string[];
   customSector: string;
-  workAndStudyPlaces: string;
+  workAndStudyPlaces: string[];
   currentOccupation: string;
   basicDescription: string;
   freeDescription: string;
   interests: string[];
-  otherInterests: string;
+  otherInterests: string[];
   futureVision: string;
-  nonCompromisableAttributes: string;
-  lookingForAttributes: string;
+  nonCompromisableAttributes: string[];
+  lookingForAttributes: string[];
   appearanceMustHave: string;
   appearanceMustNotHave: string;
   generalDealBreakers: string;
@@ -36,7 +37,7 @@ interface FormData {
   shareInWhatsappGroups: string;
   proposePreference: string;
   phoneNumber: string;
-  referencePhones: string;
+  referencePhones: string[];
   images: string[];
   nameForPrayer: string;
   referralSource: string;
@@ -52,17 +53,17 @@ const initialForm: FormData = {
   ethnicity: ethnicities[0],
   customEthnicity: '',
   city: '',
-  sectors: [],
+  sectors: [sectors[0]],
   customSector: '',
-  workAndStudyPlaces: '',
+  workAndStudyPlaces: [''],
   currentOccupation: '',
   basicDescription: '',
   freeDescription: '',
   interests: [],
-  otherInterests: '',
+  otherInterests: [''],
   futureVision: '',
-  nonCompromisableAttributes: '',
-  lookingForAttributes: '',
+  nonCompromisableAttributes: ['', '', '', ''],
+  lookingForAttributes: [''],
   appearanceMustHave: '',
   appearanceMustNotHave: '',
   generalDealBreakers: '',
@@ -70,7 +71,7 @@ const initialForm: FormData = {
   shareInWhatsappGroups: 'לא',
   proposePreference: proposePreferences[2],
   phoneNumber: '',
-  referencePhones: '',
+  referencePhones: [''],
   images: [],
   nameForPrayer: '',
   referralSource: '',
@@ -104,13 +105,19 @@ const SingleForm: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const toggleArray = (name: keyof FormData, value: string) => {
+  const updateArray = (name: keyof FormData, index: number, value: string) => {
     setForm((prev) => {
-      const arr = prev[name] as string[];
-      const exists = arr.includes(value);
-      const updated = exists ? arr.filter((v) => v !== value) : [...arr, value];
-      return { ...prev, [name]: updated };
+      const arr = [...(prev[name] as string[])];
+      arr[index] = value;
+      return { ...prev, [name]: arr };
     });
+  };
+
+  const addArrayItem = (name: keyof FormData, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: [...(prev[name] as string[]), value],
+    }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,23 +147,17 @@ const SingleForm: React.FC = () => {
       ethnicity: form.ethnicity,
       customEthnicity: form.customEthnicity || undefined,
       city: form.city,
-      sectors: form.sectors,
+      sectors: form.sectors.filter(Boolean),
       customSector: form.customSector || undefined,
-      workAndStudyPlaces: form.workAndStudyPlaces.split('\n').filter(Boolean),
+      workAndStudyPlaces: form.workAndStudyPlaces.filter(Boolean),
       currentOccupation: form.currentOccupation || undefined,
       basicDescription: form.basicDescription || undefined,
       freeDescription: form.freeDescription || undefined,
-      interests: form.interests,
-      otherInterests: form.otherInterests
-        .split('\n')
-        .filter(Boolean),
+      interests: form.interests.filter(Boolean),
+      otherInterests: form.otherInterests.filter(Boolean),
       futureVision: form.futureVision || undefined,
-      nonCompromisableAttributes: form.nonCompromisableAttributes
-        .split('\n')
-        .filter(Boolean),
-      lookingForAttributes: form.lookingForAttributes
-        .split('\n')
-        .filter(Boolean),
+      nonCompromisableAttributes: form.nonCompromisableAttributes,
+      lookingForAttributes: form.lookingForAttributes.filter(Boolean),
       appearanceMustHave: form.appearanceMustHave || undefined,
       appearanceMustNotHave: form.appearanceMustNotHave || undefined,
       generalDealBreakers: form.generalDealBreakers || undefined,
@@ -164,7 +165,7 @@ const SingleForm: React.FC = () => {
       shareInWhatsappGroups: form.shareInWhatsappGroups === 'כן',
       proposePreference: form.proposePreference,
       phoneNumber: form.phoneNumber,
-      referencePhones: form.referencePhones.split('\n').filter(Boolean),
+      referencePhones: form.referencePhones.filter(Boolean),
       images: form.images,
       nameForPrayer: form.nameForPrayer || undefined,
       referralSource: form.referralSource || undefined,
@@ -191,12 +192,11 @@ const SingleForm: React.FC = () => {
       {matchmaker && (
         <div style={{ whiteSpace: 'pre-line', marginBottom: '1rem' }}>
           <p>
-            שלום לך,\nאנחנו שמחים שהגעת למאגר שלנו\n\nבנינו כאן במחשבה רבה ומעמיקה שאלון הכרות לא־שגרתי, עם כמה שאלות שאולי לא נשאלת עד היום.\nנשמח שתקדיש/י את הזמן הנדרש כדי לענות בצורה כנה ומדויקת כמה שיותר על השאלות – בשבילך ובשבילנו, כך תכיר/י את עצמך יותר טוב, וגם אנחנו נכיר אותך.\n\nחשוב לציין שטווח הגילאים שאנחנו משדכים הינו לרוב {matchmaker.ageRange?.min}-{matchmaker.ageRange?.max}.\n\nכאן בשבילך. {matchmaker.firstName} – {matchmaker.phoneNumber}
+            שלום לך,\nאנחנו שמחים שהגעת למאגר שלנו\n\nבנינו כאן במחשבה רבה ומעמיקה שאלון הכרות לא־שגרתי, עם כמה שאלות שאולי לא נשאלת עד היום.\nנשמח שתקדיש/י את הזמן הנדרש כדי לענות בצורה כנה ומדויקת כמה שיותר על השאלות – בשבילך ובשבילנו, כך תכיר/י את עצמך יותר טוב, וגם אנחנו נכיר אותך.\n\nמגזרי התמחות: {matchmaker.expertSectors.join(', ')}.\nחשוב לציין שטווח הגילאים שאנחנו משדכים הינו לרוב {matchmaker.ageRange?.min}-{matchmaker.ageRange?.max}.\nכאן בשבילך. {matchmaker.firstName}- {matchmaker.phoneNumber}
           </p>
-          <p>תחומי התמחות: {matchmaker.expertSectors.join(', ')}</p>
         </div>
       )}
-      <form onSubmit={handleSubmit}>
+      <form className={styles.form} onSubmit={handleSubmit}>
         <div>
           <label>😃 שם פרטי:</label>
           <input name="firstName" value={form.firstName} onChange={handleChange} required />
@@ -242,17 +242,27 @@ const SingleForm: React.FC = () => {
           <input name="city" value={form.city} onChange={handleChange} required />
         </div>
         <div>
-          <label>🫱🏿‍🫲🏻 סגנון דתי:</label>
-          {sectors.map((s) => (
-            <label key={s} style={{ marginRight: '0.5rem' }}>
-              <input
-                type="checkbox"
-                checked={form.sectors.includes(s)}
-                onChange={() => toggleArray('sectors', s)}
-              />
-              {s}
-            </label>
+          <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+            🫱🏿‍🫲🏻 סגנון דתי:
+          </label>
+          {form.sectors.map((s, idx) => (
+            <div key={idx} style={{ marginBottom: '0.5rem' }}>
+              <select
+                value={s}
+                onChange={(e) => updateArray('sectors', idx, e.target.value)}
+              >
+                {sectors.map((opt) => (
+                  <option key={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
           ))}
+          <button
+            type="button"
+            onClick={() => addArrayItem('sectors', sectors[0])}
+          >
+            הוסף מגזר
+          </button>
           {form.sectors.includes('אחר/ת') && (
             <input
               name="customSector"
@@ -263,13 +273,24 @@ const SingleForm: React.FC = () => {
           )}
         </div>
         <div>
-          <label>👩‍🏫 מוסדות לימוד שלמדת בהם ומקומות שעבדת בהם במהלך החיים (נא לפרט):</label>
-          <textarea
-            name="workAndStudyPlaces"
-            value={form.workAndStudyPlaces}
-            onChange={handleChange}
-            rows={3}
-          />
+          <label>
+            👩‍🏫 מוסדות לימוד שלמדת בהם ומקומות שעבדת בהם במהלך החיים (נא לפרט):
+          </label>
+          {form.workAndStudyPlaces.map((w, idx) => (
+            <div key={idx} style={{ marginBottom: '0.5rem' }}>
+              <input
+                value={w}
+                onChange={(e) => updateArray('workAndStudyPlaces', idx, e.target.value)}
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={() => addArrayItem('workAndStudyPlaces', '')}
+          >
+            הוסף מקום
+          </button>
         </div>
         <div>
           <label>🎓 מה את/ה עושה בחיים כיום (נא לפרט):</label>
@@ -300,23 +321,45 @@ const SingleForm: React.FC = () => {
         </div>
         <div>
           <label>🏓 תחומי עניין בולטים שלך:</label>
-          {interests.map((i) => (
-            <label key={i} style={{ marginRight: '0.5rem' }}>
-              <input
-                type="checkbox"
-                checked={form.interests.includes(i)}
-                onChange={() => toggleArray('interests', i)}
-              />
-              {i}
-            </label>
+          {form.interests.map((i, idx) => (
+            <div key={idx} style={{ marginBottom: '0.5rem' }}>
+              <select
+                value={i}
+                onChange={(e) => updateArray('interests', idx, e.target.value)}
+              >
+                {interests.map((opt) => (
+                  <option key={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
           ))}
-          <textarea
-            name="otherInterests"
-            value={form.otherInterests}
-            onChange={handleChange}
-            placeholder="פרטים נוספים"
-            rows={2}
-          />
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={() => addArrayItem('interests', interests[0])}
+          >
+            הוסף תחום
+          </button>
+          {form.interests.includes('אחר/ת') && (
+            <div style={{ marginTop: '0.5rem' }}>
+              {form.otherInterests.map((o, idx) => (
+                <div key={idx} style={{ marginBottom: '0.5rem' }}>
+                  <input
+                    value={o}
+                    onChange={(e) => updateArray('otherInterests', idx, e.target.value)}
+                    placeholder="פרט"
+                  />
+                </div>
+              ))}
+              <button
+                type="button"
+                className={styles.addButton}
+                onClick={() => addArrayItem('otherInterests', '')}
+              >
+                הוסף תחום אחר
+              </button>
+            </div>
+          )}
         </div>
         <div>
           <label>🧑‍🎓 איפה את/ה רואה את עצמך בעתיד:</label>
@@ -329,21 +372,38 @@ const SingleForm: React.FC = () => {
         </div>
         <div>
           <label>💍 ארבעה דברים (!) שקריטיים לך שיהיו בבן/ת הזוג:</label>
-          <textarea
-            name="nonCompromisableAttributes"
-            value={form.nonCompromisableAttributes}
-            onChange={handleChange}
-            rows={4}
-          />
+          {form.nonCompromisableAttributes.map((attr, idx) => (
+            <input
+              key={idx}
+              value={attr}
+              onChange={(e) =>
+                updateArray('nonCompromisableAttributes', idx, e.target.value)
+              }
+              style={{ marginBottom: '0.5rem' }}
+            />
+          ))}
         </div>
         <div>
-          <label>🔍 מה עוד תשמח/י שיהיה בבן/ת הזוג אבל תוכל/י להסתדר גם בלעדיהם:</label>
-          <textarea
-            name="lookingForAttributes"
-            value={form.lookingForAttributes}
-            onChange={handleChange}
-            rows={3}
-          />
+          <label>
+            🔍 מה עוד תשמח/י שיהיה בבן/ת הזוג אבל תוכל/י להסתדר גם בלעדיהם:
+          </label>
+          {form.lookingForAttributes.map((attr, idx) => (
+            <div key={idx} style={{ marginBottom: '0.5rem' }}>
+              <input
+                value={attr}
+                onChange={(e) =>
+                  updateArray('lookingForAttributes', idx, e.target.value)
+                }
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={() => addArrayItem('lookingForAttributes', '')}
+          >
+            הוסף תכונה
+          </button>
         </div>
         <div>
           <label>👀 מה חשוב לך שיהיה בבן/בת מבחינה חיצונית?</label>
@@ -410,12 +470,21 @@ const SingleForm: React.FC = () => {
         </div>
         <div>
           <label>📞 מספרים לבירור (מספר ושם):</label>
-          <textarea
-            name="referencePhones"
-            value={form.referencePhones}
-            onChange={handleChange}
-            rows={3}
-          />
+          {form.referencePhones.map((r, idx) => (
+            <div key={idx} style={{ marginBottom: '0.5rem' }}>
+              <input
+                value={r}
+                onChange={(e) => updateArray('referencePhones', idx, e.target.value)}
+              />
+            </div>
+          ))}
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={() => addArrayItem('referencePhones', '')}
+          >
+            הוסף מספר
+          </button>
         </div>
         <div>
           <label>📸 צרפ/י לפחות שתי תמונות שלך (פנים + כל גוף):</label>
@@ -450,6 +519,12 @@ const SingleForm: React.FC = () => {
         </div>
         <button type="submit">שליחה</button>
       </form>
+      {matchmaker?.priceRange && (
+        <p style={{ marginTop: '1rem' }}>
+          נ.ב. דמי שידוך בעז"ה בתשלום של {matchmaker.priceRange.min}–
+          {matchmaker.priceRange.max} ש"ח
+        </p>
+      )}
     </div>
   );
 };

@@ -1,0 +1,13 @@
+.form > div {
+  margin-bottom: 1rem;
+}
+
+.form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.addButton {
+  margin-top: 0.5rem;
+}

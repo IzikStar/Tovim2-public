@@ -12,6 +12,11 @@ interface AgeRange {
   max: number;
 }
 
+interface PriceRange {
+  min: number;
+  max: number;
+}
+
 export interface IMatchMaker {
   firstName: string;
   lastName: string;
@@ -23,6 +28,7 @@ export interface IMatchMaker {
   sector: Sector;
   expertSectors: Sector[];
   ageRange?: AgeRange;
+  priceRange?: PriceRange;
 }
 
 const matchMakerSchema = new Schema<IMatchMaker>(
@@ -54,6 +60,15 @@ const matchMakerSchema = new Schema<IMatchMaker>(
         {
           min: { type: Number, min: 18 },
           max: { type: Number, min: 18 },
+        },
+        { _id: false }
+      ),
+    },
+    priceRange: {
+      type: new Schema<PriceRange>(
+        {
+          min: { type: Number, min: 0 },
+          max: { type: Number, min: 0 },
         },
         { _id: false }
       ),

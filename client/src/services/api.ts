@@ -12,6 +12,7 @@ export interface MatchMaker {
   sector: string;
   expertSectors: string[];
   ageRange?: { min: number; max: number };
+  priceRange?: { min: number; max: number };
 }
 
 interface LoginResponse {
