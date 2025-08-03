@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import FilterBar, { FilterState } from "./FilterBar";
 import SingleCard from "./SingleCard";
 import SingleModal from "./SingleModal";
 import { Single, fakeSingles } from "../utils/fakeData";
 import { genders } from "../utils/enums";
+import styles from "./SinglesView.module.css";
 
 interface Props {
   fetchSingles: () => Promise<Single[]>;
@@ -17,16 +18,20 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   const [highlight, setHighlight] = useState<Single | null>(null);
   const [couple, setCouple] = useState<[Single, Single] | null>(null);
   const [selected, setSelected] = useState<Single | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
         const data = await fetchSingles();
         setSingles([...data, ...fakeSingles]);
         setAllSingles([...data, ...fakeSingles]);
       } catch {
         setSingles(fakeSingles);
         setAllSingles(fakeSingles);
+      } finally {
+        setLoading(false);
       }
     };
     load();
@@ -93,60 +98,84 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
       }
     : undefined;
 
-  return (
-    <div>
-      <FilterBar filters={filters} onChange={handleFiltersChange} />
-      <div className="random-btns-container">
-        <button className="random-btn" onClick={showRandom}>
-          כרטיס רנדומלי
-        </button>
-        <button className="random-btn" onClick={showRandomCouple}>
-          זוג רנדומלי
-        </button>
-        <button className="random-btn" onClick={shuffleSingles}>
-          ערבב
-        </button>
+  if (loading) {
+    return (
+      <div className={styles.singlesView}>
+        <FilterBar filters={filters} onChange={handleFiltersChange} />
+        <div className={styles.contentWrapper}>
+          <div className={styles.loadingState}>טוען נתונים...</div>
+        </div>
       </div>
-      {highlight && (
-        <>
-          <div className="single-grid">
-            <div style={{ width: "320px" }}>
-              <SingleCard
-                key={highlight.id}
-                single={highlight}
-                onSelect={(single) => setSelected(single)}
-                onAddToPrivate={addHandler}
-              />
-            </div>
-          </div>
-        </>
-      )}
-      {couple && (
-        <>
-          <div className="single-grid">
-            {couple.map((s) => (
-              <div style={{ width: "320px" }}>
+    );
+  }
+
+  return (
+    <div className={styles.singlesView}>
+      <FilterBar filters={filters} onChange={handleFiltersChange} />
+
+      <div className={styles.contentWrapper}>
+        <div className={styles.randomBtnsContainer}>
+          <button className={styles.randomBtn} onClick={showRandom}>
+            כרטיס רנדומלי
+          </button>
+          <button className={styles.randomBtn} onClick={showRandomCouple}>
+            זוג רנדומלי
+          </button>
+          <button className={styles.randomBtn} onClick={shuffleSingles}>
+            ערבב
+          </button>
+        </div>
+
+        {highlight && (
+          <div className={styles.highlightSection}>
+            <div className={styles.singleGrid}>
+              <div>
                 <SingleCard
-                  key={s.id}
-                  single={s}
+                  key={highlight.id}
+                  single={highlight}
                   onSelect={(single) => setSelected(single)}
                   onAddToPrivate={addHandler}
                 />
               </div>
+            </div>
+          </div>
+        )}
+
+        {couple && (
+          <div className={styles.highlightSection}>
+            <div className={styles.singleGrid}>
+              {couple.map((s) => (
+                <div key={s.id}>
+                  <SingleCard
+                    single={s}
+                    onSelect={(single) => setSelected(single)}
+                    onAddToPrivate={addHandler}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <h3>לא נמצאו תוצאות</h3>
+            <p>נסה לשנות את הפילטרים או לאפס אותם כדי לראות יותר תוצאות</p>
+          </div>
+        ) : (
+          <div className={styles.singlesGrid}>
+            {rest.map((s) => (
+              <SingleCard
+                key={s.id}
+                single={s}
+                onSelect={(single) => setSelected(single)}
+                onAddToPrivate={addHandler}
+              />
             ))}
           </div>
-        </>
-      )}
-      <div className="singles-grid">
-        {rest.map((s) => (
-          <SingleCard
-            key={s.id}
-            single={s}
-            onSelect={(single) => setSelected(single)}
-            onAddToPrivate={addHandler}
-          />
-        ))}
+        )}
       </div>
+
       {selected && (
         <SingleModal single={selected} onClose={() => setSelected(null)} />
       )}
