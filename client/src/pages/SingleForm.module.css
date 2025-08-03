@@ -1,0 +1,14 @@
+.container {
+  padding: 2rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.addButton {
+  margin-top: 0.5rem;
+}

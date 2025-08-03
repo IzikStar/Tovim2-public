@@ -16,6 +16,14 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/:id', async (req, res) => {
+  const matchMaker = await MatchMaker.findById(req.params.id).select('-password');
+  if (!matchMaker) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.json(matchMaker);
+});
+
 router.put('/:id', authenticate, async (req: AuthRequest, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });

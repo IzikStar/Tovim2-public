@@ -52,7 +52,7 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   const filtered = singles.filter(
     (s) =>
       (!filters.gender || s.gender === filters.gender) &&
-      (!filters.sector || s.sector === filters.sector) &&
+      (!filters.sector || s.sectors?.includes(filters.sector)) &&
       (!filters.marriageStatus ||
         s.marriageStatus === filters.marriageStatus) &&
       (!filters.ethnicity || s.ethnicity === filters.ethnicity) &&

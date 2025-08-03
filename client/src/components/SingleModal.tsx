@@ -7,69 +7,92 @@ interface Props {
   onClose: () => void;
 }
 
-const fieldLabels: Record<string, string> = {
-  firstName: "שם פרטי",
-  lastName: "שם משפחה",
-  phoneNumber: "טלפון",
-  email: "אימייל",
-  city: "עיר",
-  gender: "מגדר",
-  sector: "מגזר",
-  birthYear: "שנת לידה",
-  marriageStatus: "מצב משפחתי",
-  numOfChildren: "מספר ילדים",
-  ethnicity: "עדה",
-  workAndStudyPlaces: "מקומות לימוד ועבודה",
-  currentOccupation: "עיסוק נוכחי",
-  basicDescription: "תיאור בסיסי",
-  freeDescription: "תיאור חופשי",
-  attributes: "תכונות",
-  lookingForAttributes: "תכונות מבוקשות",
-  nonCompromisableAttributes: "תכונות לא מתפשר עליהן",
-  desiredSectors: "מגזרים רצויים",
-  matchMakers: "שדכנים",
-  height: "גובה",
-  appearanceDescription: "תיאור מראה",
-  appearanceMustHave: "חייב במראה",
-  appearanceMustNotHave: "אסור במראה",
-  generalDealBreakers: "קווים אדומים",
-  interests: "תחומי עניין",
-  futureVision: "חזון עתידי",
-  existingMatchProfile: "פרופיל קיים",
-  shareInWhatsappGroups: "שיתוף בקבוצות וואטסאפ",
-  proposePreference: "העדפת הצעה",
-  referencePhones: "טלפונים להפניות",
-  nameForPrayer: "שם לתפילה",
-  referralSource: "מקור הפניה",
-  matchmakerExpectations: "ציפיות מהשדכן",
-  desiredAgeRange: "טווח גיל רצוי",
-  searchText: "טקסט חיפוש",
-};
+const questions: { key: keyof Single; text: string }[] = [
+  { key: "firstName", text: "😃 שם פרטי:" },
+  { key: "lastName", text: "👨‍👩‍👧‍👦 שם משפחה:" },
+  { key: "phoneNumber", text: "📱 מספר טלפון שלך:" },
+  { key: "email", text: "אימייל" },
+  { key: "city", text: "🏠 מקום מגורים:" },
+  { key: "gender", text: "👤 מגדר:" },
+  { key: "sectors", text: "🫱🏿‍🫲🏻 סגנון דתי:" },
+  { key: "birthDate", text: "🎂 גיל:" },
+  { key: "height", text: "🌱 גובה:" },
+  { key: "marriageStatus", text: "👤 סטטוס:" },
+  { key: "numOfChildren", text: "מספר ילדים" },
+  { key: "ethnicity", text: "🕍 עדה:" },
+  { key: "workAndStudyPlaces", text: "👩‍🏫 מוסדות לימוד ומקומות עבודה:" },
+  { key: "currentOccupation", text: "🎓 מה את/ה עושה בחיים כיום:" },
+  { key: "basicDescription", text: "📝 ספר/י לנו על עצמך בצורה טכנית:" },
+  { key: "freeDescription", text: "🤓 ספר/י לנו על עצמך דברים נוספים:" },
+  { key: "interests", text: "🏓 תחומי עניין בולטים שלך:" },
+  { key: "otherInterests", text: "תחומי עניין נוספים:" },
+  { key: "futureVision", text: "🧑‍🎓 איפה את/ה רואה את עצמך בעתיד:" },
+  {
+    key: "nonCompromisableAttributes",
+    text: "💍 ארבעה דברים קריטיים בבן/בת הזוג:",
+  },
+  {
+    key: "lookingForAttributes",
+    text: "🔍 מה עוד תשמח/י שיהיה בבן/ת הזוג:",
+  },
+  { key: "appearanceMustHave", text: "👀 מה חשוב שיהיה מבחינה חיצונית:" },
+  {
+    key: "appearanceMustNotHave",
+    text: "🚫 מה חשוב שלא יהיה מבחינה חיצונית:",
+  },
+  {
+    key: "generalDealBreakers",
+    text: "👎 מה חשוב שלא יהיה בבן/ת הזוג:",
+  },
+  {
+    key: "existingMatchProfile",
+    text: "💳 כרטיס שידוכים רגיל:",
+  },
+  {
+    key: "shareInWhatsappGroups",
+    text: "📩 האם לשתף בקבוצות ווטסאפ:",
+  },
+  {
+    key: "proposePreference",
+    text: "✅ למי להציע קודם:",
+  },
+  { key: "referencePhones", text: "📞 מספרים לבירור:" },
+  { key: "nameForPrayer", text: "🪬 שם לתפילה:" },
+  { key: "referralSource", text: "🖊 איך הגעת אלינו:" },
+  {
+    key: "matchmakerExpectations",
+    text: "🫡 מה הציפיות שלך מאיתנו:",
+  },
+];
 
 const formatValue = (
   key: string,
   value: any,
   single: Single
-): string | null => {
+): string[] | string | null => {
   if (value === undefined || value === null) return null;
-  if (key === "sector" && value === "אחר/ת") {
-    return single.customSector || null;
+  if (key === "sectors") {
+    const arr = Array.isArray(value) ? value : [value];
+    return arr.map((s) => (s === "אחר/ת" ? single.customSector || s : s));
+  }
+  if (key === "birthDate") {
+    return String(
+      new Date().getFullYear() - new Date(value as string).getFullYear()
+    );
   }
   if (key === "ethnicity" && value === "אחר/ת") {
     return single.customEthnicity || null;
   }
   if (key === "interests") {
     const arr = Array.isArray(value) ? value : [value];
-    return arr
-      .map((i) =>
-        i === "אחר/ת" && single.otherInterests?.length
-          ? single.otherInterests.join(", ")
-          : i
-      )
-      .join(", ");
+    return arr.map((i) =>
+      i === "אחר/ת" && single.otherInterests?.length
+        ? single.otherInterests.join(", ")
+        : i
+    );
   }
   if (Array.isArray(value)) {
-    return value.join(", ");
+    return value;
   }
   if (typeof value === "boolean") {
     return value ? "כן" : "לא";
@@ -85,10 +108,14 @@ const formatValue = (
 
 const gatherDetails = (single: Single) => {
   const lines: string[] = [];
-  Object.entries(fieldLabels).forEach(([key, label]) => {
-    const value = formatValue(key, (single as any)[key], single);
+  questions.forEach(({ key, text }) => {
+    const value = formatValue(key as string, (single as any)[key], single);
     if (value) {
-      lines.push(`${label}: ${value}`);
+      if (Array.isArray(value)) {
+        lines.push(`${text} ${value.join(", ")}`);
+      } else {
+        lines.push(`${text} ${value}`);
+      }
     }
   });
   single.images.forEach((img, i) => lines.push(`תמונה ${i + 1}: ${img}`));
@@ -147,13 +174,22 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
           </button>
         </div>
         <div className={styles.details}>
-          {Object.entries(fieldLabels).map(([key, label]) => {
-            const value = formatValue(key, (single as any)[key], single);
-            if (!value) return null;
+          {questions.map(({ key, text }) => {
+            const value = formatValue(key as string, (single as any)[key], single);
+            if (!value || (Array.isArray(value) && value.length === 0)) return null;
             return (
-              <p key={key}>
-                <strong>{label}:</strong> {value}
-              </p>
+              <div key={key} className={styles.field}>
+                <p><strong>{text}</strong></p>
+                {Array.isArray(value) ? (
+                  <ul>
+                    {value.map((v, i) => (
+                      <li key={i}>{v}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>{value}</p>
+                )}
+              </div>
             );
           })}
         </div>

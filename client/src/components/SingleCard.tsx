@@ -9,14 +9,15 @@ interface Props {
 
 const SingleCard: React.FC<Props> = ({ single, onSelect, onAddToPrivate }) => {
   const age =
-    single.birthYear && !isNaN(single.birthYear)
-      ? new Date().getFullYear() - single.birthYear
+    single.birthDate && !isNaN(new Date(single.birthDate).getTime())
+      ? new Date().getFullYear() -
+        new Date(single.birthDate).getFullYear()
       : undefined;
 
   const summary = [
     single.city,
     age ? `${age}` : undefined,
-    single.sector,
+    single.sectors?.join(", "),
     single.marriageStatus,
   ]
     .filter(Boolean)

@@ -2,6 +2,19 @@ import { baseURL } from "../config";
 import { Single } from "../utils/fakeData";
 import { getCookie } from "../utils/cookies";
 
+export interface MatchMaker {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  email: string;
+  city: string;
+  gender: string;
+  sector: string;
+  expertSectors: string[];
+  ageRange?: { min: number; max: number };
+  priceRange?: { min: number; max: number };
+}
+
 interface LoginResponse {
   token: string;
   matchMakerId: string;
@@ -75,6 +88,10 @@ class ApiService {
   // Add more endpoints as needed
   async getMatchmakers() {
     return this.request("/matchmakers");
+  }
+
+  async getMatchmaker(id: string): Promise<MatchMaker> {
+    return this.request<MatchMaker>(`/matchmakers/${id}`);
   }
 
   async getRequests() {
