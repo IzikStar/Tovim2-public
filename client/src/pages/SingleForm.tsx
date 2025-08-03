@@ -4,14 +4,57 @@ interface Props {
   matchmakerId: string;
 }
 
+interface FormData {
+  name: string;
+  age: string;
+  gender: string;
+  details: string;
+  images: string[];
+}
+
 const SingleForm: React.FC<Props> = ({ matchmakerId }) => {
-  const [form, setForm] = useState({ name: '', age: '', gender: '', details: '' });
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const [form, setForm] = useState<FormData>({
+    name: '',
+    age: '',
+    gender: '',
+    details: '',
+    images: [],
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const readers = Array.from(files).map((file) => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    });
+    Promise.all(readers).then((images) => setForm((f) => ({ ...f, images })));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('פרטים נשלחו לשדכן ' + matchmakerId);
+    try {
+      const res = await fetch(`/singles/register/${matchmakerId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error('Failed to submit');
+      alert('פרטים נשלחו לשדכן ' + matchmakerId);
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה בשליחת הטופס');
+    }
   };
   return (
     <div style={{ padding: '2rem' }}>
@@ -32,6 +75,10 @@ const SingleForm: React.FC<Props> = ({ matchmakerId }) => {
         <div>
           <label>פרטים נוספים:</label>
           <textarea name="details" value={form.details} onChange={handleChange} rows={5} />
+        </div>
+        <div>
+          <label>תמונות:</label>
+          <input type="file" multiple accept="image/*" onChange={handleImageChange} />
         </div>
         <button type="submit">שליחה</button>
       </form>
