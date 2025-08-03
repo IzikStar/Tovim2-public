@@ -35,6 +35,22 @@ const DashboardIcon = () => (
   </svg>
 );
 
+const ShareIcon = () => (
+  <svg
+    className={styles.navIcon}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M13.828 10.172a4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.172-1.172m1.656-1.656a4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656L14.828 8"
+    />
+  </svg>
+);
+
 const LogoutIcon = () => (
   <svg
     className={styles.logoutIcon}
@@ -52,7 +68,7 @@ const LogoutIcon = () => (
 );
 
 const Navbar: React.FC = () => {
-  const { token, logout } = useAuth();
+  const { token, logout, matchMakerId } = useAuth();
 
   return (
     <nav className={styles.navbar}>
@@ -81,6 +97,23 @@ const Navbar: React.FC = () => {
             <DashboardIcon />
             <span>המאגר שלי</span>
           </NavLink>
+
+          {matchMakerId && (
+            <a
+              href={`/single-form/${matchMakerId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.navLink}
+              onClick={() =>
+                navigator.clipboard.writeText(
+                  `${window.location.origin}/single-form/${matchMakerId}`
+                )
+              }
+            >
+              <ShareIcon />
+              <span>טופס סינגל</span>
+            </a>
+          )}
         </div>
       )}
 
