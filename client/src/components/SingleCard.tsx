@@ -23,7 +23,10 @@ const SingleCard: React.FC<Props> = ({ single, onSelect, onAddToPrivate }) => {
     .join(" • ");
 
   return (
-    <div className={styles.card} onClick={() => onSelect?.(single)}>
+    <div
+      className={single.gender === "זכר" ? styles.maleCard : styles.femaleCard}
+      onClick={() => onSelect?.(single)}
+    >
       <img
         className={styles.image}
         src={single.images[0]}
@@ -40,7 +43,11 @@ const SingleCard: React.FC<Props> = ({ single, onSelect, onAddToPrivate }) => {
       </div>
       {onAddToPrivate && (
         <button
-          className={styles.addButton}
+          className={
+            single.gender === "זכר"
+              ? styles.maleAddButton
+              : styles.femaleAddButton
+          }
           onClick={(e) => {
             e.stopPropagation();
             onAddToPrivate(single);

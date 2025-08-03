@@ -67,3 +67,20 @@
   color: #fff;
 }
 
+.maleCarouselButton {
+  background-color: var(--light-blue);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.femaleCarouselButton {
+  background-color: var(--pink);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}

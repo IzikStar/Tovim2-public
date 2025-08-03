@@ -46,7 +46,11 @@ const fieldLabels: Record<string, string> = {
   searchText: "טקסט חיפוש",
 };
 
-const formatValue = (key: string, value: any, single: Single): string | null => {
+const formatValue = (
+  key: string,
+  value: any,
+  single: Single
+): string | null => {
   if (value === undefined || value === null) return null;
   if (key === "sector" && value === "אחר/ת") {
     return single.customSector || null;
@@ -87,19 +91,18 @@ const gatherDetails = (single: Single) => {
       lines.push(`${label}: ${value}`);
     }
   });
-  single.images.forEach((img, i) =>
-    lines.push(`תמונה ${i + 1}: ${img}`)
-  );
+  single.images.forEach((img, i) => lines.push(`תמונה ${i + 1}: ${img}`));
   return lines.join("\n");
 };
 
 const SingleModal: React.FC<Props> = ({ single, onClose }) => {
   const [index, setIndex] = useState(0);
 
-  const next = () =>
-    setIndex((i) => (i + 1) % (single.images.length || 1));
+  const next = () => setIndex((i) => (i + 1) % (single.images.length || 1));
   const prev = () =>
-    setIndex((i) => (i - 1 + (single.images.length || 1)) % (single.images.length || 1));
+    setIndex(
+      (i) => (i - 1 + (single.images.length || 1)) % (single.images.length || 1)
+    );
 
   const copy = () => {
     const text = gatherDetails(single);
@@ -108,7 +111,9 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
 
   const shareWhatsapp = () => {
     const text = gatherDetails(single);
-    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(
+      text
+    )}`;
     window.open(url, "_blank");
   };
 
@@ -119,9 +124,27 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
           ×
         </button>
         <div className={styles.carousel}>
-          <button onClick={prev}>‹</button>
+          <button
+            className={
+              single.gender === "זכר"
+                ? styles.maleCarouselButton
+                : styles.femaleCarouselButton
+            }
+            onClick={prev}
+          >
+            ‹
+          </button>
           <img src={single.images[index]} alt={single.firstName} />
-          <button onClick={next}>›</button>
+          <button
+            className={
+              single.gender === "זכר"
+                ? styles.maleCarouselButton
+                : styles.femaleCarouselButton
+            }
+            onClick={next}
+          >
+            ›
+          </button>
         </div>
         <div className={styles.details}>
           {Object.entries(fieldLabels).map(([key, label]) => {
@@ -135,7 +158,16 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
           })}
         </div>
         <div className={styles.actions}>
-          <button onClick={copy}>העתק</button>
+          <button
+            className={
+              single.gender === "זכר"
+                ? styles.maleCarouselButton
+                : styles.femaleCarouselButton
+            }
+            onClick={copy}
+          >
+            העתק
+          </button>
           <button className={styles.whatsapp} onClick={shareWhatsapp}>
             וואטסאפ
           </button>
@@ -146,4 +178,3 @@ const SingleModal: React.FC<Props> = ({ single, onClose }) => {
 };
 
 export default SingleModal;
-
