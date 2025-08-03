@@ -1,13 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import SingleCard, { Single } from '../components/SingleCard';
 
+const placeholderImage =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=';
+
 const publicSingles: Single[] = [
   {
     id: 'p1',
     name: 'Sara',
     age: 24,
     gender: 'female',
-    image: 'https://via.placeholder.com/150',
+    image: placeholderImage,
     details: 'Teacher and volunteer'
   },
   {
@@ -15,7 +18,7 @@ const publicSingles: Single[] = [
     name: 'Moshe',
     age: 29,
     gender: 'male',
-    image: 'https://via.placeholder.com/150',
+    image: placeholderImage,
     details: 'Engineer who likes chess'
   }
 ];

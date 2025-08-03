@@ -5,6 +5,7 @@ export interface Single {
   name: string;
   age: number;
   gender: string;
+  /** Base64-encoded image data */
   image: string;
   details: string;
 }
@@ -15,6 +16,11 @@ interface Props {
 
 const SingleCard: React.FC<Props> = ({ single }) => {
   const [open, setOpen] = useState(false);
+
+  const imgSrc =
+    single.image.startsWith('data:')
+      ? single.image
+      : `data:image/*;base64,${single.image}`;
 
   const copyCard = () => {
     const text = `${single.name}, ${single.age}, ${single.gender} - ${single.details}`;
@@ -28,7 +34,7 @@ const SingleCard: React.FC<Props> = ({ single }) => {
 
   return (
     <div style={{ border: '1px solid #ccc', margin: '0.5rem', padding: '0.5rem' }}>
-      <img src={single.image} alt={single.name} width={100} height={100} />
+      <img src={imgSrc} alt={single.name} width={100} height={100} />
       <div>
         <strong>{single.name}</strong> ({single.age})
       </div>
