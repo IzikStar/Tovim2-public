@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useParams,
+} from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
@@ -11,7 +17,9 @@ const SingleFormRoute: React.FC = () => {
   return matchmakerId ? (
     <SingleForm matchmakerId={matchmakerId} />
   ) : (
-    <div>Missing matchmaker ID</div>
+    <div>
+      מצטערים, אי אפשר להירשם מקישור זה, יש ליצור קשר עם אחד השדכנים שלנו...
+    </div>
   );
 };
 
@@ -19,11 +27,23 @@ const AppRoutes: React.FC = () => {
   const { token } = useAuth();
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={token ? "/dashboard" : "/login"} replace />} />
-      <Route path="/public" element={token ? <Public /> : <Navigate to="/login" replace />} />
+      <Route
+        path="/"
+        element={<Navigate to={token ? "/dashboard" : "/login"} replace />}
+      />
+      <Route
+        path="/public"
+        element={token ? <Public /> : <Navigate to="/login" replace />}
+      />
       <Route path="/single-form/:matchmakerId" element={<SingleFormRoute />} />
-      <Route path="/login" element={token ? <Navigate to="/dashboard" replace /> : <Login />} />
-      <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" replace />} />
+      <Route
+        path="/login"
+        element={token ? <Navigate to="/dashboard" replace /> : <Login />}
+      />
+      <Route
+        path="/dashboard"
+        element={token ? <Dashboard /> : <Navigate to="/login" replace />}
+      />
     </Routes>
   );
 };
