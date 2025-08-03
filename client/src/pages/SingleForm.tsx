@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
-
-interface Props {
-  matchmakerId: string;
-}
+import { useParams } from 'react-router-dom';
 
 interface FormData {
   name: string;
@@ -12,7 +9,8 @@ interface FormData {
   images: string[];
 }
 
-const SingleForm: React.FC<Props> = ({ matchmakerId }) => {
+const SingleForm: React.FC = () => {
+  const { matchmakerId } = useParams();
   const [form, setForm] = useState<FormData>({
     name: '',
     age: '',
@@ -20,6 +18,12 @@ const SingleForm: React.FC<Props> = ({ matchmakerId }) => {
     details: '',
     images: [],
   });
+  if (!matchmakerId)
+    return (
+      <div>
+        מצטערים, אי אפשר להירשם מקישור זה, יש ליצור קשר עם אחד השדכנים שלנו...
+      </div>
+    );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
