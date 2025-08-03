@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import apiService from "../services/api";
+import styles from "./Login.module.css";
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -23,8 +24,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="login-form">
-      {error && <div className="error">{error}</div>}
+    <form onSubmit={handleSubmit} className={styles.loginForm}>
+      {error && <div className={styles.error}>{error}</div>}
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}

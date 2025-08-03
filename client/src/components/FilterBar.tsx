@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   genders,
   sectors,
@@ -14,11 +14,13 @@ export interface FilterState {
   marriageStatus?: string;
   ethnicity?: string;
   interests?: string[];
+  search?: string;
 }
 
 interface Props {
   filters: FilterState;
   onChange: (f: FilterState) => void;
+  onClose?: () => void;
 }
 
 const makeHandler =
@@ -46,10 +48,38 @@ const toggleInterest =
     onChange({ ...filters, interests: arr.length ? arr : undefined });
   };
 
-const resetFilters = (onChange: (f: FilterState) => void) => () => onChange({});
+const FilterBar: React.FC<Props> = ({ filters, onChange, onClose }) => {
+  const [showInterests, setShowInterests] = useState(false);
 
-const FilterBar: React.FC<Props> = ({ filters, onChange }) => (
-  <div className={styles.filterBar}>
+  const handleReset = () => {
+    onChange({});
+    setShowInterests(false);
+    onClose?.();
+  };
+
+  const handleClose = () => {
+    setShowInterests(false);
+    onClose?.();
+  };
+
+  return (
+    <div className={styles.filterBar}>
+      {onClose && (
+        <button className={styles.closeBtn} onClick={handleClose}>
+          ✕
+        </button>
+      )}
+      <div className={styles.filterItem}>
+      <label>חיפוש שם</label>
+      <input
+        type="text"
+        value={filters.search || ""}
+        onChange={(e) =>
+          onChange({ ...filters, search: e.target.value || undefined })
+        }
+        placeholder="שם פרטי או משפחה"
+      />
+    </div>
     <div className={styles.filterItem}>
       <label>מין</label>
       <select
@@ -112,29 +142,41 @@ const FilterBar: React.FC<Props> = ({ filters, onChange }) => (
 
     <div className={styles.filterItem}>
       <label>תחומי עניין</label>
-      <div className={styles.interestsGroup}>
-        {interests.map((i) => (
-          <label key={i} className={styles.interestLabel}>
-            <input
-              type="checkbox"
-              className={styles.interestCheckbox}
-              checked={filters.interests?.includes(i) || false}
-              onChange={toggleInterest(i, filters, onChange)}
-            />
-            {i}
-          </label>
-        ))}
-      </div>
+      <button
+        type="button"
+        className={styles.interestsToggle}
+        onClick={() => setShowInterests((p) => !p)}
+      >
+        בחר תחומי עניין
+      </button>
+      {showInterests && (
+        <div className={styles.interestsModal}>
+          <div className={styles.interestsGroup}>
+            {interests.map((i) => (
+              <label key={i} className={styles.interestLabel}>
+                <input
+                  type="checkbox"
+                  className={styles.interestCheckbox}
+                  checked={filters.interests?.includes(i) || false}
+                  onChange={toggleInterest(i, filters, onChange)}
+                />
+                {i}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
 
     <button
       type="button"
       className={styles.resetBtn}
-      onClick={resetFilters(onChange)}
+      onClick={handleReset}
     >
       איפוס
     </button>
   </div>
-);
+  );
+};
 
 export default FilterBar;

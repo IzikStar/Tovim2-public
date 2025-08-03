@@ -75,15 +75,3 @@ select {
 .grid-break {
   grid-column: 1 / -1;
 }
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-width: 300px;
-  margin: 2rem auto;
-}
-
-.login-form .error {
-  color: red;
-}

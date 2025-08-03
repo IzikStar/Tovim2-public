@@ -1,0 +1,13 @@
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 300px;
+  margin: 2rem auto;
+}
+
+.error {
+  color: red;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}

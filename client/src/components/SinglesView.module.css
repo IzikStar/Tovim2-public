@@ -1,7 +1,6 @@
-/* SinglesView.module.css */
 .singlesView {
   min-height: 100vh;
-  background: linear-gradient(135deg, #e0f2fe 0%, #fce7f3 50%, #e1f5fe 100%);
+  background: linear-gradient(180deg, var(--pink) 0%, var(--light-blue) 100%);
   direction: rtl;
 }
 
@@ -183,7 +182,7 @@
 
 @media (max-width: 768px) {
   .contentWrapper {
-    padding-top: 140px; /* הרבה פחות רווח במובייל */
+    padding-top: 200px; /* מרווח גדול יותר כשהפילטר בר פתוח במובייל */
   }
 
   .randomBtnsContainer {
@@ -214,11 +213,6 @@
 }
 
 @media (max-width: 480px) {
-  .contentWrapper {
-    position: absolute;
-    top: 50%;
-  }
-
   .randomBtnsContainer {
     flex-direction: column;
     align-items: center;
@@ -244,6 +238,24 @@
     width: 100%;
     padding: 0 1rem;
   }
+}
+
+.openFiltersBtn {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #9ad5ff, #ff9ad5);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.openFiltersBtn:hover {
+  opacity: 0.9;
 }
 
 /* Animations */
