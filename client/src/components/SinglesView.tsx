@@ -19,6 +19,7 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   const [couple, setCouple] = useState<[Single, Single] | null>(null);
   const [selected, setSelected] = useState<Single | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -35,6 +36,7 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
       }
     };
     load();
+    if (window.innerWidth < 768) setShowFilters(false);
   }, [fetchSingles]);
 
   const filtered = singles.filter(
@@ -101,8 +103,24 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   if (loading) {
     return (
       <div className={styles.singlesView}>
-        <FilterBar filters={filters} onChange={handleFiltersChange} />
-        <div className={styles.contentWrapper}>
+        {showFilters ? (
+          <FilterBar
+            filters={filters}
+            onChange={handleFiltersChange}
+            onClose={() => setShowFilters(false)}
+          />
+        ) : (
+          <button
+            className={styles.openFiltersBtn}
+            onClick={() => setShowFilters(true)}
+          >
+            פילטרים
+          </button>
+        )}
+        <div
+          className={styles.contentWrapper}
+          style={{ paddingTop: showFilters ? undefined : "100px" }}
+        >
           <div className={styles.loadingState}>טוען נתונים...</div>
         </div>
       </div>
@@ -111,9 +129,25 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
 
   return (
     <div className={styles.singlesView}>
-      <FilterBar filters={filters} onChange={handleFiltersChange} />
+      {showFilters ? (
+        <FilterBar
+          filters={filters}
+          onChange={handleFiltersChange}
+          onClose={() => setShowFilters(false)}
+        />
+      ) : (
+        <button
+          className={styles.openFiltersBtn}
+          onClick={() => setShowFilters(true)}
+        >
+          פילטרים
+        </button>
+      )}
 
-      <div className={styles.contentWrapper}>
+      <div
+        className={styles.contentWrapper}
+        style={{ paddingTop: showFilters ? undefined : "100px" }}
+      >
         <div className={styles.randomBtnsContainer}>
           <button className={styles.randomBtn} onClick={showRandom}>
             כרטיס רנדומלי

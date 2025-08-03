@@ -19,6 +19,7 @@ export interface FilterState {
 interface Props {
   filters: FilterState;
   onChange: (f: FilterState) => void;
+  onClose?: () => void;
 }
 
 const makeHandler =
@@ -48,8 +49,13 @@ const toggleInterest =
 
 const resetFilters = (onChange: (f: FilterState) => void) => () => onChange({});
 
-const FilterBar: React.FC<Props> = ({ filters, onChange }) => (
+const FilterBar: React.FC<Props> = ({ filters, onChange, onClose }) => (
   <div className={styles.filterBar}>
+    {onClose && (
+      <button className={styles.closeBtn} onClick={onClose}>
+        ✕
+      </button>
+    )}
     <div className={styles.filterItem}>
       <label>מין</label>
       <select
@@ -112,19 +118,22 @@ const FilterBar: React.FC<Props> = ({ filters, onChange }) => (
 
     <div className={styles.filterItem}>
       <label>תחומי עניין</label>
-      <div className={styles.interestsGroup}>
-        {interests.map((i) => (
-          <label key={i} className={styles.interestLabel}>
-            <input
-              type="checkbox"
-              className={styles.interestCheckbox}
-              checked={filters.interests?.includes(i) || false}
-              onChange={toggleInterest(i, filters, onChange)}
-            />
-            {i}
-          </label>
-        ))}
-      </div>
+      <details className={styles.interestsCollapse}>
+        <summary>בחר תחומי עניין</summary>
+        <div className={styles.interestsGroup}>
+          {interests.map((i) => (
+            <label key={i} className={styles.interestLabel}>
+              <input
+                type="checkbox"
+                className={styles.interestCheckbox}
+                checked={filters.interests?.includes(i) || false}
+                onChange={toggleInterest(i, filters, onChange)}
+              />
+              {i}
+            </label>
+          ))}
+        </div>
+      </details>
     </div>
 
     <button
