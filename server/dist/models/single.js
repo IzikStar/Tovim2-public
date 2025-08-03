@@ -2,7 +2,8 @@ import { Schema, model, Types } from "mongoose";
 import { Gender, Sector, MarriageStatus, Ethnicity, Interest, ProposePreference, } from "./enums.js";
 const phoneRegex = /^\+?\d{7,15}$/;
 const emailRegex = /.+@.+\..+/;
-const urlRegex = /^https?:\/\//;
+// Images are expected to be sent as base64 data URIs
+const base64ImagePrefix = /^data:image\//;
 const ageRangeSchema = new Schema({
     min: { type: Number, min: 18 },
     max: { type: Number, min: 18 },
@@ -50,8 +51,8 @@ const singleSchema = new Schema({
         type: [String],
         default: [],
         validate: {
-            validator: (arr) => arr.every((u) => urlRegex.test(u)),
-            message: "Invalid image URL",
+            validator: (arr) => arr.every((img) => base64ImagePrefix.test(img)),
+            message: "Invalid base64 image",
         },
     },
     height: { type: Number, min: 50, max: 250 },
