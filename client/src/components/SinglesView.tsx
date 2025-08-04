@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import FilterBar, { FilterState } from "./FilterBar";
 import SingleCard from "./SingleCard";
 import SingleModal from "./SingleModal";
-import { Single, fakeSingles } from "../utils/fakeData";
+import { Single } from "../utils/types";
 import { genders } from "../utils/enums";
 import styles from "./SinglesView.module.css";
 
@@ -26,11 +26,11 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
     try {
       setLoading(true);
       const data = await fetchSingles();
-      setSingles([...data, ...fakeSingles]);
-      setAllSingles([...data, ...fakeSingles]);
+      setSingles(data);
+      setAllSingles(data);
     } catch {
-      setSingles(fakeSingles);
-      setAllSingles(fakeSingles);
+      setSingles([]);
+      setAllSingles([]);
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,8 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
         filters.interests.some((i) => s.interests?.includes(i))) &&
       (!filters.search ||
         s.firstName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        s.lastName.toLowerCase().includes(filters.search.toLowerCase()))
+        s.lastName.toLowerCase().includes(filters.search.toLowerCase())) &&
+      (filters.showTaken || !s.isTaken)
   );
 
   const showRandom = () => {

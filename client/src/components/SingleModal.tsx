@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Single } from "../utils/fakeData";
+import { Single } from "../utils/types";
 import styles from "./SingleModal.module.css";
 import apiService from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -148,8 +148,8 @@ const SingleModal: React.FC<Props> = ({ single, onClose, onRefresh }) => {
     window.open(url, "_blank");
   };
 
-  const markTaken = async () => {
-    await apiService.updateSingle(single.id, { isTaken: true });
+  const toggleTaken = async () => {
+    await apiService.updateSingle(single.id, { isTaken: !single.isTaken });
     onRefresh();
     onClose();
   };
@@ -222,10 +222,14 @@ const SingleModal: React.FC<Props> = ({ single, onClose, onRefresh }) => {
         </div>
         <div className={styles.actions}>
           <button
-            className={styles.maleCarouselButton}
-            onClick={markTaken}
+            className={
+              single.gender === "זכר"
+                ? styles.maleCarouselButton
+                : styles.femaleCarouselButton
+            }
+            onClick={toggleTaken}
           >
-            סמן כתפוס
+            {single.isTaken ? "סמן כפנוי" : "סמן כתפוס"}
           </button>
           <button
             className={styles.maleCarouselButton}

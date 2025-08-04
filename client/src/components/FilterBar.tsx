@@ -15,6 +15,7 @@ export interface FilterState {
   ethnicity?: string;
   interests?: string[];
   search?: string;
+  showTaken?: boolean;
 }
 
 interface Props {
@@ -166,6 +167,22 @@ const FilterBar: React.FC<Props> = ({ filters, onChange, onClose }) => {
           </div>
         </div>
       )}
+    </div>
+
+    <div className={styles.filterItem}>
+      <label>תפוס</label>
+      <select
+        value={filters.showTaken ? "all" : "available"}
+        onChange={(e) =>
+          onChange({
+            ...filters,
+            showTaken: e.target.value === "all" ? true : undefined,
+          })
+        }
+      >
+        <option value="available">פנויים בלבד</option>
+        <option value="all">כולל תפוסים</option>
+      </select>
     </div>
 
     <button

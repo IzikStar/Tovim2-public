@@ -67,7 +67,6 @@ router.get('/:id/singles', authenticate, async (req: AuthRequest, res) => {
   }
   const singles = await Single.find({
     matchMakers: req.params.id,
-    isTaken: false,
     marriedMatchmaker: { $exists: false },
   });
   res.json(singles);

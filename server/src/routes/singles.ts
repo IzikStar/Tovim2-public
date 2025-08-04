@@ -42,16 +42,22 @@ router.post('/bulk', authenticate, async (req: AuthRequest, res) => {
 });
 
 router.put('/:id', authenticate, async (req: AuthRequest, res) => {
-  const single = await Single.findById(req.params.id);
-  if (!single) {
-    return res.status(404).json({ error: 'Not found' });
+  try {
+    const single = await Single.findById(req.params.id);
+    if (!single) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    if (!single.matchMakers.map((id) => id.toString()).includes(req.matchMakerId!)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const updated = await Single.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ error: 'Failed to update single' });
   }
-  if (!single.matchMakers.map((id) => id.toString()).includes(req.matchMakerId!)) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  Object.assign(single, req.body);
-  await single.save();
-  res.json(single);
 });
 
 router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
@@ -69,7 +75,6 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
 router.get('/public', async (_req, res) => {
   const singles = await Single.find({
     isPublic: true,
-    isTaken: false,
     marriedMatchmaker: { $exists: false },
   });
   res.json(singles);
