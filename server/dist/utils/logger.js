@@ -1,8 +1,23 @@
-const log = (level, message, meta = {}) => {
-    const entry = { timestamp: new Date().toISOString(), level, message, ...meta };
-    console.log(JSON.stringify(entry));
+import util from 'util';
+const format = (level, message, meta) => {
+    const base = { timestamp: new Date().toISOString(), level, message, ...meta };
+    if (process.env.NODE_ENV === 'production') {
+        return JSON.stringify(base);
+    }
+    const metaString = Object.keys(meta).length
+        ? ' ' + util.inspect(meta, { depth: null, colors: true })
+        : '';
+    return `${base.timestamp} [${level.toUpperCase()}] ${message}${metaString}`;
 };
-export default {
-    info: (message, meta) => log('info', message, meta),
-    error: (message, meta) => log('error', message, meta),
+const logger = {
+    info: (message, meta = {}) => {
+        console.log(format('info', message, meta));
+    },
+    error: (message, meta = {}) => {
+        if (meta instanceof Error) {
+            meta = { error: meta.message, stack: meta.stack };
+        }
+        console.error(format('error', message, meta));
+    },
 };
+export default logger;

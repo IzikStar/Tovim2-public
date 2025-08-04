@@ -5,10 +5,15 @@ const requestLogger = (req: Request, res: Response, next: NextFunction): void =>
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
-    const { method, originalUrl } = req;
+    const { method, originalUrl: url } = req;
     const { statusCode } = res;
     const level: 'info' | 'error' = statusCode >= 400 ? 'error' : 'info';
-    logger[level](`${method} ${originalUrl} ${statusCode} ${duration}ms`);
+    logger[level]('HTTP request', {
+      method,
+      url,
+      statusCode,
+      duration,
+    });
   });
   next();
 };

@@ -16,6 +16,15 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+process.on('unhandledRejection', (err) => {
+  logger.error('Unhandled promise rejection', { err });
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught exception', { err });
+  process.exit(1);
+});
+
 // CORS configuration
 const corsOptions = {
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
