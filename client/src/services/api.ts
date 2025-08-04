@@ -33,20 +33,23 @@ class ApiService {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
+    const token = getCookie("token");
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(options.headers as Record<string, string> | undefined),
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const config: RequestInit = {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
       ...options,
+      headers,
     };
 
-    const token = getCookie("token");
     if (token) {
-      (
-        config.headers as Record<string, string>
-      ).Authorization = `Bearer ${token}`;
+      config.credentials = "include";
     }
 
     const response = await fetch(url, config);
