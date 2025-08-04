@@ -37,16 +37,23 @@ router.post('/bulk', authenticate, async (req, res) => {
     }
 });
 router.put('/:id', authenticate, async (req, res) => {
-    const single = await Single.findById(req.params.id);
-    if (!single) {
-        return res.status(404).json({ error: 'Not found' });
+    try {
+        const single = await Single.findById(req.params.id);
+        if (!single) {
+            return res.status(404).json({ error: 'Not found' });
+        }
+        if (!single.matchMakers.map((id) => id.toString()).includes(req.matchMakerId)) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+        const updated = await Single.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true,
+        });
+        res.json(updated);
     }
-    if (!single.matchMakers.map((id) => id.toString()).includes(req.matchMakerId)) {
-        return res.status(403).json({ error: 'Forbidden' });
+    catch (err) {
+        res.status(400).json({ error: 'Failed to update single' });
     }
-    Object.assign(single, req.body);
-    await single.save();
-    res.json(single);
 });
 router.delete('/:id', authenticate, async (req, res) => {
     const single = await Single.findById(req.params.id);
