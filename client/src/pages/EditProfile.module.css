@@ -51,3 +51,47 @@
   background: #2563eb;
 }
 
+/* Expert sectors multi-select */
+.sectorsToggle {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  direction: rtl;
+}
+
+.sectorsModal {
+  position: relative;
+}
+
+.sectorsGroup {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sectorLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  direction: rtl;
+}
+
+.sectorCheckbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+

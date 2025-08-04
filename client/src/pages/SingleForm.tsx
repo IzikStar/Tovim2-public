@@ -255,9 +255,11 @@ const SingleForm: React.FC = () => {
 בנינו במחשבה רבה ומעמיקה שאלון הכרות לא-שגרתי, עם כמה שאלות שאולי לא נשאלת עד היום.
 נשמח שתקדיש/י את הזמן הנדרש כדי לענות בצורה כנה ומדויקת – בשבילך ובשבילנו. כך תכיר/י את עצמך יותר טוב, וגם אנחנו נכיר אותך.
 
-מגזרי התמחות: ${matchmaker.expertSectors
-              .map((s) => sectorLabels[s] || s)
-              .join(', ')}.
+מגזרי התמחות: ${
+              (matchmaker.expertSectors || [])
+                .map((s) => sectorLabels[s] || s)
+                .join(', ')
+            }.
 חשוב לציין שטווח הגילאים שאנחנו משדכים הינו לרוב ${matchmaker.ageRange?.min}-${matchmaker.ageRange?.max}.
 כאן בשבילך,
 ${matchmaker.firstName} - ${matchmaker.phoneNumber}`}

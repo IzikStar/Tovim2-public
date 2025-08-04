@@ -7,6 +7,7 @@ import styles from "./EditProfile.module.css";
 const EditProfile: React.FC = () => {
   const { matchMakerId } = useAuth();
   const [form, setForm] = useState<MatchMaker | null>(null);
+  const [showSectors, setShowSectors] = useState(false);
 
   useEffect(() => {
     if (matchMakerId) {
@@ -22,12 +23,14 @@ const EditProfile: React.FC = () => {
     setForm({ ...form, [name]: value } as MatchMaker);
   };
 
-  const handleExpertSectors = (
-    e: React.ChangeEvent<HTMLSelectElement>
+  const toggleSector = (sector: string) => (
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (!form) return;
-    const values = Array.from(e.target.selectedOptions).map((o) => o.value);
-    setForm({ ...form, expertSectors: values });
+    const current = new Set(form.expertSectors || []);
+    if (e.target.checked) current.add(sector);
+    else current.delete(sector);
+    setForm({ ...form, expertSectors: Array.from(current) });
   };
 
   const handleAgeRange = (field: "min" | "max") => (
@@ -100,17 +103,30 @@ const EditProfile: React.FC = () => {
         </div>
         <div className={styles.field}>
           <label>מגזרים מומחים</label>
-          <select
-            multiple
-            value={form.expertSectors}
-            onChange={handleExpertSectors}
+          <button
+            type="button"
+            className={styles.sectorsToggle}
+            onClick={() => setShowSectors((p) => !p)}
           >
-            {sectors.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            בחר מגזרים
+          </button>
+          {showSectors && (
+            <div className={styles.sectorsModal}>
+              <div className={styles.sectorsGroup}>
+                {sectors.map((s) => (
+                  <label key={s} className={styles.sectorLabel}>
+                    <input
+                      type="checkbox"
+                      className={styles.sectorCheckbox}
+                      checked={form.expertSectors?.includes(s) || false}
+                      onChange={toggleSector(s)}
+                    />
+                    {s}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className={styles.field}>
           <label>טווח גילאים</label>
