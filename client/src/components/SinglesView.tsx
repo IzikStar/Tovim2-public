@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { Shuffle, Sparkles, UsersRound } from "lucide-react";
 import FilterBar, { FilterState } from "./FilterBar";
 import SingleCard from "./SingleCard";
 import SingleModal from "./SingleModal";
 import { Single } from "../utils/types";
 import { genders } from "../utils/enums";
-import styles from "./SinglesView.module.css";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 interface Props {
   fetchSingles: () => Promise<Single[]>;
@@ -54,11 +56,10 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
     (s) =>
       (!filters.gender || s.gender === filters.gender) &&
       (!filters.sector || s.sectors?.includes(filters.sector)) &&
-      (!filters.marriageStatus ||
-        s.marriageStatus === filters.marriageStatus) &&
+      (!filters.marriageStatus || s.marriageStatus === filters.marriageStatus) &&
       (!filters.ethnicity || s.ethnicity === filters.ethnicity) &&
       (!filters.interests?.length ||
-        filters.interests.some((i) => s.interests?.includes(i))) &&
+        filters.interests.some((interest) => s.interests?.includes(interest))) &&
       (!filters.search ||
         s.firstName.toLowerCase().includes(filters.search.toLowerCase()) ||
         s.lastName.toLowerCase().includes(filters.search.toLowerCase())) &&
@@ -66,20 +67,19 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
   );
 
   const showRandom = () => {
-    if (filtered.length === 0) return;
-    const rand = filtered[Math.floor(Math.random() * filtered.length)];
-    setHighlight(rand);
+    if (!filtered.length) return;
+    const random = filtered[Math.floor(Math.random() * filtered.length)];
+    setHighlight(random);
     setCouple(null);
   };
 
   const showRandomCouple = () => {
-    const males = filtered.filter(
-      (s) => s.gender === genders[0] || s.gender === "זכר"
-    );
+    const males = filtered.filter((s) => s.gender === genders[0] || s.gender === "זכר");
     const females = filtered.filter(
       (s) => s.gender === genders[1] || s.gender === "נקבה"
     );
-    if (males.length === 0 || females.length === 0) return;
+    if (!males.length || !females.length) return;
+
     const male = males[Math.floor(Math.random() * males.length)];
     const female = females[Math.floor(Math.random() * females.length)];
     setCouple([male, female]);
@@ -92,16 +92,16 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
     setCouple(null);
   };
 
-  const handleFiltersChange = (f: FilterState) => {
-    setFilters(f);
+  const handleFiltersChange = (nextFilters: FilterState) => {
+    setFilters(nextFilters);
     setSingles(allSingles);
     setHighlight(null);
     setCouple(null);
   };
 
-  const rest = filtered.filter((s) => {
-    if (highlight) return s.id !== highlight.id;
-    if (couple) return !couple.some((c) => c.id === s.id);
+  const rest = filtered.filter((single) => {
+    if (highlight) return single.id !== highlight.id;
+    if (couple) return !couple.some((chosen) => chosen.id === single.id);
     return true;
   });
 
@@ -109,76 +109,63 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
     ? async (single: Single) => {
         try {
           await onAddToPrivate(single);
-        } catch (e) {
-          console.error(e);
+        } catch (error) {
+          console.error(error);
         }
       }
     : undefined;
 
-  if (loading) {
-    return (
-      <div className={styles.singlesView}>
+  return (
+    <div className="page-shell">
+      <section className="mb-4 space-y-3">
         {showFilters ? (
           <FilterBar
             filters={filters}
             onChange={handleFiltersChange}
-            onClose={() => setShowFilters(false)}
+            onClose={isMobile ? () => setShowFilters(false) : undefined}
           />
         ) : (
-          <button
-            className={styles.openFiltersBtn}
-            onClick={() => setShowFilters(true)}
-          >
-            פילטרים
-          </button>
+          <Button variant="outline" onClick={() => setShowFilters(true)}>
+            פתח פילטרים
+          </Button>
         )}
-          <div
-            className={styles.contentWrapper}
-            style={{ paddingTop: showFilters ? (isMobile ? "200px" : undefined) : "100px" }}
-          >
-          <div className={styles.loadingState}>טוען נתונים...</div>
-        </div>
-      </div>
-    );
-  }
+      </section>
 
-  return (
-    <div className={styles.singlesView}>
-      {showFilters ? (
-        <FilterBar
-          filters={filters}
-          onChange={handleFiltersChange}
-          onClose={() => setShowFilters(false)}
-        />
+      <section className="mb-5 flex flex-wrap items-center justify-center gap-2 md:gap-3">
+        <Button variant="secondary" className="gap-2" onClick={showRandom}>
+          <Sparkles className="h-4 w-4" />
+          כרטיס רנדומלי
+        </Button>
+        <Button variant="accent" className="gap-2" onClick={showRandomCouple}>
+          <UsersRound className="h-4 w-4" />
+          זוג רנדומלי
+        </Button>
+        <Button variant="outline" className="gap-2" onClick={shuffleSingles}>
+          <Shuffle className="h-4 w-4" />
+          ערבב
+        </Button>
+      </section>
+
+      {loading ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>טוען נתונים</CardTitle>
+            <CardDescription>עוד רגע הרשימה תופיע</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-56 animate-pulse rounded-md bg-muted" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       ) : (
-        <button
-          className={styles.openFiltersBtn}
-          onClick={() => setShowFilters(true)}
-        >
-          פילטרים
-        </button>
-      )}
-
-      <div
-        className={styles.contentWrapper}
-        style={{ paddingTop: showFilters ? (isMobile ? "200px" : undefined) : "100px" }}
-      >
-        <div className={styles.randomBtnsContainer}>
-          <button className={styles.randomBtn} onClick={showRandom}>
-            כרטיס רנדומלי
-          </button>
-          <button className={styles.randomBtn} onClick={showRandomCouple}>
-            זוג רנדומלי
-          </button>
-          <button className={styles.randomBtn} onClick={shuffleSingles}>
-            ערבב
-          </button>
-        </div>
-
-        {highlight && (
-          <div className={styles.highlightSection}>
-            <div className={styles.singleGrid}>
-              <div>
+        <>
+          {highlight && (
+            <section className="mb-6">
+              <h3 className="mb-3 text-lg font-bold text-primary">נבחר אקראי</h3>
+              <div className="mx-auto max-w-sm">
                 <SingleCard
                   key={highlight.id}
                   single={highlight}
@@ -186,51 +173,51 @@ const SinglesView: React.FC<Props> = ({ fetchSingles, onAddToPrivate }) => {
                   onAddToPrivate={addHandler}
                 />
               </div>
-            </div>
-          </div>
-        )}
+            </section>
+          )}
 
-        {couple && (
-          <div className={styles.highlightSection}>
-            <div className={styles.singleGrid}>
-              {couple.map((s) => (
-                <div key={s.id}>
+          {couple && (
+            <section className="mb-6">
+              <h3 className="mb-3 text-lg font-bold text-primary">הצעת זוג</h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {couple.map((single) => (
                   <SingleCard
-                    single={s}
-                    onSelect={(single) => setSelected(single)}
+                    key={single.id}
+                    single={single}
+                    onSelect={(item) => setSelected(item)}
                     onAddToPrivate={addHandler}
                   />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                ))}
+              </div>
+            </section>
+          )}
 
-        {filtered.length === 0 ? (
-          <div className={styles.emptyState}>
-            <h3>לא נמצאו תוצאות</h3>
-            <p>נסה לשנות את הפילטרים או לאפס אותם כדי לראות יותר תוצאות</p>
-          </div>
-        ) : (
-          <div className={styles.singlesGrid}>
-            {rest.map((s) => (
-              <SingleCard
-                key={s.id}
-                single={s}
-                onSelect={(single) => setSelected(single)}
-                onAddToPrivate={addHandler}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+          {filtered.length === 0 ? (
+            <Card className="border-dashed bg-muted/40">
+              <CardHeader>
+                <CardTitle>לא נמצאו תוצאות</CardTitle>
+                <CardDescription>
+                  נסה לשנות פילטרים או לבצע איפוס כדי לראות כרטיסים נוספים.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ) : (
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {rest.map((single) => (
+                <SingleCard
+                  key={single.id}
+                  single={single}
+                  onSelect={(item) => setSelected(item)}
+                  onAddToPrivate={addHandler}
+                />
+              ))}
+            </section>
+          )}
+        </>
+      )}
 
       {selected && (
-        <SingleModal
-          single={selected}
-          onClose={() => setSelected(null)}
-          onRefresh={load}
-        />
+        <SingleModal single={selected} onClose={() => setSelected(null)} onRefresh={load} />
       )}
     </div>
   );

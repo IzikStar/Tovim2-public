@@ -1,186 +1,130 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import {
+  HeartHandshake,
+  Home,
+  LayoutDashboard,
+  Link2,
+  LogIn,
+  LogOut,
+  UserRoundPen,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import styles from "./Navbar.module.css";
+import { Button, buttonVariants } from "./ui/button";
+import { cn } from "../lib/utils";
 
-const HomeIcon = () => (
-  <svg
-    className={styles.navIcon}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-    />
-  </svg>
-);
-
-const DashboardIcon = () => (
-  <svg
-    className={styles.navIcon}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-    />
-  </svg>
-);
-
-const ShareIcon = () => (
-  <svg
-    className={styles.navIcon}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M13.828 10.172a4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.172-1.172m1.656-1.656a4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656L14.828 8"
-    />
-  </svg>
-);
-
-const HeartIcon = () => (
-  <svg
-    className={styles.navIcon}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.637l1.318-1.319a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
-    />
-  </svg>
-);
-
-const EditIcon = () => (
-  <svg
-    className={styles.navIcon}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"
-    />
-  </svg>
-);
-
-const LogoutIcon = () => (
-  <svg
-    className={styles.logoutIcon}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-    />
-  </svg>
-);
+const navLinkBase =
+  "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition";
 
 const Navbar: React.FC = () => {
   const { token, logout, matchMakerId } = useAuth();
 
   return (
-    <nav className={styles.navbar}>
-      {/* לוגו/מותג */}
-      <div className={styles.navbarBrand}>טובים השניים</div>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex min-h-[72px] w-full max-w-[1480px] flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
+        <div className="rounded-md bg-primary/10 px-3 py-1 text-sm font-bold text-primary md:text-base">
+          טובים השניים
+        </div>
 
-      {/* קישורי ניווט */}
-      {token && (
-        <div className={styles.navLinks}>
-          <NavLink
-            to="/public"
-            className={({ isActive }) =>
-              `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
-            }
-          >
-            <HomeIcon />
-            <span>מאגר ציבורי</span>
-          </NavLink>
-
-          <NavLink
-            to="/dashboard"
-            className={({ isActive }) =>
-              `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
-            }
-          >
-            <DashboardIcon />
-            <span>המאגר שלי</span>
-          </NavLink>
-
-          {matchMakerId && (
-            <a
-              href={`/single-form/${matchMakerId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.navLink}
-              onClick={() =>
-                navigator.clipboard.writeText(
-                  `${window.location.origin}/single-form/${matchMakerId}`
+        {token && (
+          <nav className="order-3 flex w-full flex-wrap items-center gap-2 md:order-2 md:w-auto">
+            <NavLink
+              to="/public"
+              className={({ isActive }) =>
+                cn(
+                  navLinkBase,
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-card hover:bg-muted"
                 )
               }
             >
-              <ShareIcon />
-              <span>טופס סינגל</span>
-            </a>
-          )}
-          <NavLink
-            to="/couples"
-            className={({ isActive }) =>
-              `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
-            }
-          >
-            <HeartIcon />
-            <span>זוגות שחיתנתי</span>
-          </NavLink>
-          <NavLink
-            to="/profile"
-            className={({ isActive }) =>
-              `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
-            }
-          >
-            <EditIcon />
-            <span>עריכת פרטים</span>
-          </NavLink>
-        </div>
-      )}
+              <Home className="h-4 w-4" />
+              <span>מאגר ציבורי</span>
+            </NavLink>
 
-      {/* אזור התחברות */}
-      <div className={styles.authSection}>
-        {token ? (
-          <button onClick={logout} className={styles.logoutBtn}>
-            <LogoutIcon />
-            <span>התנתק</span>
-          </button>
-        ) : (
-          <NavLink to="/login" className={styles.loginBtn}>
-            התחבר
-          </NavLink>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                cn(
+                  navLinkBase,
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-card hover:bg-muted"
+                )
+              }
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              <span>המאגר שלי</span>
+            </NavLink>
+
+            {matchMakerId && (
+              <a
+                href={`/single-form/${matchMakerId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(navLinkBase, "bg-card hover:bg-muted")}
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    `${window.location.origin}/single-form/${matchMakerId}`
+                  )
+                }
+              >
+                <Link2 className="h-4 w-4" />
+                <span>טופס סינגל</span>
+              </a>
+            )}
+
+            <NavLink
+              to="/couples"
+              className={({ isActive }) =>
+                cn(
+                  navLinkBase,
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-card hover:bg-muted"
+                )
+              }
+            >
+              <HeartHandshake className="h-4 w-4" />
+              <span>זוגות שחיתנתי</span>
+            </NavLink>
+
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                cn(
+                  navLinkBase,
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-card hover:bg-muted"
+                )
+              }
+            >
+              <UserRoundPen className="h-4 w-4" />
+              <span>עריכת פרטים</span>
+            </NavLink>
+          </nav>
         )}
+
+        <div className="order-2 md:order-3">
+          {token ? (
+            <Button variant="outline" onClick={logout} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              התנתק
+            </Button>
+          ) : (
+            <NavLink
+              to="/login"
+              className={cn(buttonVariants({ variant: "default" }), "gap-2")}
+            >
+              <LogIn className="h-4 w-4" />
+              התחבר
+            </NavLink>
+          )}
+        </div>
       </div>
-    </nav>
+    </header>
   );
 };
 

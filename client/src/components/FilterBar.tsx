@@ -6,7 +6,11 @@ import {
   ethnicities,
   interests,
 } from "../utils/enums";
-import styles from "./FilterBar.module.css";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Select } from "./ui/select";
 
 export interface FilterState {
   gender?: string;
@@ -64,135 +68,147 @@ const FilterBar: React.FC<Props> = ({ filters, onChange, onClose }) => {
   };
 
   return (
-    <div className={styles.filterBar}>
-      {onClose && (
-        <button className={styles.closeBtn} onClick={handleClose}>
-          ✕
-        </button>
-      )}
-      <div className={styles.filterItem}>
-      <label>חיפוש שם</label>
-      <input
-        type="text"
-        value={filters.search || ""}
-        onChange={(e) =>
-          onChange({ ...filters, search: e.target.value || undefined })
-        }
-        placeholder="שם פרטי או משפחה"
-      />
-    </div>
-    <div className={styles.filterItem}>
-      <label>מין</label>
-      <select
-        value={filters.gender || ""}
-        onChange={makeHandler("gender", filters, onChange)}
-      >
-        <option value="">כל המינים</option>
-        {genders.map((g) => (
-          <option key={g} value={g}>
-            {g}
-          </option>
-        ))}
-      </select>
-    </div>
+    <div className="rounded-xl border border-border/80 bg-card/95 p-4 shadow-md backdrop-blur md:p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-bold text-foreground md:text-base">פילטרים</h3>
+        {onClose && (
+          <Button variant="ghost" size="sm" onClick={handleClose}>
+            סגור
+          </Button>
+        )}
+      </div>
 
-    <div className={styles.filterItem}>
-      <label>מגזר</label>
-      <select
-        value={filters.sector || ""}
-        onChange={makeHandler("sector", filters, onChange)}
-      >
-        <option value="">כל המגזרים</option>
-        {sectors.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
-    </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="search">חיפוש שם</Label>
+          <Input
+            id="search"
+            value={filters.search || ""}
+            onChange={(e) =>
+              onChange({ ...filters, search: e.target.value || undefined })
+            }
+            placeholder="שם פרטי או משפחה"
+          />
+        </div>
 
-    <div className={styles.filterItem}>
-      <label>מצב משפחתי</label>
-      <select
-        value={filters.marriageStatus || ""}
-        onChange={makeHandler("marriageStatus", filters, onChange)}
-      >
-        <option value="">כל המצבים</option>
-        {marriageStatuses.map((m) => (
-          <option key={m} value={m}>
-            {m}
-          </option>
-        ))}
-      </select>
-    </div>
+        <div className="space-y-2">
+          <Label htmlFor="gender">מין</Label>
+          <Select
+            id="gender"
+            value={filters.gender || ""}
+            onChange={makeHandler("gender", filters, onChange)}
+          >
+            <option value="">כל המינים</option>
+            {genders.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </Select>
+        </div>
 
-    <div className={styles.filterItem}>
-      <label>עדה</label>
-      <select
-        value={filters.ethnicity || ""}
-        onChange={makeHandler("ethnicity", filters, onChange)}
-      >
-        <option value="">כל העדות</option>
-        {ethnicities.map((e) => (
-          <option key={e} value={e}>
-            {e}
-          </option>
-        ))}
-      </select>
-    </div>
+        <div className="space-y-2">
+          <Label htmlFor="sector">מגזר</Label>
+          <Select
+            id="sector"
+            value={filters.sector || ""}
+            onChange={makeHandler("sector", filters, onChange)}
+          >
+            <option value="">כל המגזרים</option>
+            {sectors.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </Select>
+        </div>
 
-    <div className={styles.filterItem}>
-      <label>תחומי עניין</label>
-      <button
-        type="button"
-        className={styles.interestsToggle}
-        onClick={() => setShowInterests((p) => !p)}
-      >
-        בחר תחומי עניין
-      </button>
-      {showInterests && (
-        <div className={styles.interestsModal}>
-          <div className={styles.interestsGroup}>
-            {interests.map((i) => (
-              <label key={i} className={styles.interestLabel}>
-                <input
-                  type="checkbox"
-                  className={styles.interestCheckbox}
-                  checked={filters.interests?.includes(i) || false}
-                  onChange={toggleInterest(i, filters, onChange)}
+        <div className="space-y-2">
+          <Label htmlFor="marriage-status">מצב משפחתי</Label>
+          <Select
+            id="marriage-status"
+            value={filters.marriageStatus || ""}
+            onChange={makeHandler("marriageStatus", filters, onChange)}
+          >
+            <option value="">כל המצבים</option>
+            {marriageStatuses.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="ethnicity">עדה</Label>
+          <Select
+            id="ethnicity"
+            value={filters.ethnicity || ""}
+            onChange={makeHandler("ethnicity", filters, onChange)}
+          >
+            <option value="">כל העדות</option>
+            {ethnicities.map((ethnicity) => (
+              <option key={ethnicity} value={ethnicity}>
+                {ethnicity}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="taken">תפוס</Label>
+          <Select
+            id="taken"
+            value={filters.showTaken ? "all" : "available"}
+            onChange={(e) =>
+              onChange({
+                ...filters,
+                showTaken: e.target.value === "all" ? true : undefined,
+              })
+            }
+          >
+            <option value="available">פנויים בלבד</option>
+            <option value="all">כולל תפוסים</option>
+          </Select>
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-lg border border-border/70 bg-muted/45 p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <Label>תחומי עניין</Label>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowInterests((prev) => !prev)}
+          >
+            {showInterests ? "הסתר" : "בחר תחומים"}
+          </Button>
+        </div>
+
+        {showInterests && (
+          <div className="grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-md border border-border/60 bg-card p-2 sm:grid-cols-3 md:grid-cols-4">
+            {interests.map((interest) => (
+              <label
+                key={interest}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted"
+              >
+                <Checkbox
+                  checked={filters.interests?.includes(interest) || false}
+                  onChange={toggleInterest(interest, filters, onChange)}
                 />
-                {i}
+                <span className="truncate">{interest}</span>
               </label>
             ))}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
 
-    <div className={styles.filterItem}>
-      <label>תפוס</label>
-      <select
-        value={filters.showTaken ? "all" : "available"}
-        onChange={(e) =>
-          onChange({
-            ...filters,
-            showTaken: e.target.value === "all" ? true : undefined,
-          })
-        }
-      >
-        <option value="available">פנויים בלבד</option>
-        <option value="all">כולל תפוסים</option>
-      </select>
+      <div className="mt-4 flex justify-end">
+        <Button variant="secondary" onClick={handleReset}>
+          איפוס
+        </Button>
+      </div>
     </div>
-
-    <button
-      type="button"
-      className={styles.resetBtn}
-      onClick={handleReset}
-    >
-      איפוס
-    </button>
-  </div>
   );
 };
 

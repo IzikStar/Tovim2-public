@@ -1,18 +1,22 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
-  marriageStatuses,
-  sectors,
   ethnicities,
   interests,
+  marriageStatuses,
   proposePreferences,
   sectorLabels,
-} from '../utils/enums';
-import apiService, { MatchMaker } from '../services/api';
-import { baseURL } from '../config';
-import styles from './SingleForm.module.css';
-import ProgressBar from '../components/ProgressBar';
-import QuestionBlock from '../components/QuestionBlock';
+  sectors,
+} from "../utils/enums";
+import apiService, { MatchMaker } from "../services/api";
+import { baseURL } from "../config";
+import ProgressBar from "../components/ProgressBar";
+import QuestionBlock from "../components/QuestionBlock";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Select } from "../components/ui/select";
+import { Textarea } from "../components/ui/textarea";
 
 interface FormData {
   firstName: string;
@@ -50,60 +54,65 @@ interface FormData {
 }
 
 const initialForm: FormData = {
-  firstName: '',
-  lastName: '',
+  firstName: "",
+  lastName: "",
   marriageStatus: marriageStatuses[0],
-  age: '',
-  height: '',
+  age: "",
+  height: "",
   ethnicity: ethnicities[0],
-  customEthnicity: '',
-  city: '',
+  customEthnicity: "",
+  city: "",
   sector: sectors[0],
-  customSector: '',
-  workAndStudyPlaces: [''],
-  currentOccupation: '',
-  basicDescription: '',
-  freeDescription: '',
+  customSector: "",
+  workAndStudyPlaces: [""],
+  currentOccupation: "",
+  basicDescription: "",
+  freeDescription: "",
   interests: [],
-  otherInterests: [''],
-  futureVision: '',
-  nonCompromisableAttributes: ['', '', '', ''],
-  lookingForAttributes: [''],
-  appearanceMustHave: '',
-  appearanceMustNotHave: '',
-  generalDealBreakers: '',
-  existingMatchProfile: '',
-  shareInWhatsappGroups: 'לא',
+  otherInterests: [""],
+  futureVision: "",
+  nonCompromisableAttributes: ["", "", "", ""],
+  lookingForAttributes: [""],
+  appearanceMustHave: "",
+  appearanceMustNotHave: "",
+  generalDealBreakers: "",
+  existingMatchProfile: "",
+  shareInWhatsappGroups: "לא",
   proposePreference: proposePreferences[2],
-  phoneNumber: '',
-  referencePhones: [''],
+  phoneNumber: "",
+  referencePhones: [""],
   images: [],
-  nameForPrayer: '',
-  referralSource: '',
-  matchmakerExpectations: '',
-  addToPublic: 'לא',
+  nameForPrayer: "",
+  referralSource: "",
+  matchmakerExpectations: "",
+  addToPublic: "לא",
 };
 
 const SingleForm: React.FC = () => {
   const { matchmakerId } = useParams();
   const [form, setForm] = useState<FormData>(initialForm);
   const [matchmaker, setMatchmaker] = useState<MatchMaker | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (matchmakerId) {
-      apiService
-        .getMatchmaker(matchmakerId)
-        .then(setMatchmaker)
-        .catch((err) => console.error('failed to load matchmaker', err));
-    }
+    if (!matchmakerId) return;
+    apiService
+      .getMatchmaker(matchmakerId)
+      .then(setMatchmaker)
+      .catch((err) => console.error("failed to load matchmaker", err));
   }, [matchmakerId]);
 
-  if (!matchmakerId)
+  if (!matchmakerId) {
     return (
-      <div>
-        מצטערים, אי אפשר להירשם מקישור זה, יש ליצור קשר עם אחד השדכנים שלנו...
+      <div className="page-shell">
+        <Card>
+          <CardContent className="p-6 text-center text-sm md:text-base">
+            מצטערים, אי אפשר להירשם מקישור זה. יש ליצור קשר עם אחד השדכנים שלנו.
+          </CardContent>
+        </Card>
       </div>
     );
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -137,13 +146,14 @@ const SingleForm: React.FC = () => {
         reader.readAsDataURL(file);
       });
     });
-    Promise.all(readers).then((images) => setForm((f) => ({ ...f, images })));
+    Promise.all(readers).then((images) => setForm((prev) => ({ ...prev, images })));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const birthDate = new Date();
     birthDate.setFullYear(birthDate.getFullYear() - Number(form.age));
+
     const payload = {
       firstName: form.firstName,
       lastName: form.lastName,
@@ -168,7 +178,7 @@ const SingleForm: React.FC = () => {
       appearanceMustNotHave: form.appearanceMustNotHave || undefined,
       generalDealBreakers: form.generalDealBreakers || undefined,
       existingMatchProfile: form.existingMatchProfile || undefined,
-      shareInWhatsappGroups: form.shareInWhatsappGroups === 'כן',
+      shareInWhatsappGroups: form.shareInWhatsappGroups === "כן",
       proposePreference: form.proposePreference,
       phoneNumber: form.phoneNumber,
       referencePhones: form.referencePhones.filter(Boolean),
@@ -176,57 +186,61 @@ const SingleForm: React.FC = () => {
       nameForPrayer: form.nameForPrayer || undefined,
       referralSource: form.referralSource || undefined,
       matchmakerExpectations: form.matchmakerExpectations || undefined,
-      isPublic: form.addToPublic === 'כן',
+      isPublic: form.addToPublic === "כן",
     };
+
+    setSubmitting(true);
     try {
       const res = await fetch(
-        `${baseURL || 'http://localhost:3000'}/singles/register/${matchmakerId}`,
+        `${baseURL || "http://localhost:3000"}/singles/register/${matchmakerId}`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }
       );
-      if (!res.ok) throw new Error('Failed to submit');
-      alert('פרטים נשלחו לשדכן');
+      if (!res.ok) throw new Error("Failed to submit");
+      alert("הפרטים נשלחו לשדכן");
       setForm(initialForm);
     } catch (err) {
       console.error(err);
-      alert('שגיאה בשליחת הטופס');
+      alert("שגיאה בשליחת הטופס");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const questionKeys: (keyof FormData)[] = useMemo(
     () => [
-      'firstName',
-      'lastName',
-      'marriageStatus',
-      'age',
-      'height',
-      'ethnicity',
-      'city',
-      'sector',
-      'workAndStudyPlaces',
-      'currentOccupation',
-      'basicDescription',
-      'freeDescription',
-      'interests',
-      'futureVision',
-      'nonCompromisableAttributes',
-      'lookingForAttributes',
-      'appearanceMustHave',
-      'appearanceMustNotHave',
-      'generalDealBreakers',
-      'existingMatchProfile',
-      'shareInWhatsappGroups',
-      'addToPublic',
-      'proposePreference',
-      'phoneNumber',
-      'referencePhones',
-      'images',
-      'nameForPrayer',
-      'referralSource',
-      'matchmakerExpectations',
+      "firstName",
+      "lastName",
+      "marriageStatus",
+      "age",
+      "height",
+      "ethnicity",
+      "city",
+      "sector",
+      "workAndStudyPlaces",
+      "currentOccupation",
+      "basicDescription",
+      "freeDescription",
+      "interests",
+      "futureVision",
+      "nonCompromisableAttributes",
+      "lookingForAttributes",
+      "appearanceMustHave",
+      "appearanceMustNotHave",
+      "generalDealBreakers",
+      "existingMatchProfile",
+      "shareInWhatsappGroups",
+      "addToPublic",
+      "proposePreference",
+      "phoneNumber",
+      "referencePhones",
+      "images",
+      "nameForPrayer",
+      "referralSource",
+      "matchmakerExpectations",
     ],
     []
   );
@@ -234,67 +248,78 @@ const SingleForm: React.FC = () => {
   const progress = useMemo(() => {
     const answered = questionKeys.filter((key) => {
       const value = form[key];
-      if (Array.isArray(value)) {
-        return value.some((v) => v);
-      }
-      return value !== '' && value !== undefined && value !== null;
+      if (Array.isArray(value)) return value.some((v) => v);
+      return value !== "" && value !== undefined && value !== null;
     }).length;
     return Math.round((answered / questionKeys.length) * 100);
   }, [form, questionKeys]);
 
   return (
-    <div className={styles.container}>
+    <div className="page-shell mx-auto max-w-5xl">
       <ProgressBar percent={progress} />
-      <h2>שאלון הכרות</h2>
+
+      <div className="mb-5">
+        <h2 className="text-2xl font-extrabold text-foreground">שאלון היכרות</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          נשמח שתענה בכנות ובפירוט. המידע מסייע להתאמה מדויקת יותר.
+        </p>
+      </div>
+
       {matchmaker && (
-        <div style={{ whiteSpace: 'pre-line', marginBottom: '1rem' }}>
-          <p>
-            {`שלום לך,
-אנחנו שמחים שהגעת למאגר שלנו.
-
-בנינו במחשבה רבה ומעמיקה שאלון הכרות לא-שגרתי, עם כמה שאלות שאולי לא נשאלת עד היום.
-נשמח שתקדיש/י את הזמן הנדרש כדי לענות בצורה כנה ומדויקת – בשבילך ובשבילנו. כך תכיר/י את עצמך יותר טוב, וגם אנחנו נכיר אותך.
-
-מגזרי התמחות: ${
-              (matchmaker.expertSectors || [])
-                .map((s) => sectorLabels[s] || s)
-                .join(', ')
-            }.
-חשוב לציין שטווח הגילאים שאנחנו משדכים הינו לרוב ${matchmaker.ageRange?.min}-${matchmaker.ageRange?.max}.
-כאן בשבילך,
-${matchmaker.firstName} - ${matchmaker.phoneNumber}`}
-          </p>
-        </div>
+        <Card className="mb-4 border-primary/20 bg-primary/5">
+          <CardContent className="space-y-2 p-4 text-sm leading-6">
+            <p>שלום לך, אנחנו שמחים שהגעת למאגר שלנו.</p>
+            <p>
+              מגזרי התמחות:{" "}
+              {(matchmaker.expertSectors || [])
+                .map((sector) => sectorLabels[sector] || sector)
+                .join(", ")}
+              .
+            </p>
+            <p>
+              טווח גילאים מקובל: {matchmaker.ageRange?.min}-{matchmaker.ageRange?.max}
+            </p>
+            <p>
+              כאן בשבילך, {matchmaker.firstName} - {matchmaker.phoneNumber}
+            </p>
+          </CardContent>
+        </Card>
       )}
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <QuestionBlock label="😃 שם פרטי:">
-          <input name="firstName" value={form.firstName} onChange={handleChange} required />
+
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <QuestionBlock label="שם פרטי">
+          <Input name="firstName" value={form.firstName} onChange={handleChange} required />
         </QuestionBlock>
-        <QuestionBlock label="👨‍👩‍👧‍👦 שם משפחה:">
-          <input name="lastName" value={form.lastName} onChange={handleChange} required />
+
+        <QuestionBlock label="שם משפחה">
+          <Input name="lastName" value={form.lastName} onChange={handleChange} required />
         </QuestionBlock>
-        <QuestionBlock label="👤 סטטוס:">
-          <select name="marriageStatus" value={form.marriageStatus} onChange={handleChange}>
-            {marriageStatuses.map((s) => (
-              <option key={s}>{s}</option>
+
+        <QuestionBlock label="סטטוס">
+          <Select name="marriageStatus" value={form.marriageStatus} onChange={handleChange}>
+            {marriageStatuses.map((status) => (
+              <option key={status}>{status}</option>
             ))}
-          </select>
+          </Select>
         </QuestionBlock>
-        <QuestionBlock label="🎂 גיל:">
-          <input type="number" name="age" value={form.age} onChange={handleChange} required />
+
+        <QuestionBlock label="גיל">
+          <Input type="number" name="age" value={form.age} onChange={handleChange} required />
         </QuestionBlock>
-        <QuestionBlock label="🌱 גובה:">
-          <input type="number" name="height" value={form.height} onChange={handleChange} />
+
+        <QuestionBlock label="גובה">
+          <Input type="number" name="height" value={form.height} onChange={handleChange} />
         </QuestionBlock>
-        <QuestionBlock label="🕍 עדה:">
+
+        <QuestionBlock label="עדה">
           <>
-            <select name="ethnicity" value={form.ethnicity} onChange={handleChange}>
-              {ethnicities.map((e) => (
-                <option key={e}>{e}</option>
+            <Select name="ethnicity" value={form.ethnicity} onChange={handleChange}>
+              {ethnicities.map((ethnicity) => (
+                <option key={ethnicity}>{ethnicity}</option>
               ))}
-            </select>
-            {form.ethnicity === 'אחר/ת' && (
-              <input
+            </Select>
+            {form.ethnicity === "אחר/ת" && (
+              <Input
                 name="customEthnicity"
                 value={form.customEthnicity}
                 onChange={handleChange}
@@ -303,18 +328,20 @@ ${matchmaker.firstName} - ${matchmaker.phoneNumber}`}
             )}
           </>
         </QuestionBlock>
-        <QuestionBlock label="🏠 מקום מגורים:">
-          <input name="city" value={form.city} onChange={handleChange} required />
+
+        <QuestionBlock label="מקום מגורים">
+          <Input name="city" value={form.city} onChange={handleChange} required />
         </QuestionBlock>
-        <QuestionBlock label="🫱🏿‍🫲🏻 סגנון דתי:">
+
+        <QuestionBlock label="סגנון דתי">
           <>
-            <select name="sector" value={form.sector} onChange={handleChange}>
+            <Select name="sector" value={form.sector} onChange={handleChange}>
               {sectors.map((opt) => (
                 <option key={opt}>{opt}</option>
               ))}
-            </select>
-            {form.sector === 'אחר/ת' && (
-              <input
+            </Select>
+            {form.sector === "אחר/ת" && (
+              <Input
                 name="customSector"
                 value={form.customSector}
                 onChange={handleChange}
@@ -323,261 +350,260 @@ ${matchmaker.firstName} - ${matchmaker.phoneNumber}`}
             )}
           </>
         </QuestionBlock>
-        <QuestionBlock label="👩‍🏫 מוסדות לימוד שלמדת בהם ומקומות שעבדת בהם במהלך החיים (נא לפרט):">
+
+        <QuestionBlock label="מוסדות לימוד ומקומות עבודה לאורך החיים">
           <>
-            {form.workAndStudyPlaces.map((w, idx) => (
-              <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                <input
-                  value={w}
-                  onChange={(e) => updateArray('workAndStudyPlaces', idx, e.target.value)}
-                />
-              </div>
+            {form.workAndStudyPlaces.map((item, idx) => (
+              <Input
+                key={idx}
+                value={item}
+                onChange={(e) => updateArray("workAndStudyPlaces", idx, e.target.value)}
+              />
             ))}
-            <button
-              type="button"
-              className={styles.iconButton}
-              onClick={() => addArrayItem('workAndStudyPlaces', '')}
-              aria-label="הוסף מקום"
+            <Button
+              variant="secondary"
+              onClick={() => addArrayItem("workAndStudyPlaces", "")}
             >
-              ➕
-            </button>
+              הוסף שורה
+            </Button>
           </>
         </QuestionBlock>
-        <QuestionBlock label="🎓 מה את/ה עושה בחיים כיום (נא לפרט):">
-          <textarea
+
+        <QuestionBlock label="מה את/ה עושה כיום">
+          <Textarea
             name="currentOccupation"
             value={form.currentOccupation}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="📝 ספר/י לנו על עצמך בצורה טכנית (דתית, אופי וכו׳):">
-          <textarea
+
+        <QuestionBlock label="ספר/י על עצמך בצורה תכל'סית">
+          <Textarea
             name="basicDescription"
             value={form.basicDescription}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="🤓 ספר/י לנו על עצמך דברים נוספים, בצורה הכי מעניינת! (פרטי טריוויה):">
-          <textarea
+
+        <QuestionBlock label="ספר/י על עצמך מעבר לסטנדרט">
+          <Textarea
             name="freeDescription"
             value={form.freeDescription}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="🏓 תחומי עניין בולטים שלך:">
+
+        <QuestionBlock label="תחומי עניין">
           <>
-            {form.interests.map((i, idx) => (
-              <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                <select
-                  value={i}
-                  onChange={(e) => updateArray('interests', idx, e.target.value)}
-                >
-                  {interests.map((opt) => (
-                    <option key={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-            <button
-              type="button"
-              className={styles.iconButton}
-              onClick={() => addArrayItem('interests', interests[0])}
-              aria-label="הוסף תחום עניין"
-            >
-              ➕
-            </button>
-            {form.interests.includes('אחר/ת') && (
-              <>
-                {form.otherInterests.map((o, idx) => (
-                  <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                    <input
-                      value={o}
-                      onChange={(e) => updateArray('otherInterests', idx, e.target.value)}
-                      placeholder="פרט"
-                    />
-                  </div>
+            {form.interests.map((item, idx) => (
+              <Select
+                key={idx}
+                value={item}
+                onChange={(e) => updateArray("interests", idx, e.target.value)}
+              >
+                {interests.map((opt) => (
+                  <option key={opt}>{opt}</option>
                 ))}
-                <button
-                  type="button"
-                  className={styles.iconButton}
-                  onClick={() => addArrayItem('otherInterests', '')}
-                  aria-label="הוסף תחום נוסף"
+              </Select>
+            ))}
+            <Button variant="secondary" onClick={() => addArrayItem("interests", interests[0])}>
+              הוסף תחום עניין
+            </Button>
+
+            {form.interests.includes("אחר/ת") && (
+              <>
+                {form.otherInterests.map((item, idx) => (
+                  <Input
+                    key={idx}
+                    value={item}
+                    onChange={(e) => updateArray("otherInterests", idx, e.target.value)}
+                    placeholder="תחום נוסף"
+                  />
+                ))}
+                <Button
+                  variant="secondary"
+                  onClick={() => addArrayItem("otherInterests", "")}
                 >
-                  ➕
-                </button>
+                  הוסף תחום נוסף
+                </Button>
               </>
             )}
           </>
         </QuestionBlock>
-        <QuestionBlock label="🧑‍🎓 איפה את/ה רואה את עצמך בעתיד:">
-          <textarea
+
+        <QuestionBlock label="איפה את/ה רואה את עצמך בעתיד">
+          <Textarea
             name="futureVision"
             value={form.futureVision}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="💍 ארבעה דברים (!) שקריטיים לך שיהיו בבן/ת הזוג (בלי – לא תצא/י לדייט):">
+
+        <QuestionBlock label="4 דברים קריטיים בבן/בת זוג">
           <>
-            {form.nonCompromisableAttributes.map((a, idx) => (
-              <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                <input
-                  value={a}
-                  onChange={(e) =>
-                    updateArray('nonCompromisableAttributes', idx, e.target.value)
-                  }
-                />
-              </div>
+            {form.nonCompromisableAttributes.map((item, idx) => (
+              <Input
+                key={idx}
+                value={item}
+                onChange={(e) =>
+                  updateArray("nonCompromisableAttributes", idx, e.target.value)
+                }
+              />
             ))}
           </>
         </QuestionBlock>
-        <QuestionBlock label="🔍 מה עוד תשמח/י שיהיה בבן/ת הזוג אבל תוכל/י להסתדר גם בלעדיהם:">
+
+        <QuestionBlock label="מה עוד תשמח/י שיהיה בבן/בת הזוג">
           <>
-            {form.lookingForAttributes.map((a, idx) => (
-              <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                <input
-                  value={a}
-                  onChange={(e) => updateArray('lookingForAttributes', idx, e.target.value)}
-                />
-              </div>
+            {form.lookingForAttributes.map((item, idx) => (
+              <Input
+                key={idx}
+                value={item}
+                onChange={(e) => updateArray("lookingForAttributes", idx, e.target.value)}
+              />
             ))}
-            <button
-              type="button"
-              className={styles.iconButton}
-              onClick={() => addArrayItem('lookingForAttributes', '')}
-              aria-label="הוסף תכונה"
+            <Button
+              variant="secondary"
+              onClick={() => addArrayItem("lookingForAttributes", "")}
             >
-              ➕
-            </button>
+              הוסף תכונה
+            </Button>
           </>
         </QuestionBlock>
-        <QuestionBlock label="👀 מה חשוב לך שיהיה בבן/בת מבחינה חיצונית?">
-          <textarea
+
+        <QuestionBlock label="מה חשוב במראה חיצוני">
+          <Textarea
             name="appearanceMustHave"
             value={form.appearanceMustHave}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="🚫 מה חשוב לך שלא יהיה בבן/בת מבחינה חיצונית?">
-          <textarea
+
+        <QuestionBlock label="מה לא מקובל במראה חיצוני">
+          <Textarea
             name="appearanceMustNotHave"
             value={form.appearanceMustNotHave}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="👎 מה חשוב לך שלא יהיה בבן/ת הזוג (תכונות, עיסוק, עדה וכו׳):">
-          <textarea
+
+        <QuestionBlock label="Deal breakers כלליים">
+          <Textarea
             name="generalDealBreakers"
             value={form.generalDealBreakers}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="💳 העתק/העתיקי לכאן את כרטיס השידוכים הרגיל שלך (לעינינו בלבד):">
-          <textarea
+
+        <QuestionBlock label="כרטיס שידוכים קיים">
+          <Textarea
             name="existingMatchProfile"
             value={form.existingMatchProfile}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="📩 האם תרצה/י שנשלח את הכרטיס שצירפת בקבוצות ווטסאפ יעודיות, כך שיהיו לנו הצעות רבות יותר?">
-          <select
+
+        <QuestionBlock label="האם לשתף בקבוצות וואטסאפ">
+          <Select
             name="shareInWhatsappGroups"
             value={form.shareInWhatsappGroups}
             onChange={handleChange}
           >
             <option>כן</option>
             <option>לא</option>
-          </select>
+          </Select>
         </QuestionBlock>
-        <QuestionBlock label="📂 האם להוסיף למאגר הציבורי של השדכנים?">
-          <select
-            name="addToPublic"
-            value={form.addToPublic}
-            onChange={handleChange}
-          >
+
+        <QuestionBlock label="להוסיף למאגר הציבורי של השדכנים">
+          <Select name="addToPublic" value={form.addToPublic} onChange={handleChange}>
             <option>כן</option>
             <option>לא</option>
-          </select>
+          </Select>
         </QuestionBlock>
-        <QuestionBlock label="✅ במידה ויש רעיון להצעה, תרצ/י שנציע קודם לך או לצד השני?">
-          <select
+
+        <QuestionBlock label="אם יש רעיון, למי להציע קודם">
+          <Select
             name="proposePreference"
             value={form.proposePreference}
             onChange={handleChange}
           >
-            {proposePreferences.map((p) => (
-              <option key={p}>{p}</option>
+            {proposePreferences.map((preference) => (
+              <option key={preference}>{preference}</option>
             ))}
-          </select>
+          </Select>
         </QuestionBlock>
-        <QuestionBlock label="📱 מספר טלפון שלך:">
-          <input
+
+        <QuestionBlock label="מספר טלפון שלך">
+          <Input
             name="phoneNumber"
             value={form.phoneNumber}
             onChange={handleChange}
             required
           />
         </QuestionBlock>
-        <QuestionBlock label="📞 מספרים לבירור (מספר ושם):">
+
+        <QuestionBlock label="מספרים לבירור (שם + טלפון)">
           <>
-            {form.referencePhones.map((r, idx) => (
-              <div key={idx} style={{ marginBottom: '0.5rem' }}>
-                <input
-                  value={r}
-                  onChange={(e) => updateArray('referencePhones', idx, e.target.value)}
-                />
-              </div>
+            {form.referencePhones.map((item, idx) => (
+              <Input
+                key={idx}
+                value={item}
+                onChange={(e) => updateArray("referencePhones", idx, e.target.value)}
+              />
             ))}
-            <button
-              type="button"
-              className={styles.iconButton}
-              onClick={() => addArrayItem('referencePhones', '')}
-              aria-label="הוסף מספר"
-            >
-              ➕
-            </button>
+            <Button variant="secondary" onClick={() => addArrayItem("referencePhones", "")}>
+              הוסף מספר
+            </Button>
           </>
         </QuestionBlock>
-        <QuestionBlock label="📸 צרפ/י לפחות שתי תמונות שלך (פנים + כל גוף):">
-          <input type="file" accept="image/*" multiple onChange={handleImageChange} />
+
+        <QuestionBlock label="צרפ/י לפחות שתי תמונות">
+          <Input type="file" accept="image/*" multiple onChange={handleImageChange} />
         </QuestionBlock>
-        <QuestionBlock label="🪬 אפשר להשאיר שם לתפילה לזיווג הגון ונשתדל להתפלל:">
-          <textarea
+
+        <QuestionBlock label="שם לתפילה">
+          <Textarea
             name="nameForPrayer"
             value={form.nameForPrayer}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="🖊 אם תרצה/י לכתוב עוד משהו. (איך הגעת אלינו):">
-          <textarea
+
+        <QuestionBlock label="איך הגעת אלינו">
+          <Textarea
             name="referralSource"
             value={form.referralSource}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <QuestionBlock label="🫡 מה הציפיות שלך מאיתנו (השדכנים):">
-          <textarea
+
+        <QuestionBlock label="מה הציפיות שלך מאיתנו">
+          <Textarea
             name="matchmakerExpectations"
             value={form.matchmakerExpectations}
             onChange={handleChange}
             rows={3}
           />
         </QuestionBlock>
-        <button type="submit">שלח</button>
+
+        <Button type="submit" disabled={submitting} className="w-full text-base">
+          {submitting ? "שולח..." : "שלח טופס"}
+        </Button>
       </form>
+
       {matchmaker?.priceRange && (
-        <p>
-          נ.ב. דמי שידוך בעז"ה בתשלום של {matchmaker.priceRange.min}–
-          {matchmaker.priceRange.max} ש"ח
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          דמי שידוך: {matchmaker.priceRange.min}-{matchmaker.priceRange.max} ש"ח
         </p>
       )}
     </div>
