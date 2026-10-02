@@ -2,10 +2,21 @@ import { useMemo, useState } from 'react';
 import { api } from '../api/client';
 import type { Proposal, ProposalStatus } from '../api/types';
 import { ProposalCard, ProposalDialog } from '../components/proposals';
-import { EmptyState, ErrorBox, Spinner } from '../components/ui';
+import { EmptyState, ErrorBox, PageHeader, Spinner } from '../components/ui';
+import { Input } from '../components/ui/input';
 import { matchesQuery } from '../lib/format';
 import { BOARD, OPEN, STATUS_LABEL, isStale, lastActivity } from '../lib/proposals';
 import { useAsync } from '../lib/useAsync';
+import { cn } from '../lib/utils';
+
+const COLUMN_ACCENT: Record<ProposalStatus, string> = {
+  idea: 'border-t-input',
+  proposed: 'border-t-warning/60',
+  dating: 'border-t-primary',
+  engaged: 'border-t-secondary',
+  married: 'border-t-secondary',
+  closed: 'border-t-destructive/50',
+};
 
 type View = 'open' | 'all' | ProposalStatus;
 
@@ -38,27 +49,31 @@ export function ProposalsPage() {
   const columns = view === 'open' ? OPEN : view === 'all' ? BOARD : [view];
 
   return (
-    <div className="page">
-      <div className="page__head">
-        <div>
-          <h1>מעקב הצעות</h1>
-          <p className="muted">
+    <div>
+      <PageHeader
+        title="מעקב הצעות"
+        subtitle={
+          <>
             {OPEN.reduce((n, s) => n + counts[s], 0)} פתוחות · {counts.married} התחתנו
             {stale > 0 && <> · {stale} מחכות לעדכון</>}
-          </p>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div className="toolbar">
-        <input
-          className="toolbar__search"
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <Input
+          className="sm:min-w-[220px] sm:flex-1"
           type="search"
           placeholder="חיפוש לפי שם, עיר או הערה"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           aria-label="חיפוש"
         />
-        <div className="segmented" role="group" aria-label="תצוגה">
+        <div
+          className="flex max-w-full gap-1 overflow-x-auto rounded-md bg-muted p-1 sm:inline-flex"
+          role="group"
+          aria-label="תצוגה"
+        >
           {(
             [
               ['open', 'פתוחות'],
@@ -67,7 +82,16 @@ export function ProposalsPage() {
               ['all', 'הכול'],
             ] as [View, string][]
           ).map(([value, label]) => (
-            <button key={value} type="button" aria-pressed={view === value} onClick={() => setView(value)}>
+            <button
+              key={value}
+              type="button"
+              aria-pressed={view === value}
+              onClick={() => setView(value)}
+              className={cn(
+                'flex-1 whitespace-nowrap rounded-sm px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-none',
+                view === value && 'bg-card font-semibold text-foreground shadow-sm'
+              )}
+            >
               {label}
             </button>
           ))}
@@ -83,18 +107,34 @@ export function ProposalsPage() {
           <p>אפשר לפתוח הצעה מכרטיס של מועמד/ת, או לשמור הצעה אוטומטית מהדשבורד.</p>
         </EmptyState>
       ) : (
-        <div className="board">
+        <div
+          className={cn(
+            '-mx-4 flex snap-x snap-mandatory items-start gap-3.5 overflow-x-auto px-4 pb-3 sm:-mx-5 sm:px-5',
+            'md:mx-0 md:grid md:snap-none md:overflow-visible md:px-0 md:pb-0',
+            columns.length === 1
+              ? 'md:grid-cols-1'
+              : 'md:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]'
+          )}
+        >
           {columns.map((status) => {
             const items = list
               .filter((p) => p.status === status)
               .sort((a, b) => lastActivity(b).localeCompare(lastActivity(a)));
             return (
-              <section key={status} className={`board__col board__col--${status}`}>
-                <h2>
-                  {STATUS_LABEL[status]} <span className="muted">{items.length}</span>
+              <section
+                key={status}
+                data-status={status}
+                className={cn(
+                  'flex min-h-[120px] w-[80vw] max-w-[300px] shrink-0 snap-start flex-col gap-2.5 rounded-lg border-t-4 bg-muted p-3 md:w-auto md:max-w-none',
+                  columns.length === 1 && 'w-full max-w-none',
+                  COLUMN_ACCENT[status]
+                )}
+              >
+                <h2 className="mx-1 my-0.5 flex items-center justify-between text-base">
+                  {STATUS_LABEL[status]} <span className="text-sm font-medium text-muted-foreground">{items.length}</span>
                 </h2>
                 {items.length === 0 ? (
-                  <p className="board__empty">אין כרגע</p>
+                  <p className="my-3 text-center text-sm text-muted-foreground">אין כרגע</p>
                 ) : (
                   items.map((p) => <ProposalCard key={p._id} proposal={p} onOpen={() => setOpen(p)} />)
                 )}

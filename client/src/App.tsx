@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Navigate, Outlet, Route, Routes, useLocation } fro
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { BareLayout, Layout } from './components/Layout';
 import { EmptyState, Spinner } from './components/ui';
+import { buttonVariants } from './components/ui/button';
 import { DashboardPage } from './pages/DashboardPage';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -33,7 +34,7 @@ function AuthReady() {
 function NotFound() {
   return (
     <EmptyState title="העמוד לא נמצא">
-      <Link to="/" className="btn btn--primary">
+      <Link to="/" className={buttonVariants()}>
         לדף הבית
       </Link>
     </EmptyState>

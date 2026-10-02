@@ -18,6 +18,11 @@ import {
 import { ChipInput, ChipSelect } from './ChipInput';
 import { ImagePicker } from './ImagePicker';
 import { ErrorBox, Field } from './ui';
+import { Button } from './ui/button';
+import { Checkbox } from './ui/checkbox';
+import { Input } from './ui/input';
+import { Select } from './ui/select';
+import { Textarea } from './ui/textarea';
 
 type TextKey = {
   [K in keyof SingleFormState]: SingleFormState[K] extends string ? K : never;
@@ -25,10 +30,10 @@ type TextKey = {
 
 function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
-    <fieldset className="form-section">
-      <legend>{title}</legend>
-      {subtitle && <p className="form-section__sub">{subtitle}</p>}
-      <div className="form-grid">{children}</div>
+    <fieldset className="m-0 mb-4 min-w-0 rounded-lg border bg-card p-4 pt-3 shadow-soft sm:px-5 sm:pb-5">
+      <legend className="px-1.5 text-[1.05rem] font-bold">{title}</legend>
+      {subtitle && <p className="-mt-0.5 mb-3 text-sm text-muted-foreground">{subtitle}</p>}
+      <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">{children}</div>
     </fieldset>
   );
 }
@@ -56,7 +61,7 @@ export function SingleForm({
   const text = (key: TextKey, label: string, opts: { required?: boolean; type?: string; hint?: string; inputMode?: 'numeric' | 'tel' | 'email'; dir?: 'ltr' } = {}) => (
     <Field label={label} required={opts.required} error={errors[key]} hint={opts.hint}>
       {(id) => (
-        <input
+        <Input
           id={id}
           type={opts.type ?? 'text'}
           inputMode={opts.inputMode}
@@ -71,21 +76,21 @@ export function SingleForm({
 
   const area = (key: TextKey, label: string, hint?: string) => (
     <Field label={label} error={errors[key]} hint={hint} wide>
-      {(id) => <textarea id={id} rows={3} value={form[key]} onChange={(e) => set(key, e.target.value)} />}
+      {(id) => <Textarea id={id} rows={3} value={form[key]} onChange={(e) => set(key, e.target.value)} />}
     </Field>
   );
 
   const select = (key: TextKey, label: string, options: readonly string[], required = false) => (
     <Field label={label} required={required} error={errors[key]}>
       {(id) => (
-        <select id={id} value={form[key]} onChange={(e) => set(key, e.target.value)} aria-invalid={Boolean(errors[key])}>
+        <Select id={id} value={form[key]} onChange={(e) => set(key, e.target.value)} aria-invalid={Boolean(errors[key])}>
           {!form[key] && <option value="">בחירה…</option>}
           {options.map((o) => (
             <option key={o} value={o}>
               {o}
             </option>
           ))}
-        </select>
+        </Select>
       )}
     </Field>
   );
@@ -118,7 +123,7 @@ export function SingleForm({
   const you = selfRegistration;
 
   return (
-    <form className="single-form" onSubmit={submit} noValidate>
+    <form onSubmit={submit} noValidate>
       <Section title="פרטים אישיים">
         {text('firstName', 'שם פרטי', { required: true })}
         {text('lastName', 'שם משפחה', { required: true })}
@@ -171,9 +176,9 @@ export function SingleForm({
         </Field>
         <Field label="ארבעה דברים שאין עליהם פשרה" required error={errors.nonCompromisableAttributes} wide>
           {() => (
-            <div className="four">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {form.nonCompromisableAttributes.map((v, i) => (
-                <input
+                <Input
                   key={i}
                   aria-label={`דבר ${i + 1} שאין עליו פשרה`}
                   placeholder={`${i + 1}.`}
@@ -193,10 +198,10 @@ export function SingleForm({
         </Field>
         <Field label="טווח גילאים" error={errors.desiredAgeRange}>
           {(id) => (
-            <div className="range">
-              <input id={id} inputMode="numeric" aria-label="גיל מינימלי" placeholder="מגיל" value={form.desiredAgeMin} onChange={(e) => set('desiredAgeMin', e.target.value)} />
-              <span>עד</span>
-              <input inputMode="numeric" aria-label="גיל מקסימלי" placeholder="גיל" value={form.desiredAgeMax} onChange={(e) => set('desiredAgeMax', e.target.value)} />
+            <div className="flex items-center gap-2">
+              <Input id={id} className="w-24" inputMode="numeric" aria-label="גיל מינימלי" placeholder="מגיל" value={form.desiredAgeMin} onChange={(e) => set('desiredAgeMin', e.target.value)} />
+              <span className="text-sm text-muted-foreground">עד</span>
+              <Input className="w-24" inputMode="numeric" aria-label="גיל מקסימלי" placeholder="גיל" value={form.desiredAgeMax} onChange={(e) => set('desiredAgeMax', e.target.value)} />
             </div>
           )}
         </Field>
@@ -210,9 +215,9 @@ export function SingleForm({
       </Section>
 
       <Section title="תמונות" subtitle="עד ארבע תמונות. הן מוקטנות אוטומטית לפני השליחה ולא מוצגות במאגר המשותף.">
-        <div className="field field--wide">
+        <div className="flex min-w-0 flex-col gap-1.5 sm:col-span-2" data-error={errors.images ? 'true' : undefined}>
           <ImagePicker value={form.images} onChange={(v) => set('images', v)} />
-          {errors.images && <small className="field__error">{errors.images}</small>}
+          {errors.images && <small className="text-xs font-medium text-destructive">{errors.images}</small>}
         </div>
       </Section>
 
@@ -225,24 +230,20 @@ export function SingleForm({
         {text('referralSource', 'איך הגעת אלינו?')}
         {area('existingMatchProfile', 'קישור לפרופיל קיים או כרטיס שידוך')}
         {area('matchmakerExpectations', 'ציפיות מהשדכן/ית')}
-        <label className="check field--wide">
-          <input type="checkbox" checked={form.isPublic} onChange={(e) => set('isPublic', e.target.checked)} />
-          <span>
-            להציג במאגר המשותף לשדכנים
-            <small> (בלי שם משפחה, פרטי קשר ותמונות)</small>
-          </span>
-        </label>
-        <label className="check field--wide">
-          <input type="checkbox" checked={form.shareInWhatsappGroups} onChange={(e) => set('shareInWhatsappGroups', e.target.checked)} />
-          <span>מאשר/ת שיתוף בקבוצות שדכנים בוואטסאפ</span>
-        </label>
+        <Checkbox className="sm:col-span-2" checked={form.isPublic} onChange={(e) => set('isPublic', e.target.checked)}>
+          להציג במאגר המשותף לשדכנים
+          <small className="text-muted-foreground"> (בלי שם משפחה, פרטי קשר ותמונות)</small>
+        </Checkbox>
+        <Checkbox className="sm:col-span-2" checked={form.shareInWhatsappGroups} onChange={(e) => set('shareInWhatsappGroups', e.target.checked)}>
+          מאשר/ת שיתוף בקבוצות שדכנים בוואטסאפ
+        </Checkbox>
       </Section>
 
-      <div className="form-actions">
+      <div className="sticky bottom-0 z-[1] flex flex-col items-stretch gap-1 bg-gradient-to-b from-transparent via-background via-30% to-background pb-2 pt-5 sm:items-start [&>[role=alert]]:w-full">
         {formError && <ErrorBox message={formError} />}
-        <button type="submit" className="btn btn--primary btn--lg" disabled={saving}>
+        <Button type="submit" size="lg" disabled={saving}>
           {saving ? 'שומר…' : submitLabel}
-        </button>
+        </Button>
       </div>
     </form>
   );

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { X } from 'lucide-react';
 import { resizeImage } from '../lib/images';
 
 const MAX_IMAGES = 4;
@@ -27,27 +28,32 @@ export function ImagePicker({ value, onChange }: { value: string[]; onChange: (n
   };
 
   return (
-    <div className="images">
+    <div className="flex flex-wrap items-center gap-2.5">
       {value.map((src, i) => (
-        <figure key={i} className="images__item">
-          <img src={src} alt={`תמונה ${i + 1}`} />
+        <figure key={i} className="relative m-0 size-24 sm:size-28">
+          <img className="size-full rounded-md border object-cover" src={src} alt={`תמונה ${i + 1}`} />
           <button
             type="button"
-            className="images__remove"
+            className="absolute start-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-black/55 text-white transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             aria-label={`הסרת תמונה ${i + 1}`}
             onClick={() => onChange(value.filter((_, j) => j !== i))}
           >
-            ×
+            <X className="size-4" aria-hidden />
           </button>
         </figure>
       ))}
       {value.length < MAX_IMAGES && (
-        <button type="button" className="images__add" onClick={() => input.current?.click()} disabled={busy}>
+        <button
+          type="button"
+          className="grid size-24 place-items-center rounded-md border-2 border-dashed border-input bg-muted/40 px-2 text-center text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60 sm:size-28"
+          onClick={() => input.current?.click()}
+          disabled={busy}
+        >
           {busy ? 'מעבד…' : '+ הוספת תמונה'}
         </button>
       )}
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => add(e.target.files)} />
-      {error && <small className="field__error images__error">{error}</small>}
+      {error && <small className="w-full text-xs font-medium text-destructive">{error}</small>}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { useMe } from '../auth/AuthContext';
 import { SingleForm } from '../components/SingleForm';
-import { ErrorBox, Spinner } from '../components/ui';
+import { ErrorBox, PageHeader, Spinner } from '../components/ui';
 import { emptySingleForm, singleToForm } from '../lib/singleForm';
 import { useAsync } from '../lib/useAsync';
 
@@ -10,11 +10,11 @@ export function NewSinglePage() {
   const me = useMe();
   const navigate = useNavigate();
   return (
-    <div className="page page--narrow">
-      <Link to="/dashboard" className="back">
+    <div className="mx-auto w-full max-w-[820px]">
+      <Link to="/dashboard" className="mb-3 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary">
         → חזרה לרשימה
       </Link>
-      <h1>מועמד/ת חדש/ה</h1>
+      <PageHeader title="מועמד/ת חדש/ה" />
       <SingleForm
         initial={emptySingleForm()}
         submitLabel="שמירת מועמד/ת"
@@ -33,11 +33,11 @@ export function EditSinglePage() {
   const single = useAsync(() => api.single(id), [id]);
 
   return (
-    <div className="page page--narrow">
-      <Link to={`/singles/${id}`} className="back">
+    <div className="mx-auto w-full max-w-[820px]">
+      <Link to={`/singles/${id}`} className="mb-3 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary">
         → חזרה לכרטיס
       </Link>
-      <h1>עריכת פרטים</h1>
+      <PageHeader title="עריכת פרטים" />
       {single.loading ? (
         <Spinner />
       ) : single.error || !single.data ? (

@@ -3,6 +3,9 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { ErrorBox, Field } from '../components/ui';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { Input } from '../components/ui/input';
 
 export function LoginPage() {
   const { me, login } = useAuth();
@@ -31,31 +34,31 @@ export function LoginPage() {
   };
 
   return (
-    <div className="auth card">
-      <h1>כניסה לשדכנים</h1>
-      <form onSubmit={submit} className="stack">
+    <Card className="mx-auto my-6 w-full max-w-[420px] p-6 sm:p-7">
+      <h1 className="mb-5 text-center">כניסה לשדכנים</h1>
+      <form onSubmit={submit} className="flex flex-col gap-3.5">
         <Field label="אימייל">
-          {(id) => <input id={id} type="email" dir="ltr" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />}
+          {(id) => <Input id={id} type="email" dir="ltr" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />}
         </Field>
         <Field label="סיסמה">
           {(id) => (
-            <input id={id} type="password" dir="ltr" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input id={id} type="password" dir="ltr" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           )}
         </Field>
         {error && <ErrorBox message={error} />}
-        <button className="btn btn--primary btn--lg" disabled={busy}>
+        <Button type="submit" size="lg" className="mt-2 w-full" disabled={busy}>
           {busy ? 'נכנסים…' : 'כניסה'}
-        </button>
+        </Button>
       </form>
-      <p className="auth__alt">
-        עוד אין חשבון? <Link to="/signup">הרשמה</Link>
+      <p className="mt-4 text-center text-muted-foreground">
+        עוד אין חשבון? <Link to="/signup" className="font-semibold text-primary hover:underline">הרשמה</Link>
       </p>
       {(import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_LOGIN === 'true') && (
-        <p className="auth__demo">
+        <p className="mt-3 text-center text-[0.82rem] text-muted-foreground">
           נתוני דמו: <code dir="ltr">rachel@demo.tovim.example</code> /{' '}
           <code dir="ltr">demo-password</code>
         </p>
       )}
-    </div>
+    </Card>
   );
 }
