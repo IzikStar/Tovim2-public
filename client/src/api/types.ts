@@ -262,3 +262,14 @@ export interface Suggestion {
   score: number;
   reasons: string[];
 }
+
+// ---------- brainstorm ----------
+
+export const BRAINSTORM_MODES = ['random', 'pool', 'waiting', 'outside', 'single'] as const;
+export type BrainstormMode = (typeof BRAINSTORM_MODES)[number];
+
+/** A brainstorm pair; score ignores sector/age requirements, stretches lists the ones it breaks. */
+export interface BrainstormIdea extends Suggestion {
+  stretches: string[];
+  note?: string;
+}

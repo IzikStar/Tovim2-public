@@ -4,10 +4,10 @@ import { Proposal } from '../models/proposal.js';
 import { ageOn } from '../utils/age.js';
 
 /** Fields the matching needs; images are left out because they are large. */
-const MATCH_FIELDS =
-  'firstName lastName gender sectors birthDate city marriageStatus numOfChildren interests desiredSectors desiredAgeRange matchMakers isPublic currentOccupation';
+export const MATCH_FIELDS =
+  'firstName lastName gender sectors birthDate city marriageStatus numOfChildren interests desiredSectors desiredAgeRange matchMakers isPublic currentOccupation createdAt';
 
-type Candidate = Pick<
+export type Candidate = Pick<
   ISingle,
   | 'firstName'
   | 'lastName'
@@ -23,7 +23,7 @@ type Candidate = Pick<
   | 'matchMakers'
   | 'isPublic'
   | 'currentOccupation'
-> & { _id: Types.ObjectId };
+> & { _id: Types.ObjectId; createdAt?: Date };
 
 export interface SuggestionPerson {
   _id: string;
@@ -54,20 +54,41 @@ const wantsSectors = (who: Candidate, sectors: string[]) =>
   !who.desiredSectors?.length || sectors.some((s) => who.desiredSectors.includes(s as any));
 
 /**
+ * The stated requirements (desired sectors, desired age range) each side of
+ * an opposite-gender pair doesn't meet, in Hebrew; empty when the pair fits.
+ */
+export const missedRequirements = (a: Candidate, b: Candidate): string[] => {
+  const misses: string[] = [];
+  const ageA = ageOn(a.birthDate);
+  const ageB = ageOn(b.birthDate);
+  for (const [who, other, otherAge] of [[a, b, ageB], [b, a, ageA]] as const) {
+    if (!wantsSectors(who, other.sectors ?? [])) misses.push(`${who.firstName} ביקש/ה מגזר אחר`);
+    if (!inRange(otherAge, who.desiredAgeRange)) misses.push(`${other.firstName} מחוץ לטווח הגילאים של ${who.firstName}`);
+  }
+  return misses;
+};
+
+/**
  * Scores a pair 0-100, or returns null when one side's stated requirements
  * (gender, desired sectors, desired age range) rule the other out.
  */
 export const scorePair = (a: Candidate, b: Candidate): { score: number; reasons: string[] } | null => {
-  if (a.gender === b.gender) return null;
+  if (a.gender === b.gender || missedRequirements(a, b).length) return null;
+  return scoreTraits(a, b);
+};
+
+/** The score ignoring the sector and age requirements (gender still has to differ). */
+export const scoreTraits = (a: Candidate, b: Candidate): { score: number; reasons: string[] } => {
   const ageA = ageOn(a.birthDate);
   const ageB = ageOn(b.birthDate);
-  if (!wantsSectors(a, b.sectors ?? []) || !wantsSectors(b, a.sectors ?? [])) return null;
-  if (!inRange(ageB, a.desiredAgeRange) || !inRange(ageA, b.desiredAgeRange)) return null;
+  const fits = missedRequirements(a, b).length === 0;
 
   let score = 40;
   const reasons: string[] = [];
 
-  if (a.desiredSectors?.length && b.desiredSectors?.length) {
+  if (!fits) {
+    // Requirements were not met, so none of the "fits what they asked" points
+  } else if (a.desiredSectors?.length && b.desiredSectors?.length) {
     score += 15;
     reasons.push('המגזר מתאים לשני הצדדים');
   } else {
@@ -77,7 +98,7 @@ export const scorePair = (a: Candidate, b: Candidate): { score: number; reasons:
     score += 10;
     reasons.push('מגזר משותף');
   }
-  if (a.desiredAgeRange || b.desiredAgeRange) {
+  if (fits && (a.desiredAgeRange || b.desiredAgeRange)) {
     score += 10;
     reasons.push('הגילאים בטווח המבוקש');
   }
@@ -99,7 +120,7 @@ export const scorePair = (a: Candidate, b: Candidate): { score: number; reasons:
   return { score: Math.min(score, 100), reasons };
 };
 
-const person = (s: Candidate, matchMakerId: string): SuggestionPerson => {
+export const person = (s: Candidate, matchMakerId: string): SuggestionPerson => {
   const mine = s.matchMakers.some((id) => id.toString() === matchMakerId);
   return {
     _id: s._id.toString(),
@@ -114,6 +135,25 @@ const person = (s: Candidate, matchMakerId: string): SuggestionPerson => {
   };
 };
 
+export const pairKey = (x: string, y: string) => (x < y ? `${x}:${y}` : `${y}:${x}`);
+
+/**
+ * The matchmaker's untaken singles, the untaken public pool of the others,
+ * and the pairs the matchmaker already has a proposal for (by pairKey).
+ */
+export const loadMatchContext = async (matchMakerId: string) => {
+  const notTaken = { isTaken: { $ne: true } };
+  const [mine, pool, proposals] = await Promise.all([
+    Single.find({ ...notTaken, matchMakers: matchMakerId }, MATCH_FIELDS).lean<Candidate[]>(),
+    Single.find({ ...notTaken, isPublic: true, matchMakers: { $ne: matchMakerId } }, MATCH_FIELDS).lean<Candidate[]>(),
+    Proposal.find({ matchMaker: matchMakerId }, 'sides.single status updatedAt').lean(),
+  ]);
+  const known = new Set(
+    proposals.map((p) => pairKey(p.sides[0].single.toString(), p.sides[1].single.toString()))
+  );
+  return { mine, pool, known, proposals };
+};
+
 /**
  * Pairs one of the matchmaker's singles with another of theirs or with a
  * single from the shared pool. Skips taken singles and any pair the
@@ -124,17 +164,7 @@ export const suggestMatches = async (
   matchMakerId: string,
   { limit = 12, perSingle = 3, singleId }: { limit?: number; perSingle?: number; singleId?: string } = {}
 ): Promise<Suggestion[]> => {
-  const notTaken = { isTaken: { $ne: true } };
-  const [mine, pool, proposals] = await Promise.all([
-    Single.find({ ...notTaken, matchMakers: matchMakerId }, MATCH_FIELDS).lean<Candidate[]>(),
-    Single.find({ ...notTaken, isPublic: true, matchMakers: { $ne: matchMakerId } }, MATCH_FIELDS).lean<Candidate[]>(),
-    Proposal.find({ matchMaker: matchMakerId }, 'sides.single').lean(),
-  ]);
-
-  const pairKey = (x: string, y: string) => (x < y ? `${x}:${y}` : `${y}:${x}`);
-  const known = new Set(
-    proposals.map((p) => pairKey(p.sides[0].single.toString(), p.sides[1].single.toString()))
-  );
+  const { mine, pool, known } = await loadMatchContext(matchMakerId);
 
   const sources = singleId ? mine.filter((s) => s._id.toString() === singleId) : mine;
   const candidates = [...mine, ...pool];

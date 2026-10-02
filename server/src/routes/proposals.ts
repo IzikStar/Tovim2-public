@@ -3,6 +3,7 @@ import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { OPEN_STATUSES, Proposal, ProposalStatus, SideResponse } from '../models/proposal.js';
 import { Single } from '../models/single.js';
 import { suggestMatches } from '../services/suggestions.js';
+import { brainstorm, BRAINSTORM_MODES, BrainstormMode } from '../services/brainstorm.js';
 import { asyncHandler, isValidObjectId } from '../utils/http.js';
 import { ageOn, withAge } from '../utils/age.js';
 
@@ -53,6 +54,20 @@ const markTaken = async (singleIds: unknown[], matchMakerId: string) => {
     }
   );
 };
+
+// Brainstorm mode: random and off-the-usual-path pairs, to prompt new ideas
+router.get('/brainstorm', asyncHandler<AuthRequest>(async (req, res) => {
+  const mode = (req.query.mode ?? 'random') as BrainstormMode;
+  if (!BRAINSTORM_MODES.includes(mode)) {
+    return res.status(400).json({ error: `mode must be one of ${BRAINSTORM_MODES.join(', ')}` });
+  }
+  const singleId = typeof req.query.single === 'string' ? req.query.single : undefined;
+  if (mode === 'single' && !isValidObjectId(singleId)) {
+    return res.status(400).json({ error: 'mode=single needs a valid single id' });
+  }
+  const count = Math.min(Math.max(Number(req.query.count) || 6, 1), 20);
+  res.json(await brainstorm(req.matchMakerId!, { mode, count, singleId }));
+}));
 
 // Automatic match ideas for the dashboard (optionally for one single)
 router.get('/suggestions', asyncHandler<AuthRequest>(async (req, res) => {

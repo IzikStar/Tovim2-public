@@ -10,6 +10,8 @@ import type {
   Single,
   SingleFields,
   Suggestion,
+  BrainstormIdea,
+  BrainstormMode,
 } from './types';
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '');
@@ -133,6 +135,9 @@ export const api = {
   deleteProposal: (id: string) => request<{ message: string }>('DELETE', `/proposals/${id}`),
   suggestions: (singleId?: string, limit = 12) =>
     request<Suggestion[]>('GET', `/proposals/suggestions?limit=${limit}${singleId ? `&single=${singleId}` : ''}`),
+
+  brainstorm: (mode: BrainstormMode, { single, count = 6 }: { single?: string; count?: number } = {}) =>
+    request<BrainstormIdea[]>('GET', `/proposals/brainstorm?mode=${mode}&count=${count}${single ? `&single=${single}` : ''}`),
 
   requests: () => request<RequestsResponse>('GET', '/requests'),
   sendRequest: (singleId: string, toMatchMakerId: string) =>
