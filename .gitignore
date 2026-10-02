@@ -422,3 +422,6 @@ server/dist/
 .env
 .env.*
 !.env.example
+
+# Client build output
+client/dist/

@@ -1,0 +1,171 @@
+// Mirrors server/src/models. Enum values are the Hebrew strings the server stores.
+
+export const GENDERS = ['זכר', 'נקבה'] as const;
+export type Gender = (typeof GENDERS)[number];
+
+export const SECTORS = [
+  'חרדי/ת',
+  'חסידי/ת',
+  'ליטאי/ת',
+  'דתי/ה לאומי/ת',
+  'חרדלי/ת',
+  'מסורתי/ת',
+  'חילוני/ת',
+  'אחר/ת',
+] as const;
+export type Sector = (typeof SECTORS)[number];
+
+export const MARRIAGE_STATUSES = ['רווק/ה', 'גרוש/ה', 'אלמן/ה'] as const;
+export type MarriageStatus = (typeof MARRIAGE_STATUSES)[number];
+
+export const ETHNICITIES = ['אשכנזי/ה', 'עדות המזרח', 'תימני/ת', 'מעורב/ת', 'אחר/ת'] as const;
+export type Ethnicity = (typeof ETHNICITIES)[number];
+
+export const INTERESTS = [
+  'תורה', 'ספורט', 'מוסיקה', 'אמנות', 'טכנולוגיה', 'נסיעות', 'בישול', 'התנדבות',
+  'קריאה', 'שחמט', 'גינון', 'צילום', 'כתיבה', 'קולנוע', 'תיאטרון', 'ריקוד', 'יוגה',
+  'מדיטציה', 'ריצה', 'אופניים', 'טיולים', 'שחיה', 'ציור', 'תרבות קפה', 'טעימות יין',
+  'בישול בירה', 'גיימינג', 'משחקי קופסה', 'פילוסופיה', 'פוליטיקה', 'טבע', 'מדע',
+  'היסטוריה', 'אופנה', 'דיג', 'טיפוס הרים', 'אסטרונומיה', 'שירה',
+] as const;
+export type Interest = (typeof INTERESTS)[number];
+
+export const PROPOSE_PREFERENCES = [
+  'ללא העדפה',
+  'מעוניין/ת שיציעו לי קודם',
+  'מעוניין/ת שיציעו קודם לצד השני',
+] as const;
+export type ProposePreference = (typeof PROPOSE_PREFERENCES)[number];
+
+export interface MatchMaker {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  email: string;
+  city: string;
+  gender: Gender;
+  sector: Sector;
+  expertSectors: Sector[];
+}
+
+export type MatchMakerSummary = Pick<MatchMaker, '_id' | 'firstName' | 'lastName' | 'city'> &
+  Partial<Pick<MatchMaker, 'sector' | 'expertSectors'>>;
+
+export interface MatchMakerInput {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  email: string;
+  password: string;
+  city: string;
+  gender: Gender | '';
+  sector: Sector | '';
+  expertSectors: Sector[];
+}
+
+export interface AgeRange {
+  min?: number;
+  max?: number;
+}
+
+/** Everything a matchmaker or the single can edit (server: SINGLE_EDITABLE_FIELDS). */
+export interface SingleFields {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  email: string;
+  city: string;
+  gender: Gender;
+  sector: Sector;
+  customSector?: string;
+  birthYear: number;
+  marriageStatus: MarriageStatus;
+  numOfChildren: number;
+  ethnicity: Ethnicity;
+  customEthnicity?: string;
+  workAndStudyPlaces: string[];
+  currentOccupation?: string;
+  basicDescription?: string;
+  freeDescription?: string;
+  attributes: string[];
+  lookingForAttributes: string[];
+  nonCompromisableAttributes: string[];
+  desiredSectors: Sector[];
+  isPublic: boolean;
+  images: string[];
+  height?: number;
+  appearanceDescription?: string;
+  appearanceMustHave?: string;
+  appearanceMustNotHave?: string;
+  generalDealBreakers?: string;
+  interests: Interest[];
+  otherInterests: string[];
+  futureVision?: string;
+  existingMatchProfile?: string;
+  shareInWhatsappGroups: boolean;
+  proposePreference: ProposePreference;
+  referencePhones: string[];
+  nameForPrayer?: string;
+  referralSource?: string;
+  matchmakerExpectations?: string;
+  desiredAgeRange?: AgeRange | null;
+}
+
+export interface Single extends SingleFields {
+  _id: string;
+  matchMakers: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** What GET /singles/public returns (server: SINGLE_PUBLIC_PROJECTION). */
+export type PublicSingle = Pick<
+  Single,
+  | '_id'
+  | 'firstName'
+  | 'gender'
+  | 'sector'
+  | 'customSector'
+  | 'birthYear'
+  | 'city'
+  | 'marriageStatus'
+  | 'numOfChildren'
+  | 'ethnicity'
+  | 'customEthnicity'
+  | 'height'
+  | 'currentOccupation'
+  | 'basicDescription'
+  | 'interests'
+  | 'otherInterests'
+  | 'desiredSectors'
+  | 'desiredAgeRange'
+>;
+
+export type RequestStatus = 'pending' | 'approved' | 'rejected';
+
+type SingleSummary = Pick<Single, '_id' | 'firstName' | 'lastName' | 'gender' | 'sector' | 'birthYear' | 'city'>;
+
+interface TransferRequestBase {
+  _id: string;
+  status: RequestStatus;
+  createdAt: string;
+  updatedAt: string;
+  /** null when the single was deleted after the request was made */
+  single: SingleSummary | null;
+}
+
+export interface IncomingRequest extends TransferRequestBase {
+  from: MatchMakerSummary | null;
+  to: string;
+}
+
+export interface OutgoingRequest extends TransferRequestBase {
+  from: string;
+  to: MatchMakerSummary | null;
+}
+
+export interface RequestsResponse {
+  incoming: IncomingRequest[];
+  outgoing: OutgoingRequest[];
+}
