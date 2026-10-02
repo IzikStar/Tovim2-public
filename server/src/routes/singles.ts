@@ -8,6 +8,7 @@ import { MatchMaker } from '../models/matchMaker.js';
 import { Proposal } from '../models/proposal.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { asyncHandler, isValidObjectId, pick } from '../utils/http.js';
+import { withAge } from '../utils/age.js';
 
 const router = Router();
 
@@ -57,7 +58,7 @@ router.post('/bulk', authenticate, asyncHandler<AuthRequest>(async (req, res) =>
 
 router.get('/public', asyncHandler(async (_req, res) => {
   const singles = await Single.find({ isPublic: true, isTaken: { $ne: true } }, SINGLE_PUBLIC_PROJECTION).lean();
-  res.json(singles);
+  res.json(singles.map(withAge));
 }));
 
 // Full profile, for the matchmakers handling this single only

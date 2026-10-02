@@ -24,9 +24,55 @@ describe('singles', () => {
       'matchMakers',
       'freeDescription',
       'searchText',
+      'birthDate',
     ]) {
       expect(single).not.toHaveProperty(hidden);
     }
+    // The pool shows the age, not the exact birth date
+    expect(typeof single.age).toBe('number');
+  });
+
+  it('stores several sectors and a birth date, and derives the age', async () => {
+    const mm = await createMatchMaker();
+    const birth = new Date();
+    birth.setFullYear(birth.getFullYear() - 30, birth.getMonth(), birth.getDate() + 1);
+    const created = await createSingle(mm, {
+      sectors: ['חסידי/ת', 'חרדי/ת'],
+      birthDate: birth.toISOString().slice(0, 10),
+    });
+    const res = await api().get(`/singles/${created._id}`).set(mm.auth).expect(200);
+    expect(res.body.sectors).toEqual(['חסידי/ת', 'חרדי/ת']);
+    // Birthday is tomorrow: still 29
+    expect(res.body.age).toBe(29);
+    expect(res.body).not.toHaveProperty('id');
+  });
+
+  it('requires at least one valid sector and a birth date that is not in the future', async () => {
+    const mm = await createMatchMaker();
+    const send = (overrides: Record<string, unknown>) =>
+      api().post('/singles').set(mm.auth).send({ ...singleData(overrides), matchMakerId: mm.id });
+    expect((await send({ sectors: [] }).expect(400)).body.fields).toHaveProperty('sectors');
+    expect((await send({ sectors: ['nope'] }).expect(400)).body.fields).toBeDefined();
+    expect((await send({ birthDate: '2999-01-01' }).expect(400)).body.fields).toHaveProperty('birthDate');
+    expect((await send({ birthDate: undefined }).expect(400)).body.fields).toHaveProperty('birthDate');
+  });
+
+  it('migrates singles saved with a single sector and a birth year', async () => {
+    const { migrateLegacySingles } = await import('../src/migrations.js');
+    const { sectors: _s, birthDate: _b, ...rest } = singleData();
+    const { insertedId } = await Single.collection.insertOne({
+      ...rest,
+      sector: 'מסורתי/ת',
+      birthYear: 1990,
+      matchMakers: [],
+    } as any);
+    await migrateLegacySingles();
+    await migrateLegacySingles(); // idempotent
+    const raw: any = await Single.collection.findOne({ _id: insertedId });
+    expect(raw.sectors).toEqual(['מסורתי/ת']);
+    expect(new Date(raw.birthDate).toISOString()).toBe('1990-01-01T00:00:00.000Z');
+    expect(raw).not.toHaveProperty('sector');
+    expect(raw).not.toHaveProperty('birthYear');
   });
 
   it('creating a single requires matchMakerId to be the caller', async () => {

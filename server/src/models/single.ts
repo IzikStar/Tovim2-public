@@ -7,6 +7,7 @@ import {
   Interest,
   ProposePreference,
 } from "./enums.js";
+import { ageOn } from "../utils/age.js";
 
 const phoneRegex = /^\+?\d{7,15}$/;
 const emailRegex = /.+@.+\..+/;
@@ -25,9 +26,10 @@ export interface ISingle {
   email?: string;
   city: string;
   gender: Gender;
-  sector: Sector;
+  /** One or more; e.g. someone both Chasidic and Haredi */
+  sectors: Sector[];
   customSector?: string;
-  birthYear: number;
+  birthDate: Date;
   marriageStatus: MarriageStatus;
   numOfChildren: number;
   ethnicity: Ethnicity;
@@ -90,9 +92,23 @@ const singleSchema = new Schema<ISingle>(
     },
     city: { type: String, required: true },
     gender: { type: String, enum: Object.values(Gender), required: true },
-    sector: { type: String, enum: Object.values(Sector), required: true },
+    sectors: {
+      type: [String],
+      enum: Object.values(Sector),
+      validate: {
+        validator: (v: string[]) => v.length > 0,
+        message: "At least one sector is required",
+      },
+    },
     customSector: { type: String },
-    birthYear: { type: Number, required: true },
+    birthDate: {
+      type: Date,
+      required: true,
+      validate: {
+        validator: (d: Date) => d.getTime() <= Date.now(),
+        message: "birthDate cannot be in the future",
+      },
+    },
     marriageStatus: {
       type: String,
       enum: Object.values(MarriageStatus),
@@ -174,8 +190,18 @@ const singleSchema = new Schema<ISingle>(
     },
     searchText: { type: String },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // `age` is derived from birthDate so clients don't each compute it
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    id: false,
+  }
 );
+
+singleSchema.virtual("age").get(function (this: ISingle) {
+  return this.birthDate ? ageOn(this.birthDate) : undefined;
+});
 
 export const Single = model<ISingle>("Single", singleSchema);
 
@@ -191,9 +217,9 @@ export const SINGLE_EDITABLE_FIELDS = [
   "email",
   "city",
   "gender",
-  "sector",
+  "sectors",
   "customSector",
-  "birthYear",
+  "birthDate",
   "marriageStatus",
   "numOfChildren",
   "ethnicity",
@@ -235,15 +261,17 @@ export const SINGLE_EDITABLE_FIELDS = [
  * tend to contain personal details (freeDescription, appearance*, existing
  * match profile, matchmaker expectations), work/study places and the owning
  * matchmakers. A matchmaker gets the full profile only after adding the single
- * (POST /matchmakers/:id/add-single/:singleId).
+ * (POST /matchmakers/:id/add-single/:singleId). The exact birth date is
+ * replaced by the age (see withAge).
  */
 export const SINGLE_PUBLIC_PROJECTION = {
   _id: 1,
   firstName: 1,
   gender: 1,
-  sector: 1,
+  sectors: 1,
   customSector: 1,
-  birthYear: 1,
+  // Needed to compute `age`; withAge() strips it before the response
+  birthDate: 1,
   city: 1,
   marriageStatus: 1,
   numOfChildren: 1,

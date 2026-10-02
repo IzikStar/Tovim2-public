@@ -1,18 +1,19 @@
 import { Types } from 'mongoose';
 import { Single, ISingle } from '../models/single.js';
 import { Proposal } from '../models/proposal.js';
+import { ageOn } from '../utils/age.js';
 
 /** Fields the matching needs; images are left out because they are large. */
 const MATCH_FIELDS =
-  'firstName lastName gender sector birthYear city marriageStatus numOfChildren interests desiredSectors desiredAgeRange matchMakers isPublic currentOccupation';
+  'firstName lastName gender sectors birthDate city marriageStatus numOfChildren interests desiredSectors desiredAgeRange matchMakers isPublic currentOccupation';
 
 type Candidate = Pick<
   ISingle,
   | 'firstName'
   | 'lastName'
   | 'gender'
-  | 'sector'
-  | 'birthYear'
+  | 'sectors'
+  | 'birthDate'
   | 'city'
   | 'marriageStatus'
   | 'numOfChildren'
@@ -30,7 +31,7 @@ export interface SuggestionPerson {
   /** Only for singles the matchmaker handles; pool singles stay anonymous */
   lastName?: string;
   gender: string;
-  sector: string;
+  sectors: string[];
   age: number;
   city: string;
   currentOccupation?: string;
@@ -44,13 +45,13 @@ export interface Suggestion {
   reasons: string[];
 }
 
-const age = (birthYear: number, now = new Date()) => now.getFullYear() - birthYear;
 
 const inRange = (value: number, range?: { min?: number; max?: number } | null) =>
   !range || ((range.min == null || value >= range.min) && (range.max == null || value <= range.max));
 
-const wantsSector = (who: Candidate, sector: string) =>
-  !who.desiredSectors?.length || who.desiredSectors.includes(sector as any);
+/** No stated preference, or at least one of the other's sectors is wanted. */
+const wantsSectors = (who: Candidate, sectors: string[]) =>
+  !who.desiredSectors?.length || sectors.some((s) => who.desiredSectors.includes(s as any));
 
 /**
  * Scores a pair 0-100, or returns null when one side's stated requirements
@@ -58,9 +59,9 @@ const wantsSector = (who: Candidate, sector: string) =>
  */
 export const scorePair = (a: Candidate, b: Candidate): { score: number; reasons: string[] } | null => {
   if (a.gender === b.gender) return null;
-  const ageA = age(a.birthYear);
-  const ageB = age(b.birthYear);
-  if (!wantsSector(a, b.sector) || !wantsSector(b, a.sector)) return null;
+  const ageA = ageOn(a.birthDate);
+  const ageB = ageOn(b.birthDate);
+  if (!wantsSectors(a, b.sectors ?? []) || !wantsSectors(b, a.sectors ?? [])) return null;
   if (!inRange(ageB, a.desiredAgeRange) || !inRange(ageA, b.desiredAgeRange)) return null;
 
   let score = 40;
@@ -72,9 +73,9 @@ export const scorePair = (a: Candidate, b: Candidate): { score: number; reasons:
   } else {
     score += 5;
   }
-  if (a.sector === b.sector) {
+  if ((a.sectors ?? []).some((x) => (b.sectors ?? []).includes(x))) {
     score += 10;
-    reasons.push('אותו מגזר');
+    reasons.push('מגזר משותף');
   }
   if (a.desiredAgeRange || b.desiredAgeRange) {
     score += 10;
@@ -105,8 +106,8 @@ const person = (s: Candidate, matchMakerId: string): SuggestionPerson => {
     firstName: s.firstName,
     ...(mine ? { lastName: s.lastName } : {}),
     gender: s.gender,
-    sector: s.sector,
-    age: age(s.birthYear),
+    sectors: s.sectors ?? [],
+    age: ageOn(s.birthDate),
     city: s.city,
     currentOccupation: s.currentOccupation,
     mine,
