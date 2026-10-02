@@ -83,9 +83,11 @@ export interface SingleFields {
   email?: string;
   city: string;
   gender: Gender;
-  sector: Sector;
+  /** One or more */
+  sectors: Sector[];
   customSector?: string;
-  birthYear: number;
+  /** ISO date (YYYY-MM-DD or a full timestamp) */
+  birthDate: string;
   marriageStatus: MarriageStatus;
   numOfChildren: number;
   ethnicity: Ethnicity;
@@ -120,6 +122,8 @@ export interface SingleFields {
 
 export interface Single extends SingleFields {
   _id: string;
+  /** Derived from birthDate by the server */
+  age: number;
   matchMakers: string[];
   /** Married or engaged: off the active lists and the pool */
   isTaken?: boolean;
@@ -128,15 +132,18 @@ export interface Single extends SingleFields {
   updatedAt: string;
 }
 
-/** What GET /singles/public returns (server: SINGLE_PUBLIC_PROJECTION). */
+/**
+ * What GET /singles/public returns (server: SINGLE_PUBLIC_PROJECTION): the
+ * age, never the exact birth date.
+ */
 export type PublicSingle = Pick<
   Single,
   | '_id'
   | 'firstName'
   | 'gender'
-  | 'sector'
+  | 'sectors'
   | 'customSector'
-  | 'birthYear'
+  | 'age'
   | 'city'
   | 'marriageStatus'
   | 'numOfChildren'
@@ -153,7 +160,7 @@ export type PublicSingle = Pick<
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
-type SingleSummary = Pick<Single, '_id' | 'firstName' | 'lastName' | 'gender' | 'sector' | 'birthYear' | 'city'>;
+type SingleSummary = Pick<Single, '_id' | 'firstName' | 'lastName' | 'gender' | 'sectors' | 'customSector' | 'age' | 'city'>;
 
 interface TransferRequestBase {
   _id: string;
@@ -194,8 +201,9 @@ export interface ProposalPerson {
   /** Only for singles the matchmaker handles */
   lastName?: string;
   gender: Gender;
-  sector: Sector;
-  birthYear: number;
+  sectors: Sector[];
+  customSector?: string;
+  age: number;
   city: string;
   currentOccupation?: string;
   mine: boolean;
@@ -241,7 +249,7 @@ export interface SuggestionPerson {
   firstName: string;
   lastName?: string;
   gender: Gender;
-  sector: Sector;
+  sectors: Sector[];
   age: number;
   city: string;
   currentOccupation?: string;

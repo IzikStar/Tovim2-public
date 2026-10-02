@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Copy, MessageCircle, PenLine } from 'lucide-react';
+import { cn } from '../lib/utils';
 import { Modal } from './ui';
+import { Button, buttonVariants } from './ui/button';
 
 export const registrationUrl = (matchMakerId: string) => `${window.location.origin}/register/${matchMakerId}`;
 
@@ -21,15 +24,20 @@ export function ShareRegistration({ matchMakerId, compact }: { matchMakerId: str
   };
   const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${MESSAGE}\n${url}`)}`;
   return (
-    <div className={`share${compact ? ' share--compact' : ''}`}>
-      <code dir="ltr" className="share__url">
+    <div className={cn('flex w-full flex-col gap-2', compact && 'mx-auto mt-3 max-w-[460px]')}>
+      <code
+        dir="ltr"
+        className="block truncate rounded-md border bg-card px-2.5 py-2 text-start text-[0.85em] text-foreground"
+      >
         {url}
       </code>
-      <div className="share__buttons">
-        <button type="button" className="btn btn--primary btn--sm" onClick={copy}>
+      <div className={cn('flex flex-wrap gap-2', compact && 'justify-center')}>
+        <Button size="sm" onClick={copy}>
+          {!copied && <Copy aria-hidden />}
           {copied ? 'הועתק ✓' : 'העתקת קישור'}
-        </button>
-        <a className="btn btn--whatsapp btn--sm" href={whatsapp} target="_blank" rel="noreferrer">
+        </Button>
+        <a className={buttonVariants({ variant: 'whatsapp', size: 'sm' })} href={whatsapp} target="_blank" rel="noreferrer">
+          <MessageCircle aria-hidden />
           שליחה בוואטסאפ
         </a>
       </div>
@@ -44,16 +52,19 @@ export function ShareRegistration({ matchMakerId, compact }: { matchMakerId: str
 export function AddSingleDialog({ matchMakerId, onClose }: { matchMakerId: string; onClose: () => void }) {
   return (
     <Modal title="הוספת מועמד/ת" onClose={onClose}>
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <div>
-          <h3>שולחים למועמד/ת את השאלון</h3>
-          <p className="muted">
+          <h3 className="mb-1">שולחים למועמד/ת את השאלון</h3>
+          <p className="mb-3 text-sm text-muted-foreground">
             המועמד/ת ממלא/ת את הפרטים בעצמו/ה, בלשון שלו/ה ובקצב שלו/ה. הכרטיס מגיע ישר לרשימה שלך.
           </p>
           <ShareRegistration matchMakerId={matchMakerId} />
         </div>
-        <div className="divider">או</div>
-        <Link to="/singles/new" className="btn btn--ghost" onClick={onClose}>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground before:h-px before:flex-1 before:bg-border before:content-[''] after:h-px after:flex-1 after:bg-border after:content-['']">
+          או
+        </div>
+        <Link to="/singles/new" className={buttonVariants({ variant: 'outline' })} onClick={onClose}>
+          <PenLine aria-hidden />
           מילוי ידני על ידי
         </Link>
       </div>

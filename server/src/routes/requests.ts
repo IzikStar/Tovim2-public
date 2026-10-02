@@ -4,11 +4,12 @@ import { TransferRequest } from "../models/transferRequest.js";
 import { Single } from "../models/single.js";
 import { MatchMaker } from "../models/matchMaker.js";
 import { asyncHandler, isValidObjectId } from "../utils/http.js";
+import { withAge } from "../utils/age.js";
 
 const router = Router();
 
 const MATCHMAKER_SUMMARY = "firstName lastName city";
-const SINGLE_SUMMARY = "firstName lastName gender sector birthYear city";
+const SINGLE_SUMMARY = "firstName lastName gender sectors customSector birthDate city";
 
 // Incoming and outgoing transfer requests of the logged-in matchmaker
 router.get("/", authenticate, asyncHandler<AuthRequest>(async (req, res) => {
@@ -24,7 +25,9 @@ router.get("/", authenticate, asyncHandler<AuthRequest>(async (req, res) => {
       .populate("to", MATCHMAKER_SUMMARY)
       .lean(),
   ]);
-  res.json({ incoming, outgoing });
+  // The receiving matchmaker doesn't handle the single yet: age, not birth date
+  const shown = (r: any) => (r.single ? { ...r, single: withAge(r.single) } : r);
+  res.json({ incoming: incoming.map(shown), outgoing: outgoing.map(shown) });
 }));
 
 router.post("/", authenticate, asyncHandler<AuthRequest>(async (req, res) => {

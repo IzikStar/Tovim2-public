@@ -4,7 +4,16 @@ import { GENDERS, SECTORS, type AgeRange, type Gender, type MatchMakerInput, typ
 import { useAuth, useMe } from '../auth/AuthContext';
 import { ChipSelect } from '../components/ChipInput';
 import { ErrorBox, Field } from '../components/ui';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Select } from '../components/ui/select';
+import { Textarea } from '../components/ui/textarea';
 import { normalizePhone } from '../lib/singleForm';
+
+const SECTION = 'mb-4 min-w-0 rounded-lg border bg-card p-5 pt-4 shadow-soft sm:px-6';
+const LEGEND = 'px-1.5 text-[1.05rem] font-bold';
+const GRID = 'grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2';
+const RANGE = 'flex items-center gap-2';
 
 const num = (v: string) => (v.trim() === '' ? undefined : Number(v));
 const rangeOrNull = (min: string, max: string): AgeRange | null =>
@@ -91,18 +100,18 @@ export function ProfilePage() {
   const text = (k: 'firstName' | 'lastName' | 'city' | 'phoneNumber' | 'email', label: string, type = 'text') => (
     <Field label={label} error={errors[k]} required>
       {(id) => (
-        <input id={id} type={type} dir={k === 'email' || k === 'phoneNumber' ? 'ltr' : undefined} value={form[k]} onChange={(e) => set(k, e.target.value)} />
+        <Input id={id} type={type} dir={k === 'email' || k === 'phoneNumber' ? 'ltr' : undefined} value={form[k]} onChange={(e) => set(k, e.target.value)} />
       )}
     </Field>
   );
 
   return (
-    <div className="page page--narrow">
-      <h1>הפרופיל שלי</h1>
+    <div className="mx-auto max-w-[820px]">
+      <h1 className="mb-5">הפרופיל שלי</h1>
       <form onSubmit={submit} noValidate>
-        <fieldset className="form-section">
-          <legend>פרטים</legend>
-          <div className="form-grid">
+        <fieldset className={SECTION}>
+          <legend className={LEGEND}>פרטים</legend>
+          <div className={GRID}>
             {text('firstName', 'שם פרטי')}
             {text('lastName', 'שם משפחה')}
             {text('email', 'אימייל', 'email')}
@@ -110,68 +119,68 @@ export function ProfilePage() {
             {text('city', 'עיר')}
             <Field label="מגדר" required>
               {(id) => (
-                <select id={id} value={form.gender} onChange={(e) => set('gender', e.target.value as Gender)}>
+                <Select id={id} value={form.gender} onChange={(e) => set('gender', e.target.value as Gender)}>
                   {GENDERS.map((g) => (
                     <option key={g}>{g}</option>
                   ))}
-                </select>
+                </Select>
               )}
             </Field>
             <Field label="מגזר" required>
               {(id) => (
-                <select id={id} value={form.sector} onChange={(e) => set('sector', e.target.value as Sector)}>
+                <Select id={id} value={form.sector} onChange={(e) => set('sector', e.target.value as Sector)}>
                   {SECTORS.map((s) => (
                     <option key={s}>{s}</option>
                   ))}
-                </select>
+                </Select>
               )}
             </Field>
           </div>
         </fieldset>
 
-        <fieldset className="form-section">
-          <legend>במה אני עוסק/ת</legend>
-          <div className="form-grid">
+        <fieldset className={SECTION}>
+          <legend className={LEGEND}>במה אני עוסק/ת</legend>
+          <div className={GRID}>
             <Field label="מגזרים שאני מתמחה בהם" wide>
               {() => <ChipSelect<Sector> label="מגזרי התמחות" options={SECTORS} value={form.expertSectors} onChange={(v) => set('expertSectors', v)} />}
             </Field>
             <Field label="גילאי המועמדים" error={errors.age} hint="שדכנים אחרים רואים את זה כשהם מחפשים עם מי לשתף">
               {() => (
-                <div className="range">
-                  <input type="number" inputMode="numeric" min={18} placeholder="מגיל" aria-label="מגיל" value={form.ageMin} onChange={(e) => set('ageMin', e.target.value)} />
-                  <span>עד</span>
-                  <input type="number" inputMode="numeric" min={18} placeholder="עד גיל" aria-label="עד גיל" value={form.ageMax} onChange={(e) => set('ageMax', e.target.value)} />
+                <div className={RANGE}>
+                  <Input className="min-w-0 flex-1" type="number" inputMode="numeric" min={18} placeholder="מגיל" aria-label="מגיל" value={form.ageMin} onChange={(e) => set('ageMin', e.target.value)} />
+                  <span className="shrink-0 text-sm text-muted-foreground">עד</span>
+                  <Input className="min-w-0 flex-1" type="number" inputMode="numeric" min={18} placeholder="עד גיל" aria-label="עד גיל" value={form.ageMax} onChange={(e) => set('ageMax', e.target.value)} />
                 </div>
               )}
             </Field>
             <Field label="דמי שידוך (₪)" error={errors.price}>
               {() => (
-                <div className="range">
-                  <input type="number" inputMode="numeric" min={0} placeholder="מ-" aria-label="מחיר מינימום" value={form.priceMin} onChange={(e) => set('priceMin', e.target.value)} />
-                  <span>עד</span>
-                  <input type="number" inputMode="numeric" min={0} placeholder="עד" aria-label="מחיר מקסימום" value={form.priceMax} onChange={(e) => set('priceMax', e.target.value)} />
+                <div className={RANGE}>
+                  <Input className="min-w-0 flex-1" type="number" inputMode="numeric" min={0} placeholder="מ-" aria-label="מחיר מינימום" value={form.priceMin} onChange={(e) => set('priceMin', e.target.value)} />
+                  <span className="shrink-0 text-sm text-muted-foreground">עד</span>
+                  <Input className="min-w-0 flex-1" type="number" inputMode="numeric" min={0} placeholder="עד" aria-label="מחיר מקסימום" value={form.priceMax} onChange={(e) => set('priceMax', e.target.value)} />
                 </div>
               )}
             </Field>
             <Field label="קצת עליי" wide>
-              {(id) => <textarea id={id} rows={3} value={form.about} onChange={(e) => set('about', e.target.value)} />}
+              {(id) => <Textarea id={id} rows={3} value={form.about} onChange={(e) => set('about', e.target.value)} />}
             </Field>
           </div>
         </fieldset>
 
-        <fieldset className="form-section">
-          <legend>סיסמה</legend>
+        <fieldset className={SECTION}>
+          <legend className={LEGEND}>סיסמה</legend>
           <Field label="סיסמה חדשה" error={errors.password} hint="משאירים ריק כדי לא לשנות">
-            {(id) => <input id={id} type="password" dir="ltr" autoComplete="new-password" value={form.password} onChange={(e) => set('password', e.target.value)} />}
+            {(id) => <Input id={id} type="password" dir="ltr" autoComplete="new-password" value={form.password} onChange={(e) => set('password', e.target.value)} />}
           </Field>
         </fieldset>
 
-        <div className="form-actions">
-          {error && <ErrorBox message={error} />}
-          {saved && <div className="alert alert--info">נשמר ✓</div>}
-          <button className="btn btn--primary btn--lg" disabled={busy}>
+        <div className="sticky bottom-0 flex flex-col items-start gap-1 bg-gradient-to-b from-transparent via-background via-30% to-background pb-2 pt-5">
+          {error && <div className="w-full"><ErrorBox message={error} /></div>}
+          {saved && <div className="my-3 w-full rounded-md bg-success-soft px-4 py-2.5 text-sm font-medium text-success" role="status">נשמר ✓</div>}
+          <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={busy}>
             {busy ? 'שומרים…' : 'שמירה'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

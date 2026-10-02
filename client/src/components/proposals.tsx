@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Trash2 } from 'lucide-react';
 import { ApiError, api } from '../api/client';
 import type {
   Proposal,
@@ -13,7 +14,7 @@ import type {
 } from '../api/types';
 import { SIDE_RESPONSES } from '../api/types';
 import { useMe } from '../auth/AuthContext';
-import { ageFromBirthYear, formatDate, genderize, matchesQuery } from '../lib/format';
+import { formatDate, matchesQuery, sectorLabel } from '../lib/format';
 import {
   BOARD,
   RESPONSE_TONE,
@@ -27,7 +28,13 @@ import {
   sinceLabel,
 } from '../lib/proposals';
 import { useAsync } from '../lib/useAsync';
+import { cn } from '../lib/utils';
 import { Avatar, Badge, ErrorBox, Field, Modal, Spinner } from './ui';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
+import { Input } from './ui/input';
+import { Select } from './ui/select';
+import { Textarea } from './ui/textarea';
 
 const errorText = (err: unknown, fallback: string) => (err instanceof ApiError ? err.message : fallback);
 
@@ -36,24 +43,28 @@ export function StatusBadge({ status }: { status: ProposalStatus }) {
 }
 
 function PersonLine({ person }: { person: ProposalPerson | SuggestionPerson | null }) {
-  if (!person) return <span className="muted">מועמד/ת שנמחק/ה</span>;
-  const age = 'age' in person ? person.age : ageFromBirthYear(person.birthYear);
+  if (!person) return <span className="text-sm text-muted-foreground">מועמד/ת שנמחק/ה</span>;
+  const age = person.age;
   const name = personName(person);
   return (
-    <span className="person">
+    <span className="flex min-w-0 items-center gap-2.5">
       <Avatar firstName={person.firstName} lastName={person.lastName} size={34} />
-      <span className="person__text">
+      <span className="flex min-w-0 flex-col leading-snug">
         {person.mine ? (
-          <Link to={`/singles/${person._id}`} onClick={(e) => e.stopPropagation()}>
+          <Link
+            to={`/singles/${person._id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="truncate font-semibold text-primary hover:underline"
+          >
             {name}
           </Link>
         ) : (
-          <strong>
-            {name} <small className="muted">(מהמאגר)</small>
+          <strong className="truncate font-semibold">
+            {name} <small className="text-xs font-medium text-muted-foreground">(מהמאגר)</small>
           </strong>
         )}
-        <small className="muted">
-          {age} · {person.city} · {genderize(person.sector, person.gender)}
+        <small className="truncate text-[0.8125rem] text-muted-foreground">
+          {age} · {person.city} · {sectorLabel(person)}
         </small>
       </span>
     </span>
@@ -65,23 +76,36 @@ export function ProposalCard({ proposal, onOpen }: { proposal: Proposal; onOpen:
   const sides = orderedSides(proposal);
   const stale = isStale(proposal);
   return (
-    <button type="button" className={`proposal card${stale ? ' proposal--stale' : ''}`} onClick={onOpen}>
-      <div className="proposal__top">
+    <button
+      type="button"
+      data-stale={stale || undefined}
+      className={cn(
+        'flex w-full flex-col gap-2.5 rounded-lg border bg-card p-3.5 text-start text-card-foreground shadow-soft transition',
+        'hover:-translate-y-px hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        stale && 'border-warning/40'
+      )}
+      onClick={onOpen}
+    >
+      <div className="flex items-center justify-between gap-2">
         <StatusBadge status={proposal.status} />
-        <small className="muted">{sinceLabel(lastActivity(proposal))}</small>
+        <small className="text-xs text-muted-foreground">{sinceLabel(lastActivity(proposal))}</small>
       </div>
       {sides.map((side, i) => (
-        <div key={side.single?._id ?? i} className="proposal__side">
-          <PersonLine person={side.single} />
+        <div key={side.single?._id ?? i} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <span className="min-w-0 flex-1 basis-40">
+            <PersonLine person={side.single} />
+          </span>
           {proposal.status !== 'idea' && (
-            <Badge tone={RESPONSE_TONE[side.response]}>{responseLabel(side.response, side.single?.gender)}</Badge>
+            <span className="ms-11">
+              <Badge tone={RESPONSE_TONE[side.response]}>{responseLabel(side.response, side.single?.gender)}</Badge>
+            </span>
           )}
         </div>
       ))}
       {proposal.status === 'dating' && proposal.datesCount > 0 && (
-        <small className="muted">{proposal.datesCount} פגישות</small>
+        <small className="text-xs text-muted-foreground">{proposal.datesCount} פגישות</small>
       )}
-      {stale && <small className="proposal__nudge">לא היה עדכון כבר שבוע. כדאי לבדוק מה קורה</small>}
+      {stale && <small className="text-xs font-medium text-warning">לא היה עדכון כבר שבוע. כדאי לבדוק מה קורה</small>}
     </button>
   );
 }
@@ -147,17 +171,27 @@ export function ProposalDialog({
 
   return (
     <Modal title="מעקב הצעה" onClose={onClose} wide>
-      <div className="stack">
-        <div className="field">
-          <span className="field__label">איפה זה עומד</span>
-          <div className="steps" role="radiogroup" aria-label="סטטוס">
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium">איפה זה עומד</span>
+          <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 sm:grid-cols-6" role="radiogroup" aria-label="סטטוס">
             {BOARD.map((s) => (
               <button
                 key={s}
                 type="button"
                 role="radio"
                 aria-checked={status === s}
-                className={`steps__item steps__item--${s}${status === s ? ' on' : ''}`}
+                data-status={s}
+                className={cn(
+                  'rounded-md px-1 py-2 text-sm text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  status === s && 'font-semibold text-primary-foreground shadow-sm hover:text-primary-foreground',
+                  status === s &&
+                    (s === 'engaged' || s === 'married'
+                      ? 'bg-secondary hover:bg-secondary'
+                      : s === 'closed'
+                        ? 'bg-destructive hover:bg-destructive'
+                        : 'bg-primary hover:bg-primary')
+                )}
                 onClick={() => setStatus(s)}
               >
                 {STATUS_LABEL[s]}
@@ -165,47 +199,51 @@ export function ProposalDialog({
             ))}
           </div>
           {status !== proposal.status && (
-            <input
+            <Input
               placeholder="הערה לשינוי (לא חובה), למשל: נפגשו בפעם הראשונה"
               value={statusNote}
               onChange={(e) => setStatusNote(e.target.value)}
             />
           )}
           {status === 'married' && proposal.status !== 'married' && (
-            <small className="field__hint">מזל טוב! שני הצדדים יעברו לעמוד הזוגות ויוסרו מהרשימות ומהמאגר.</small>
+            <small className="text-xs text-muted-foreground">מזל טוב! שני הצדדים יעברו לעמוד הזוגות ויוסרו מהרשימות ומהמאגר.</small>
           )}
         </div>
 
-        <div className="sides">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {sides.map((side) => {
             const id = side.single?._id ?? '';
             const value = responses[id];
             return (
-              <div key={id} className="side card">
+              <div key={id} className="flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-3.5">
                 <PersonLine person={side.single} />
                 {side.single && (
                   <>
-                    <div className="chips" role="radiogroup" aria-label={`מה ${side.single.firstName} חשב/ה`}>
+                    <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={`מה ${side.single.firstName} חשב/ה`}>
                       {SIDE_RESPONSES.map((r) => (
                         <button
                           key={r}
                           type="button"
                           role="radio"
                           aria-checked={value.response === r}
-                          className={`chip${value.response === r ? ' chip--on' : ''}`}
+                          className={cn(
+                            'rounded-full border px-3 py-1 text-[0.8125rem] transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                            value.response === r ? 'border-primary/30 bg-primary-soft font-medium text-primary' : 'bg-card'
+                          )}
                           onClick={() => setResponses({ ...responses, [id]: { ...value, response: r as SideResponse } })}
                         >
                           {responseLabel(r as SideResponse, side.single!.gender)}
                         </button>
                       ))}
                     </div>
-                    <textarea
+                    <Textarea
                       rows={2}
+                      className="min-h-0"
                       placeholder={`מה ${side.single.firstName} ${side.single.gender === 'נקבה' ? 'אמרה' : 'אמר'}?`}
                       value={value.note}
                       onChange={(e) => setResponses({ ...responses, [id]: { ...value, note: e.target.value } })}
                     />
-                    {side.respondedAt && <small className="muted">עודכן {formatDate(side.respondedAt)}</small>}
+                    {side.respondedAt && <small className="text-xs text-muted-foreground">עודכן {formatDate(side.respondedAt)}</small>}
                   </>
                 )}
               </div>
@@ -213,31 +251,34 @@ export function ProposalDialog({
           })}
         </div>
 
-        <div className="form-grid">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {(status === 'dating' || status === 'engaged' || proposal.datesCount > 0) && (
             <Field label="מספר פגישות">
               {(id) => (
-                <input id={id} type="number" min={0} inputMode="numeric" value={datesCount} onChange={(e) => setDatesCount(e.target.value)} />
+                <Input id={id} type="number" min={0} inputMode="numeric" value={datesCount} onChange={(e) => setDatesCount(e.target.value)} />
               )}
             </Field>
           )}
           {status === 'closed' && (
             <Field label="למה נסגר">
-              {(id) => <input id={id} value={closeReason} onChange={(e) => setCloseReason(e.target.value)} placeholder="למשל: לא התאים לה הגיל" />}
+              {(id) => <Input id={id} value={closeReason} onChange={(e) => setCloseReason(e.target.value)} placeholder="למשל: לא התאים לה הגיל" />}
             </Field>
           )}
           <Field label="רשימות" wide>
-            {(id) => <textarea id={id} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="רעיונות, מה לברר, עם מי לדבר…" />}
+            {(id) => <Textarea id={id} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="רעיונות, מה לברר, עם מי לדבר…" />}
           </Field>
         </div>
 
         <div>
-          <h3>היסטוריה</h3>
-          <ol className="timeline">
+          <h3 className="mb-3">היסטוריה</h3>
+          <ol className="m-0 flex list-none flex-col gap-2.5 border-s-2 p-0 ps-4">
             {[...proposal.history].reverse().map((h, i) => (
-              <li key={i}>
+              <li
+                key={i}
+                className="relative flex flex-wrap items-center gap-2 text-sm before:absolute before:-start-[1.4rem] before:top-1.5 before:size-2.5 before:rounded-full before:border-2 before:border-primary before:bg-card before:content-['']"
+              >
                 <StatusBadge status={h.status} />
-                <span className="muted">{formatDate(h.at)}</span>
+                <span className="text-muted-foreground">{formatDate(h.at)}</span>
                 {h.note && <span>{h.note}</span>}
               </li>
             ))}
@@ -245,17 +286,18 @@ export function ProposalDialog({
         </div>
 
         {error && <ErrorBox message={error} />}
-        <div className="modal__actions modal__actions--split">
-          <button type="button" className="btn btn--danger-ghost" onClick={remove}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4">
+          <Button variant="destructive-ghost" onClick={remove}>
+            <Trash2 aria-hidden />
             מחיקה
-          </button>
-          <div className="modal__actions">
-            <button type="button" className="btn btn--ghost" onClick={onClose}>
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>
               ביטול
-            </button>
-            <button type="button" className="btn btn--primary" disabled={busy} onClick={save}>
+            </Button>
+            <Button disabled={busy} onClick={save}>
               {busy ? 'שומרים…' : 'שמירה'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -278,30 +320,36 @@ export function SuggestionCard({ suggestion, onCreated }: { suggestion: Suggesti
     }
   };
   return (
-    <article className="card suggestion">
-      <div className="suggestion__score" title="ציון התאמה">
+    <Card className="relative flex flex-col gap-3 bg-gradient-to-b from-card from-60% to-primary-soft/40 p-5 pt-4">
+      <div
+        className="absolute end-4 top-3.5 rounded-full bg-success-soft px-2.5 py-0.5 text-lg font-bold leading-snug text-success"
+        title="ציון התאמה"
+        dir="ltr"
+      >
         {suggestion.score}
-        <small>%</small>
+        <small className="text-xs">%</small>
       </div>
-      <PersonLine person={suggestion.single} />
+      <div className="min-w-0 pe-16">
+        <PersonLine person={suggestion.single} />
+      </div>
       <PersonLine person={suggestion.candidate} />
       {suggestion.reasons.length > 0 && (
-        <ul className="suggestion__reasons">
+        <ul className="m-0 list-disc space-y-0.5 ps-5 text-sm text-foreground/80 marker:text-primary/60">
           {suggestion.reasons.slice(0, 3).map((r) => (
             <li key={r}>{r}</li>
           ))}
         </ul>
       )}
       {error && <ErrorBox message={error} />}
-      <div className="suggestion__actions">
-        <button type="button" className="btn btn--ghost btn--sm" disabled={!!busy} onClick={() => create('idea')}>
+      <div className="mt-auto flex flex-wrap gap-2 pt-1">
+        <Button variant="outline" size="sm" disabled={!!busy} onClick={() => create('idea')}>
           {busy === 'idea' ? 'שומרים…' : 'שמירה כרעיון'}
-        </button>
-        <button type="button" className="btn btn--primary btn--sm" disabled={!!busy} onClick={() => create('proposed')}>
+        </Button>
+        <Button size="sm" disabled={!!busy} onClick={() => create('proposed')}>
           {busy === 'proposed' ? 'שומרים…' : 'הצעתי להם'}
-        </button>
+        </Button>
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -336,7 +384,7 @@ export function NewProposalDialog({
     const all = [...own, ...pool.filter((s) => !ownIds.has(s._id)).map((s) => ({ ...s, lastName: undefined, mine: false }))];
     return all
       .filter((s) => s._id !== single._id && s.gender !== single.gender)
-      .filter((s) => matchesQuery(query, s.firstName, s.lastName, s.city, s.sector))
+      .filter((s) => matchesQuery(query, s.firstName, s.lastName, s.city, ...s.sectors))
       .map((s) => ({ ...s, score: scores.get(s._id) }))
       .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
   }, [data.data, query, single]);
@@ -354,61 +402,64 @@ export function NewProposalDialog({
 
   return (
     <Modal title={`הצעה חדשה ל${single.firstName}`} onClose={onClose} wide>
-      <input type="search" placeholder="חיפוש לפי שם, עיר או מגזר" value={query} onChange={(e) => setQuery(e.target.value)} />
+      <Input type="search" placeholder="חיפוש לפי שם, עיר או מגזר" value={query} onChange={(e) => setQuery(e.target.value)} />
       {data.loading ? (
         <Spinner />
       ) : data.error ? (
         <ErrorBox message={data.error} onRetry={data.reload} />
       ) : options.length === 0 ? (
-        <p className="muted">אין מועמדים מתאימים ברשימה שלך או במאגר.</p>
+        <p className="my-4 text-muted-foreground">אין מועמדים מתאימים ברשימה שלך או במאגר.</p>
       ) : (
-        <ul className="pick-list pick-list--scroll" role="listbox" aria-label="בחירת הצד השני">
+        <ul className="my-3 flex max-h-80 list-none flex-col gap-1.5 overflow-y-auto p-0" role="listbox" aria-label="בחירת הצד השני">
           {options.map((s) => (
             <li key={s._id}>
               <button
                 type="button"
                 role="option"
                 aria-selected={picked === s._id}
-                className={`pick${picked === s._id ? ' pick--on' : ''}`}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-md border bg-card p-2.5 text-start transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  picked === s._id && 'border-primary bg-primary-soft'
+                )}
                 onClick={() => setPicked(s._id)}
               >
                 <Avatar firstName={s.firstName} lastName={s.lastName} size={40} />
-                <span>
-                  <strong>
+                <span className="flex min-w-0 flex-1 flex-col leading-snug">
+                  <strong className="truncate font-semibold">
                     {s.firstName} {s.lastName}
-                    {!s.mine && <small className="muted"> (מהמאגר)</small>}
+                    {!s.mine && <small className="text-xs font-medium text-muted-foreground"> (מהמאגר)</small>}
                   </strong>
-                  <small>
-                    {ageFromBirthYear(s.birthYear)} · {s.city} · {genderize(s.sector, s.gender)}
+                  <small className="truncate text-[0.8125rem] text-muted-foreground">
+                    {s.age} · {s.city} · {sectorLabel(s)}
                   </small>
                 </span>
-                {s.score !== undefined && <Badge tone="ok">התאמה {s.score}%</Badge>}
+                {s.score !== undefined && <Badge tone="ok">התאמה <bdi>{s.score}%</bdi></Badge>}
               </button>
             </li>
           ))}
         </ul>
       )}
-      <div className="form-grid">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="שלב">
           {(id) => (
-            <select id={id} value={status} onChange={(e) => setStatus(e.target.value as ProposalStatus)}>
+            <Select id={id} value={status} onChange={(e) => setStatus(e.target.value as ProposalStatus)}>
               <option value="idea">רעיון בלבד</option>
               <option value="proposed">כבר הצעתי</option>
-            </select>
+            </Select>
           )}
         </Field>
         <Field label="הערה">
-          {(id) => <input id={id} value={notes} onChange={(e) => setNotes(e.target.value)} />}
+          {(id) => <Input id={id} value={notes} onChange={(e) => setNotes(e.target.value)} />}
         </Field>
       </div>
       {error && <ErrorBox message={error} />}
-      <div className="modal__actions">
-        <button type="button" className="btn btn--ghost" onClick={onClose}>
+      <div className="mt-5 flex justify-end gap-2">
+        <Button variant="outline" onClick={onClose}>
           ביטול
-        </button>
-        <button type="button" className="btn btn--primary" disabled={!picked || busy} onClick={create}>
+        </Button>
+        <Button disabled={!picked || busy} onClick={create}>
           {busy ? 'שומרים…' : 'יצירת הצעה'}
-        </button>
+        </Button>
       </div>
     </Modal>
   );

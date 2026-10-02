@@ -5,6 +5,10 @@ import { GENDERS, SECTORS, type MatchMakerInput, type Sector } from '../api/type
 import { useAuth } from '../auth/AuthContext';
 import { ChipSelect } from '../components/ChipInput';
 import { ErrorBox, Field } from '../components/ui';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Select } from '../components/ui/select';
 import { normalizePhone } from '../lib/singleForm';
 
 const EMPTY: MatchMakerInput = {
@@ -66,7 +70,7 @@ export function SignupPage() {
   const input = (k: 'firstName' | 'lastName' | 'city' | 'phoneNumber' | 'email' | 'password', label: string, type = 'text') => (
     <Field label={label} error={errors[k]} required>
       {(id) => (
-        <input
+        <Input
           id={id}
           type={type}
           dir={['email', 'password', 'phoneNumber'].includes(k) ? 'ltr' : undefined}
@@ -79,10 +83,10 @@ export function SignupPage() {
   );
 
   return (
-    <div className="auth auth--wide card">
-      <h1>הרשמה לשדכנים</h1>
+    <Card className="mx-auto my-6 w-full max-w-[680px] p-6 sm:p-7">
+      <h1 className="mb-5 text-center">הרשמה לשדכנים</h1>
       <form onSubmit={submit} noValidate>
-        <div className="form-grid">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
           {input('firstName', 'שם פרטי')}
           {input('lastName', 'שם משפחה')}
           {input('email', 'אימייל', 'email')}
@@ -91,22 +95,22 @@ export function SignupPage() {
           {input('city', 'עיר')}
           <Field label="מגדר" error={errors.gender} required>
             {(id) => (
-              <select id={id} value={form.gender} onChange={(e) => set('gender', e.target.value as MatchMakerInput['gender'])}>
+              <Select id={id} value={form.gender} onChange={(e) => set('gender', e.target.value as MatchMakerInput['gender'])}>
                 <option value="">בחירה…</option>
                 {GENDERS.map((g) => (
                   <option key={g}>{g}</option>
                 ))}
-              </select>
+              </Select>
             )}
           </Field>
           <Field label="מגזר" error={errors.sector} required>
             {(id) => (
-              <select id={id} value={form.sector} onChange={(e) => set('sector', e.target.value as MatchMakerInput['sector'])}>
+              <Select id={id} value={form.sector} onChange={(e) => set('sector', e.target.value as MatchMakerInput['sector'])}>
                 <option value="">בחירה…</option>
                 {SECTORS.map((s) => (
                   <option key={s}>{s}</option>
                 ))}
-              </select>
+              </Select>
             )}
           </Field>
           <Field label="מגזרים שאני מתמחה בהם" wide>
@@ -114,13 +118,13 @@ export function SignupPage() {
           </Field>
         </div>
         {error && <ErrorBox message={error} />}
-        <button className="btn btn--primary btn--lg" disabled={busy}>
+        <Button type="submit" size="lg" className="mt-5 w-full" disabled={busy}>
           {busy ? 'נרשמים…' : 'יצירת חשבון'}
-        </button>
+        </Button>
       </form>
-      <p className="auth__alt">
-        כבר רשומים? <Link to="/login">כניסה</Link>
+      <p className="mt-4 text-center text-muted-foreground">
+        כבר רשומים? <Link to="/login" className="font-semibold text-primary hover:underline">כניסה</Link>
       </p>
-    </div>
+    </Card>
   );
 }

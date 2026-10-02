@@ -1,4 +1,5 @@
 import type { Single, SingleFields } from '../api/types';
+import { ageFromBirthDate } from './format';
 
 /**
  * The form keeps every field as something an <input> can hold (strings for
@@ -12,9 +13,10 @@ export interface SingleFormState {
   email: string;
   city: string;
   gender: string;
-  sector: string;
+  sectors: string[];
   customSector: string;
-  birthYear: string;
+  /** YYYY-MM-DD, as <input type="date"> holds it */
+  birthDate: string;
   marriageStatus: string;
   numOfChildren: string;
   ethnicity: string;
@@ -55,9 +57,9 @@ export const emptySingleForm = (): SingleFormState => ({
   email: '',
   city: '',
   gender: '',
-  sector: '',
+  sectors: [],
   customSector: '',
-  birthYear: '',
+  birthDate: '',
   marriageStatus: 'רווק/ה',
   numOfChildren: '0',
   ethnicity: '',
@@ -103,9 +105,9 @@ export function singleToForm(s: Single): SingleFormState {
     email: str(s.email),
     city: s.city,
     gender: s.gender,
-    sector: s.sector,
+    sectors: s.sectors ?? [],
     customSector: str(s.customSector),
-    birthYear: str(s.birthYear),
+    birthDate: s.birthDate ? s.birthDate.slice(0, 10) : '',
     marriageStatus: s.marriageStatus,
     numOfChildren: str(s.numOfChildren ?? 0),
     ethnicity: s.ethnicity,
@@ -165,9 +167,9 @@ export function formToPayload(f: SingleFormState): Partial<SingleFields> {
     email: f.email.trim(),
     city: f.city.trim(),
     gender: f.gender as SingleFields['gender'],
-    sector: f.sector as SingleFields['sector'],
-    customSector: f.sector === 'אחר/ת' ? f.customSector.trim() : '',
-    birthYear: toNumber(f.birthYear) as number,
+    sectors: f.sectors as SingleFields['sectors'],
+    customSector: f.sectors.includes('אחר/ת') ? f.customSector.trim() : '',
+    birthDate: f.birthDate,
     marriageStatus: f.marriageStatus as SingleFields['marriageStatus'],
     numOfChildren: toNumber(f.numOfChildren) ?? 0,
     ethnicity: f.ethnicity as SingleFields['ethnicity'],
@@ -212,7 +214,6 @@ export function validateSingleForm(f: SingleFormState, now = new Date()): Record
     ['lastName', 'שם משפחה'],
     ['city', 'עיר מגורים'],
     ['gender', 'מגדר'],
-    ['sector', 'מגזר'],
     ['marriageStatus', 'מצב משפחתי'],
     ['ethnicity', 'מוצא'],
   ];
@@ -222,10 +223,14 @@ export function validateSingleForm(f: SingleFormState, now = new Date()): Record
   if (!PHONE.test(normalizePhone(f.phoneNumber))) e.phoneNumber = 'מספר טלפון לא תקין';
   if (f.email.trim() && !EMAIL.test(f.email.trim())) e.email = 'כתובת אימייל לא תקינה';
 
-  const year = Number(f.birthYear);
-  const thisYear = now.getFullYear();
-  if (!f.birthYear.trim() || !Number.isInteger(year)) e.birthYear = 'חסרה שנת לידה';
-  else if (year > thisYear - 18 || year < thisYear - 100) e.birthYear = 'שנת לידה לא סבירה';
+  if (!f.sectors.length) e.sectors = 'צריך לבחור לפחות מגזר אחד';
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f.birthDate) || Number.isNaN(Date.parse(f.birthDate))) {
+    e.birthDate = 'חסר תאריך לידה';
+  } else {
+    const age = ageFromBirthDate(f.birthDate, now);
+    if (age < 18 || age > 100) e.birthDate = 'תאריך לידה לא סביר';
+  }
 
   if (f.height.trim()) {
     const h = Number(f.height);

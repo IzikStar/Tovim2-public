@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { connectDB } from './config/db.js';
 import { app } from './app.js';
 import { hasDemoData, seedDemo } from './demo.js';
+import { migrateLegacySingles } from './migrations.js';
 import logger from './utils/logger.js';
 
 const port = process.env.PORT || 3000;
@@ -32,6 +33,7 @@ process.on('unhandledRejection', (err) => {
 resolveMongoUri()
   .then(connectDB)
   .then(async () => {
+    await migrateLegacySingles();
     // A fresh demo deployment fills itself on first start
     if (process.env.SEED_DEMO === 'true' && !(await hasDemoData())) {
       await seedDemo();

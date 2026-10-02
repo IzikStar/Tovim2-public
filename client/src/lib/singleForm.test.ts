@@ -20,8 +20,8 @@ const filled = (): SingleFormState => ({
   email: 'noa@example.com',
   city: 'ירושלים',
   gender: 'נקבה',
-  sector: 'דתי/ה לאומי/ת',
-  birthYear: '1998',
+  sectors: ['דתי/ה לאומי/ת'],
+  birthDate: '1998-03-14',
   ethnicity: 'אשכנזי/ה',
   nonCompromisableAttributes: ['יראת שמיים', 'כנות', 'חסד', 'שאיפה ללמוד'],
 });
@@ -34,7 +34,7 @@ describe('validateSingleForm', () => {
   it('flags every missing required field on an empty form', () => {
     const errors = validateSingleForm(emptySingleForm(), NOW);
     expect(Object.keys(errors).sort()).toEqual(
-      ['birthYear', 'city', 'ethnicity', 'firstName', 'gender', 'lastName', 'nonCompromisableAttributes', 'phoneNumber', 'sector'].sort()
+      ['birthDate', 'city', 'ethnicity', 'firstName', 'gender', 'lastName', 'nonCompromisableAttributes', 'phoneNumber', 'sectors'].sort()
     );
   });
 
@@ -49,10 +49,13 @@ describe('validateSingleForm', () => {
     expect(validateSingleForm(f, NOW)).toHaveProperty('nonCompromisableAttributes');
   });
 
-  it('rejects under-18 birth years and inverted age ranges', () => {
-    const f = { ...filled(), birthYear: '2010', desiredAgeMin: '30', desiredAgeMax: '25' };
+  it('rejects under-18 birth dates and inverted age ranges', () => {
+    const f = { ...filled(), birthDate: '2010-01-01', desiredAgeMin: '30', desiredAgeMax: '25' };
     const errors = validateSingleForm(f, NOW);
-    expect(errors.birthYear).toBe('שנת לידה לא סבירה');
+    expect(errors.birthDate).toBe('תאריך לידה לא סביר');
+    // Turns 18 the day after NOW
+    expect(validateSingleForm({ ...filled(), birthDate: '2008-06-02' }, NOW).birthDate).toBe('תאריך לידה לא סביר');
+    expect(validateSingleForm({ ...filled(), birthDate: '2008-06-01' }, NOW)).toEqual({});
     expect(errors.desiredAgeRange).toBe('הגיל המינימלי גדול מהמקסימלי');
   });
 
@@ -68,7 +71,7 @@ describe('formToPayload', () => {
     const payload = formToPayload({ ...filled(), height: '166', referencePhones: ['052-000 0000'] });
     expect(payload.firstName).toBe('נועה');
     expect(payload.phoneNumber).toBe('0501234567');
-    expect(payload.birthYear).toBe(1998);
+    expect(payload.birthDate).toBe('1998-03-14');
     expect(payload.height).toBe(166);
     expect(payload.referencePhones).toEqual(['0520000000']);
   });
@@ -83,16 +86,19 @@ describe('formToPayload', () => {
     expect(formToPayload({ ...filled(), desiredAgeMin: '25' }).desiredAgeRange).toEqual({ min: 25, max: undefined });
   });
 
-  it('drops custom sector text unless the sector is "other"', () => {
+  it('drops custom sector text unless "other" is one of the sectors', () => {
     expect(formToPayload({ ...filled(), customSector: 'x' }).customSector).toBe('');
-    expect(formToPayload({ ...filled(), sector: 'אחר/ת', customSector: ' ברסלב ' }).customSector).toBe('ברסלב');
+    const f = { ...filled(), sectors: ['חסידי/ת', 'אחר/ת'], customSector: ' ברסלב ' };
+    expect(formToPayload(f).customSector).toBe('ברסלב');
+    expect(formToPayload(f).sectors).toEqual(['חסידי/ת', 'אחר/ת']);
   });
 });
 
 describe('singleToForm', () => {
   it('round-trips a saved single', () => {
     const payload = formToPayload({ ...filled(), height: '170', desiredAgeMin: '24', desiredAgeMax: '30' });
-    const saved = { ...payload, _id: 'x', matchMakers: [], createdAt: '', updatedAt: '' } as unknown as Single;
+    // The server returns a full timestamp for birthDate
+    const saved = { ...payload, birthDate: '1998-03-14T00:00:00.000Z', _id: 'x', matchMakers: [], createdAt: '', updatedAt: '' } as unknown as Single;
     expect(formToPayload(singleToForm(saved))).toEqual(payload);
   });
 });

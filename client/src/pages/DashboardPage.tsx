@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { useMe } from '../auth/AuthContext';
@@ -6,26 +6,66 @@ import type { Proposal } from '../api/types';
 import { AddSingleDialog, ShareRegistration } from '../components/AddSingleDialog';
 import { ProposalCard, ProposalDialog, SuggestionCard } from '../components/proposals';
 import { SingleCard } from '../components/SingleCard';
-import { Badge, EmptyState, ErrorBox, Spinner } from '../components/ui';
+import { Plus } from 'lucide-react';
+import { Badge, EmptyState, ErrorBox, PageHeader, Spinner } from '../components/ui';
+import { buttonVariants, Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { cn } from '../lib/utils';
 import { matchesQuery } from '../lib/format';
 import { OPEN, isStale } from '../lib/proposals';
 import { useAsync } from '../lib/useAsync';
 
-function Stat({ value, label, to }: { value: number | string; label: string; to?: string }) {
+const STAT_TONE = {
+  primary: { value: 'text-primary', blob: 'bg-primary-soft' },
+  secondary: { value: 'text-secondary', blob: 'bg-accent' },
+  gold: { value: 'text-gold', blob: 'bg-gold-soft' },
+} as const;
+
+function Stat({
+  value,
+  label,
+  to,
+  tone = 'primary',
+}: {
+  value: number | string;
+  label: string;
+  to?: string;
+  tone?: keyof typeof STAT_TONE;
+}) {
   const body = (
     <>
-      <strong className="stat__value">{value}</strong>
-      <span className="stat__label">{label}</span>
+      <span
+        className={cn('pointer-events-none absolute -end-6 -top-6 size-20 rounded-full opacity-70', STAT_TONE[tone].blob)}
+        aria-hidden
+      />
+      <strong className={cn('relative text-[1.9rem] font-bold leading-tight', STAT_TONE[tone].value)}>{value}</strong>
+      <span className="relative text-sm text-muted-foreground">{label}</span>
     </>
   );
+  const className =
+    'relative flex flex-col gap-0.5 overflow-hidden rounded-lg border bg-card px-4 py-4 text-card-foreground shadow-soft sm:px-[1.125rem]';
   return to ? (
-    <Link to={to} className="stat card">
+    <Link
+      to={to}
+      className={cn(className, 'transition-shadow hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring')}
+    >
       {body}
     </Link>
   ) : (
-    <div className="stat card">{body}</div>
+    <div className={className}>{body}</div>
   );
 }
+
+function SectionHead({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <div className="mb-3">
+      <h2 className="mb-1">{title}</h2>
+      {children && <p className="m-0 text-sm text-muted-foreground">{children}</p>}
+    </div>
+  );
+}
+
+const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,280px),1fr))] gap-4';
 
 /** Automatic match ideas; saving one turns it into a proposal and drops it from the list. */
 function Suggestions({ onCreated }: { onCreated: (p: Proposal) => void }) {
@@ -35,15 +75,14 @@ function Suggestions({ onCreated }: { onCreated: (p: Proposal) => void }) {
   if (suggestions.loading && !suggestions.data) return <Spinner label="מחפשים התאמות…" />;
   if (suggestions.error) return <ErrorBox message={suggestions.error} onRetry={suggestions.reload} />;
   return (
-    <section className="section">
-      <div className="section__head">
-        <h2>הצעות אוטומטיות</h2>
-        <p className="muted">זוגות שמתאימים לפי המגזר והגיל שכל צד ביקש, תחומי עניין ועיר. כוללות מועמדים מהמאגר המשותף.</p>
-      </div>
+    <section className="mb-7">
+      <SectionHead title="הצעות אוטומטיות">
+        זוגות שמתאימים לפי המגזר והגיל שכל צד ביקש, תחומי עניין ועיר. כוללות מועמדים מהמאגר המשותף.
+      </SectionHead>
       {items.length === 0 ? (
-        <p className="muted">אין כרגע הצעות חדשות. כשיתווספו מועמדים, יופיעו כאן התאמות.</p>
+        <p className="text-muted-foreground">אין כרגע הצעות חדשות. כשיתווספו מועמדים, יופיעו כאן התאמות.</p>
       ) : (
-        <div className="grid grid--suggestions">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-4">
           {items.map((s) => (
             <SuggestionCard
               key={s.single._id + s.candidate._id}
@@ -74,7 +113,7 @@ export function DashboardPage() {
     () =>
       (singles.data ?? [])
         .filter((s) => !gender || s.gender === gender)
-        .filter((s) => matchesQuery(query, s.firstName, s.lastName, s.city, s.sector, s.currentOccupation))
+        .filter((s) => matchesQuery(query, s.firstName, s.lastName, s.city, s.currentOccupation, ...s.sectors))
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
     [singles.data, query, gender]
   );
@@ -91,40 +130,37 @@ export function DashboardPage() {
     proposals.setData([p, ...allProposals.filter((x) => x._id !== p._id)]);
 
   return (
-    <div className="page">
-      <div className="page__head">
-        <div>
-          <h1>שלום, {me.firstName}</h1>
-          <p className="muted">
+    <div>
+      <PageHeader
+        title={<>שלום, {me.firstName}</>}
+        subtitle={
+          <>
             {total} מועמדים · {publicCount} במאגר המשותף
-          </p>
-        </div>
-        <div className="page__actions">
-          {pendingIncoming > 0 && (
-            <Link to="/requests" className="btn btn--ghost">
-              בקשות ממתינות <Badge tone="accent">{pendingIncoming}</Badge>
-            </Link>
-          )}
-          <button type="button" className="btn btn--primary" onClick={() => setAdding(true)}>
-            + הוספת מועמד/ת
-          </button>
-        </div>
-      </div>
+          </>
+        }
+      >
+        {pendingIncoming > 0 && (
+          <Link to="/requests" className={buttonVariants({ variant: 'outline' })}>
+            בקשות ממתינות <Badge tone="accent">{pendingIncoming}</Badge>
+          </Link>
+        )}
+        <Button onClick={() => setAdding(true)}>
+          <Plus aria-hidden />
+          הוספת מועמד/ת
+        </Button>
+      </PageHeader>
 
-      <div className="stats">
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat value={total} label="מועמדים פעילים" />
         <Stat value={openCount} label="הצעות פתוחות" to="/proposals" />
-        <Stat value={datingCount} label="נפגשים או מאורסים" to="/proposals" />
-        <Stat value={marriedCount} label="זוגות שהתחתנו" to="/couples" />
+        <Stat value={datingCount} label="נפגשים או מאורסים" to="/proposals" tone="secondary" />
+        <Stat value={marriedCount} label="זוגות שהתחתנו" to="/couples" tone="gold" />
       </div>
 
       {followUp.length > 0 && (
-        <section className="section">
-          <div className="section__head">
-            <h2>מחכות לעדכון</h2>
-            <p className="muted">הצעות פתוחות שלא זזו כבר שבוע</p>
-          </div>
-          <div className="grid">
+        <section className="mb-7">
+          <SectionHead title="מחכות לעדכון">הצעות פתוחות שלא זזו כבר שבוע</SectionHead>
+          <div className={GRID}>
             {followUp.map((p) => (
               <ProposalCard key={p._id} proposal={p} onOpen={() => setOpenProposal(p)} />
             ))}
@@ -134,26 +170,33 @@ export function DashboardPage() {
 
       <Suggestions onCreated={upsert} />
 
-      <div className="section__head section__head--list">
-        <h2>המועמדים שלי</h2>
-      </div>
+      <h2 className="mb-0 mt-2">המועמדים שלי</h2>
 
-      <div className="toolbar">
-        <input
-          className="toolbar__search"
+      <div className="mb-4 mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <Input
+          className="sm:min-w-[220px] sm:flex-1"
           type="search"
           placeholder="חיפוש לפי שם, עיר, מגזר או עיסוק"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           aria-label="חיפוש"
         />
-        <div className="segmented" role="group" aria-label="סינון לפי מגדר">
+        <div className="flex gap-1 rounded-md bg-muted p-1 sm:inline-flex" role="group" aria-label="סינון לפי מגדר">
           {[
             ['', 'כולם'],
             ['נקבה', 'בנות'],
             ['זכר', 'בנים'],
           ].map(([value, label]) => (
-            <button key={value} type="button" aria-pressed={gender === value} onClick={() => setGender(value)}>
+            <button
+              key={value}
+              type="button"
+              aria-pressed={gender === value}
+              onClick={() => setGender(value)}
+              className={cn(
+                'flex-1 whitespace-nowrap rounded-sm px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-none',
+                gender === value && 'bg-card font-semibold text-foreground shadow-sm'
+              )}
+            >
               {label}
             </button>
           ))}
@@ -172,13 +215,17 @@ export function DashboardPage() {
       ) : list.length === 0 ? (
         <EmptyState title="אין תוצאות לחיפוש" />
       ) : (
-        <div className="grid">
+        <div className={GRID}>
           {list.map((s) => (
-            <Link key={s._id} to={`/singles/${s._id}`} className="card-link">
+            <Link
+              key={s._id}
+              to={`/singles/${s._id}`}
+              className="block rounded-lg text-inherit no-underline transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&>*]:h-full [&>*]:transition-shadow hover:[&>*]:shadow-lift"
+            >
               <SingleCard
                 single={s}
                 footer={
-                  <div className="single-card__flags">
+                  <div className="flex flex-wrap gap-1.5">
                     {s.isPublic ? <Badge tone="ok">במאגר המשותף</Badge> : <Badge>פרטי</Badge>}
                     {s.matchMakers.length > 1 && <Badge tone="accent">{s.matchMakers.length} שדכנים</Badge>}
                   </div>

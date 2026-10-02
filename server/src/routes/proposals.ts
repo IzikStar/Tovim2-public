@@ -4,19 +4,23 @@ import { OPEN_STATUSES, Proposal, ProposalStatus, SideResponse } from '../models
 import { Single } from '../models/single.js';
 import { suggestMatches } from '../services/suggestions.js';
 import { asyncHandler, isValidObjectId } from '../utils/http.js';
+import { ageOn, withAge } from '../utils/age.js';
 
 const router = Router();
 router.use(authenticate);
 
 /** Enough to show who the two sides are; no images (large) or contact details. */
-const SIDE_FIELDS = 'firstName lastName gender sector birthYear city currentOccupation matchMakers isPublic';
+const SIDE_FIELDS = 'firstName lastName gender sectors customSector birthDate city currentOccupation matchMakers isPublic';
 
 const isStatus = (v: unknown): v is ProposalStatus =>
   Object.values(ProposalStatus).includes(v as ProposalStatus);
 const isResponse = (v: unknown): v is SideResponse =>
   Object.values(SideResponse).includes(v as SideResponse);
 
-/** Hides the last name of singles the matchmaker doesn't handle (pool singles). */
+/**
+ * Hides the last name and exact birth date of singles the matchmaker doesn't
+ * handle (pool singles); everyone gets `age`.
+ */
 const present = (proposal: any, matchMakerId: string) => {
   const p = typeof proposal.toObject === 'function' ? proposal.toObject() : proposal;
   p.sides = p.sides.map((side: any) => {
@@ -24,7 +28,8 @@ const present = (proposal: any, matchMakerId: string) => {
     if (!s || typeof s !== 'object' || !('firstName' in s)) return side;
     const mine = (s.matchMakers ?? []).some((id: any) => id.toString() === matchMakerId);
     const { matchMakers: _m, lastName, ...rest } = s;
-    return { ...side, single: { ...rest, ...(mine ? { lastName } : {}), mine } };
+    const shown = mine ? { ...rest, lastName, age: rest.birthDate ? ageOn(rest.birthDate) : undefined } : withAge(rest);
+    return { ...side, single: { ...shown, mine } };
   });
   return p;
 };

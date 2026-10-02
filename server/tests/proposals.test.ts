@@ -3,10 +3,17 @@ import { Gender, Sector } from '../src/models/enums.js';
 import { Single } from '../src/models/single.js';
 import { api, createMatchMaker, createSingle } from './helpers.js';
 
+/** A birth date that makes someone `n` years old today (birthday mid-year). */
+const yearsAgo = (n: number) => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - n, d.getMonth(), d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+};
+
 const woman = (overrides: Record<string, unknown> = {}) => ({
   firstName: 'Sarah',
   gender: Gender.FEMALE,
-  birthYear: 1998,
+  birthDate: '1998-03-01',
   ...overrides,
 });
 
@@ -111,7 +118,7 @@ describe('suggestions', () => {
     const mm = await createMatchMaker();
     const other = await createMatchMaker();
     const him = await createSingle(mm, {
-      birthYear: new Date().getFullYear() - 28,
+      birthDate: yearsAgo(28),
       desiredSectors: [Sector.DATI_LEUMI],
       desiredAgeRange: { min: 22, max: 30 },
       interests: ['ספורט', 'טיולים'],
@@ -119,16 +126,16 @@ describe('suggestions', () => {
     const good = await createSingle(other, woman({
       firstName: 'Good',
       isPublic: true,
-      birthYear: new Date().getFullYear() - 26,
+      birthDate: yearsAgo(26),
       interests: ['טיולים'],
       city: 'Haifa',
     }));
     // Too old for his range
-    await createSingle(other, woman({ firstName: 'Old', isPublic: true, birthYear: new Date().getFullYear() - 40 }));
+    await createSingle(other, woman({ firstName: 'Old', isPublic: true, birthDate: yearsAgo(40) }));
     // Wrong sector for him
-    await createSingle(other, woman({ firstName: 'Far', isPublic: true, sector: Sector.HILONI, birthYear: new Date().getFullYear() - 26 }));
+    await createSingle(other, woman({ firstName: 'Far', isPublic: true, sectors: [Sector.HILONI], birthDate: yearsAgo(26) }));
     // Private to the other matchmaker
-    await createSingle(other, woman({ firstName: 'Hidden', isPublic: false, birthYear: new Date().getFullYear() - 26 }));
+    await createSingle(other, woman({ firstName: 'Hidden', isPublic: false, birthDate: yearsAgo(26) }));
 
     const res = await api().get('/proposals/suggestions').set(mm.auth).expect(200);
     expect(res.body).toHaveLength(1);
