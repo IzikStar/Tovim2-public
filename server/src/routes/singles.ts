@@ -1,59 +1,83 @@
 import { Router } from 'express';
-import { Single } from '../models/single.js';
+import {
+  Single,
+  SINGLE_EDITABLE_FIELDS,
+  SINGLE_PUBLIC_PROJECTION,
+} from '../models/single.js';
+import { MatchMaker } from '../models/matchMaker.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { asyncHandler, isValidObjectId, pick } from '../utils/http.js';
 
 const router = Router();
 
-router.post('/register/:matchMakerId', async (req, res) => {
-  const { matchMakerId } = req.params;
-  try {
-    const single = await Single.create({
-      ...req.body,
-      matchMakers: [matchMakerId],
-    });
-    res.status(201).json(single);
-  } catch (err) {
-    res.status(400).json({ error: 'Failed to create single' });
-  }
-});
+const isOwner = (matchMakers: { toString(): string }[], matchMakerId?: string) =>
+  matchMakers.map((id) => id.toString()).includes(matchMakerId!);
 
-router.post('/', authenticate, async (req: AuthRequest, res) => {
-  const { matchMakerId, ...data } = req.body;
+// Public self-registration form: the single fills it in via a matchmaker's link
+router.post('/register/:matchMakerId', asyncHandler(async (req, res) => {
+  const { matchMakerId } = req.params;
+  if (!isValidObjectId(matchMakerId) || !(await MatchMaker.exists({ _id: matchMakerId }))) {
+    return res.status(404).json({ error: 'Matchmaker not found' });
+  }
+  const single = await Single.create({
+    ...pick(req.body, SINGLE_EDITABLE_FIELDS),
+    matchMakers: [matchMakerId],
+  });
+  res.status(201).json(single);
+}));
+
+router.post('/', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  const { matchMakerId } = req.body ?? {};
   if (req.matchMakerId !== matchMakerId) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const single = await Single.create({ ...data, matchMakers: [matchMakerId] });
+  const single = await Single.create({
+    ...pick(req.body, SINGLE_EDITABLE_FIELDS),
+    matchMakers: [matchMakerId],
+  });
   res.status(201).json(single);
-});
+}));
 
-router.put('/:id', authenticate, async (req: AuthRequest, res) => {
+router.get('/public', asyncHandler(async (_req, res) => {
+  const singles = await Single.find({ isPublic: true }, SINGLE_PUBLIC_PROJECTION).lean();
+  res.json(singles);
+}));
+
+// Full profile, for the matchmakers handling this single only
+router.get('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const single = await Single.findById(req.params.id);
   if (!single) {
     return res.status(404).json({ error: 'Not found' });
   }
-  if (!single.matchMakers.map((id) => id.toString()).includes(req.matchMakerId!)) {
+  if (!isOwner(single.matchMakers, req.matchMakerId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  Object.assign(single, req.body);
-  await single.save();
   res.json(single);
-});
+}));
 
-router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+router.put('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const single = await Single.findById(req.params.id);
   if (!single) {
     return res.status(404).json({ error: 'Not found' });
   }
-  if (!single.matchMakers.map((id) => id.toString()).includes(req.matchMakerId!)) {
+  if (!isOwner(single.matchMakers, req.matchMakerId)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  single.set(pick(req.body, SINGLE_EDITABLE_FIELDS));
+  await single.save();
+  res.json(single);
+}));
+
+router.delete('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  const single = await Single.findById(req.params.id);
+  if (!single) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  if (!isOwner(single.matchMakers, req.matchMakerId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   await single.deleteOne();
   res.json({ message: 'Deleted' });
-});
-
-router.get('/public', async (_req, res) => {
-  const singles = await Single.find({ isPublic: true });
-  res.json(singles);
-});
+}));
 
 export default router;

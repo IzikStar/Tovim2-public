@@ -2,32 +2,35 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import { MatchMaker } from '../models/matchMaker.js';
 import { Token } from '../models/token.js';
-import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { authenticate, AuthRequest, hashToken } from '../middleware/auth.js';
+import { asyncHandler } from '../utils/http.js';
+import { isLegacyHash, verifyPassword } from '../utils/password.js';
 
 const router = Router();
 
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  const matchMaker = await MatchMaker.findOne({ email });
-  if (!matchMaker) {
+router.post('/login', asyncHandler(async (req, res) => {
+  const { email, password } = req.body ?? {};
+  // Reject non-string input so query operators like {"$ne": null} can't reach Mongo
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+  const matchMaker = await MatchMaker.findOne({ email }).select('+password');
+  if (!matchMaker || !(await verifyPassword(password, matchMaker.password))) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
-  const hashed = crypto.createHash('sha256').update(password).digest('hex');
-  if (hashed !== matchMaker.password) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+  if (isLegacyHash(matchMaker.password)) {
+    // Upgrade old unsalted SHA-256 hashes to scrypt on successful login
+    matchMaker.password = password;
+    await matchMaker.save();
   }
   const rawToken = crypto.randomBytes(32).toString('hex');
-  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-  await Token.create({ matchMaker: matchMaker._id, token: tokenHash });
+  await Token.create({ matchMaker: matchMaker._id, token: hashToken(rawToken) });
   res.json({ token: rawToken, matchMakerId: matchMaker._id });
-});
+}));
 
-router.post('/logout', authenticate, async (req: AuthRequest, res) => {
-  const authHeader = req.headers.authorization!;
-  const token = authHeader.split(' ')[1];
-  const hashed = crypto.createHash('sha256').update(token).digest('hex');
-  await Token.deleteOne({ token: hashed });
+router.post('/logout', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  await Token.deleteOne({ token: req.tokenHash });
   res.json({ message: 'Logged out' });
-});
+}));
 
 export default router;

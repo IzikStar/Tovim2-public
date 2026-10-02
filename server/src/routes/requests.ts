@@ -2,67 +2,107 @@ import { Router } from "express";
 import { authenticate, AuthRequest } from "../middleware/auth.js";
 import { TransferRequest } from "../models/transferRequest.js";
 import { Single } from "../models/single.js";
+import { MatchMaker } from "../models/matchMaker.js";
+import { asyncHandler, isValidObjectId } from "../utils/http.js";
 
 const router = Router();
 
-router.post("/", authenticate, async (req: AuthRequest, res) => {
-  const { singleId, toMatchMakerId } = req.body;
+const MATCHMAKER_SUMMARY = "firstName lastName city";
+const SINGLE_SUMMARY = "firstName lastName gender sector birthYear city";
+
+// Incoming and outgoing transfer requests of the logged-in matchmaker
+router.get("/", authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  const [incoming, outgoing] = await Promise.all([
+    TransferRequest.find({ to: req.matchMakerId })
+      .sort({ createdAt: -1 })
+      .populate("single", SINGLE_SUMMARY)
+      .populate("from", MATCHMAKER_SUMMARY)
+      .lean(),
+    TransferRequest.find({ from: req.matchMakerId })
+      .sort({ createdAt: -1 })
+      .populate("single", SINGLE_SUMMARY)
+      .populate("to", MATCHMAKER_SUMMARY)
+      .lean(),
+  ]);
+  res.json({ incoming, outgoing });
+}));
+
+router.post("/", authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  const { singleId, toMatchMakerId } = req.body ?? {};
+  if (!isValidObjectId(singleId) || !isValidObjectId(toMatchMakerId)) {
+    return res.status(400).json({ error: "singleId and toMatchMakerId must be valid ids" });
+  }
+  if (toMatchMakerId === req.matchMakerId) {
+    return res.status(400).json({ error: "Cannot send a request to yourself" });
+  }
   const single = await Single.findById(singleId);
   if (!single) {
     return res.status(404).json({ error: "Single not found" });
   }
-  if (
-    !single.matchMakers.map((id) => id.toString()).includes(req.matchMakerId!)
-  ) {
+  const owners = single.matchMakers.map((id) => id.toString());
+  if (!owners.includes(req.matchMakerId!)) {
     return res.status(403).json({ error: "Forbidden" });
   }
+  if (!(await MatchMaker.exists({ _id: toMatchMakerId }))) {
+    return res.status(404).json({ error: "Matchmaker not found" });
+  }
+  if (owners.includes(toMatchMakerId)) {
+    return res.status(400).json({ error: "Matchmaker already handles this single" });
+  }
+  if (await TransferRequest.exists({ single: singleId, to: toMatchMakerId, status: "pending" })) {
+    return res.status(409).json({ error: "A pending request already exists" });
+  }
+  // A concurrent duplicate still fails on the partial unique index (-> 409)
   const request = await TransferRequest.create({
     single: singleId,
     from: req.matchMakerId!,
     to: toMatchMakerId,
   });
   res.status(201).json(request);
-});
+}));
 
-router.post("/:id/approve", authenticate, async (req: AuthRequest, res) => {
+/**
+ * Moves a pending request addressed to the current matchmaker to `status`.
+ * Only pending requests can change; anything else is a 400.
+ */
+const decide = async (
+  req: AuthRequest,
+  status: "approved" | "rejected"
+) => {
   const requestDoc = await TransferRequest.findById(req.params.id);
   if (!requestDoc) {
-    return res.status(404).json({ error: "Request not found" });
+    return { code: 404, body: { error: "Request not found" } };
   }
   if (requestDoc.to.toString() !== req.matchMakerId) {
-    return res.status(403).json({ error: "Forbidden" });
+    return { code: 403, body: { error: "Forbidden" } };
   }
-  if (requestDoc.status === "approved") {
-    return res.status(400).json({ error: "Already approved" });
+  // Conditional update so two concurrent decisions can't both succeed
+  const updated = await TransferRequest.findOneAndUpdate(
+    { _id: requestDoc._id, status: "pending" },
+    { status },
+    { new: true }
+  );
+  if (!updated) {
+    return { code: 400, body: { error: "Only pending requests can be approved or rejected" } };
   }
-  requestDoc.status = "approved";
-  await requestDoc.save();
-  const single = await Single.findById(requestDoc.single);
-  if (
-    single &&
-    !single.matchMakers.map((id) => id.toString()).includes(req.matchMakerId!)
-  ) {
-    single.matchMakers.push(requestDoc.to as any);
-    await single.save();
-  }
-  res.json(requestDoc);
-});
+  return { code: 200, body: updated };
+};
 
-router.post("/:id/reject", authenticate, async (req: AuthRequest, res) => {
-  const requestDoc = await TransferRequest.findById(req.params.id);
-  if (!requestDoc) {
-    return res.status(404).json({ error: "Request not found" });
+router.post("/:id/approve", authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  const result = await decide(req, "approved");
+  if (result.code === 200) {
+    const requestDoc = result.body as InstanceType<typeof TransferRequest>;
+    await Single.updateOne(
+      { _id: requestDoc.single },
+      { $addToSet: { matchMakers: requestDoc.to } }
+    );
   }
-  if (requestDoc.to.toString() !== req.matchMakerId) {
-    return res.status(403).json({ error: "Forbidden" });
-  }
-  if (requestDoc.status === "rejected") {
-    return res.status(400).json({ error: "Already rejected" });
-  }
-  requestDoc.status = "rejected";
-  await requestDoc.save();
+  res.status(result.code).json(result.body);
+}));
 
-  res.json(requestDoc);
-});
+router.post("/:id/reject", authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  const result = await decide(req, "rejected");
+  res.status(result.code).json(result.body);
+}));
 
 export default router;

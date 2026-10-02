@@ -1,31 +1,9 @@
-import express from 'express';
-import dotenv from 'dotenv';
+// Must be the first import: loads .env before app.ts reads process.env
+import 'dotenv/config';
 import { connectDB } from './config/db.js';
-import matchmakerRoutes from './routes/matchmakers.js';
-import singleRoutes from './routes/singles.js';
-import authRoutes from './routes/auth.js';
-import requestRoutes from './routes/requests.js';
-import { Request, Response } from 'express';
+import { app } from './app.js';
 
-dotenv.config();
-
-const app = express();
 const port = process.env.PORT || 3000;
-
-app.use(express.json({ limit: '10mb' }));
-
-app.use('/auth', authRoutes);
-app.use('/matchmakers', matchmakerRoutes);
-app.use('/singles', singleRoutes);
-app.use('/requests', requestRoutes);
-
-interface HelloResponse {
-  message: string;
-}
-
-app.get('/', (_req: Request, res: Response<HelloResponse>) => {
-  res.send({ message: 'Hello from Express + TypeScript' });
-});
 
 // Establish MongoDB connection before starting the server
 connectDB()

@@ -416,3 +416,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Server build output and local env files
+server/dist/
+.env
+.env.*
+!.env.example

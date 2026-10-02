@@ -153,7 +153,9 @@ const singleSchema = new Schema<ISingle>(
     desiredAgeRange: {
       type: ageRangeSchema,
       validate: {
-        validator: (v: AgeRange) => v.min <= v.max,
+        // null clears the range; an open-ended range (only min or max) is allowed
+        validator: (v: AgeRange | null) =>
+          !v || v.min == null || v.max == null || v.min <= v.max,
         message: "desiredAgeRange.min must be <= max",
       },
     },
@@ -163,3 +165,82 @@ const singleSchema = new Schema<ISingle>(
 );
 
 export const Single = model<ISingle>("Single", singleSchema);
+
+/**
+ * Fields a matchmaker (or the single, via the public registration form) may set.
+ * `matchMakers` is deliberately excluded: ownership only changes through the
+ * add-single and transfer-request flows.
+ */
+export const SINGLE_EDITABLE_FIELDS = [
+  "firstName",
+  "lastName",
+  "phoneNumber",
+  "email",
+  "city",
+  "gender",
+  "sector",
+  "customSector",
+  "birthYear",
+  "marriageStatus",
+  "numOfChildren",
+  "ethnicity",
+  "customEthnicity",
+  "workAndStudyPlaces",
+  "currentOccupation",
+  "basicDescription",
+  "freeDescription",
+  "attributes",
+  "lookingForAttributes",
+  "nonCompromisableAttributes",
+  "desiredSectors",
+  "isPublic",
+  "images",
+  "height",
+  "appearanceDescription",
+  "appearanceMustHave",
+  "appearanceMustNotHave",
+  "generalDealBreakers",
+  "interests",
+  "otherInterests",
+  "futureVision",
+  "existingMatchProfile",
+  "shareInWhatsappGroups",
+  "proposePreference",
+  "referencePhones",
+  "nameForPrayer",
+  "referralSource",
+  "matchmakerExpectations",
+  "desiredAgeRange",
+  "searchText",
+] as const;
+
+/**
+ * Projection for the unauthenticated public database (GET /singles/public).
+ * Only enough to decide whether a profile is worth pursuing; nothing that can
+ * contact or directly identify the person. Excluded on purpose: last name,
+ * phone/email, images, reference phones, name for prayer, free-text fields that
+ * tend to contain personal details (freeDescription, appearance*, existing
+ * match profile, matchmaker expectations), work/study places and the owning
+ * matchmakers. A matchmaker gets the full profile only after adding the single
+ * (POST /matchmakers/:id/add-single/:singleId).
+ */
+export const SINGLE_PUBLIC_PROJECTION = {
+  _id: 1,
+  firstName: 1,
+  gender: 1,
+  sector: 1,
+  customSector: 1,
+  birthYear: 1,
+  city: 1,
+  marriageStatus: 1,
+  numOfChildren: 1,
+  ethnicity: 1,
+  customEthnicity: 1,
+  height: 1,
+  currentOccupation: 1,
+  basicDescription: 1,
+  interests: 1,
+  otherInterests: 1,
+  desiredSectors: 1,
+  desiredAgeRange: 1,
+} as const;
