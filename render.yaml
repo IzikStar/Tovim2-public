@@ -1,6 +1,7 @@
 # Render Blueprint: one free web service that serves both the API (under /api)
-# and the built React client. The database is a MongoDB Atlas cluster whose
-# connection string is entered once when the Blueprint is created.
+# and the built React client. Set MONGO_URI to a MongoDB Atlas connection
+# string for data that survives restarts; left empty, the service runs on an
+# in-memory demo database (DEMO_MEMORY_DB) that resets on every restart.
 services:
   - type: web
     name: tovim
@@ -8,7 +9,8 @@ services:
     plan: free
     buildCommand: >-
       cd client && npm ci --include=dev && npm run build &&
-      cd ../server && npm ci --include=dev && npm run build
+      cd ../server && npm ci --include=dev && npm run build &&
+      node -e "import('mongodb-memory-server-core').then((m) => m.MongoBinary.getPath())"
     startCommand: cd server && npm start
     healthCheckPath: /api/
     envVars:
@@ -18,6 +20,13 @@ services:
         sync: false
       - key: CLIENT_DIST
         value: ../client/dist
+      - key: DEMO_MEMORY_DB
+        value: "true"
+      # Download mongod during the build, into the deployed directory
+      - key: MONGOMS_DOWNLOAD_DIR
+        value: /opt/render/project/src/server/.mongodb-binaries
+      - key: MONGOMS_VERSION
+        value: 7.0.14
       - key: SEED_DEMO
         value: "true"
       - key: VITE_SHOW_DEMO_LOGIN

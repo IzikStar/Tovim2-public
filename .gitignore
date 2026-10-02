@@ -419,6 +419,7 @@ FodyWeavers.xsd
 
 # Server build output and local env files
 server/dist/
+server/.mongodb-binaries/
 .env
 .env.*
 !.env.example
