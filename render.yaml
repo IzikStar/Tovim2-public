@@ -1,0 +1,24 @@
+# Render Blueprint: one free web service that serves both the API (under /api)
+# and the built React client. The database is a MongoDB Atlas cluster whose
+# connection string is entered once when the Blueprint is created.
+services:
+  - type: web
+    name: tovim
+    runtime: node
+    plan: free
+    buildCommand: >-
+      cd client && npm ci --include=dev && npm run build &&
+      cd ../server && npm ci --include=dev && npm run build
+    startCommand: cd server && npm start
+    healthCheckPath: /api/
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: MONGO_URI
+        sync: false
+      - key: CLIENT_DIST
+        value: ../client/dist
+      - key: SEED_DEMO
+        value: "true"
+      - key: VITE_SHOW_DEMO_LOGIN
+        value: "true"

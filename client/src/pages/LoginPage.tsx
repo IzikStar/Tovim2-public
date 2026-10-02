@@ -50,9 +50,9 @@ export function LoginPage() {
       <p className="auth__alt">
         עוד אין חשבון? <Link to="/signup">הרשמה</Link>
       </p>
-      {import.meta.env.DEV && (
+      {(import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_LOGIN === 'true') && (
         <p className="auth__demo">
-          נתוני דמו (אחרי <code>npm run seed</code>): <code dir="ltr">rachel@demo.tovim.example</code> /{' '}
+          נתוני דמו: <code dir="ltr">rachel@demo.tovim.example</code> /{' '}
           <code dir="ltr">demo-password</code>
         </p>
       )}
