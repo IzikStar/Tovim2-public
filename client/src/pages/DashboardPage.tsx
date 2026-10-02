@@ -12,7 +12,7 @@ import { buttonVariants, Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { cn } from '../lib/utils';
 import { matchesQuery } from '../lib/format';
-import { OPEN, isStale } from '../lib/proposals';
+import { OPEN, holdState, isStale } from '../lib/proposals';
 import { useAsync } from '../lib/useAsync';
 
 const STAT_TONE = {
@@ -132,6 +132,10 @@ export function DashboardPage() {
   const datingCount = allProposals.filter((p) => p.status === 'dating' || p.status === 'engaged').length;
   const marriedCount = allProposals.filter((p) => p.status === 'married').length;
   const followUp = allProposals.filter((p) => isStale(p)).slice(0, 3);
+  // Back from hold: the date they were put aside until has come
+  const backFromHold = allProposals
+    .filter((p) => holdState(p) === 'due')
+    .sort((a, b) => a.hold!.until.localeCompare(b.hold!.until));
   const upsert = (p: Proposal) =>
     proposals.setData([p, ...allProposals.filter((x) => x._id !== p._id)]);
 
@@ -162,6 +166,19 @@ export function DashboardPage() {
         <Stat value={datingCount} label="נפגשים או מאורסים" to="/proposals" tone="secondary" />
         <Stat value={marriedCount} label="זוגות שהתחתנו" to="/couples" tone="gold" />
       </div>
+
+      {backFromHold.length > 0 && (
+        <section className="mb-7 rounded-xl border border-primary/25 bg-primary-soft/50 p-4 sm:p-5">
+          <SectionHead title={`חוזרות להצעה (${backFromHold.length})`}>
+            הצעות ששמת בהמתנה, והגיע התאריך לחזור אליהן. כדאי לבדוק אם הצד השני כבר פנוי.
+          </SectionHead>
+          <div className={GRID}>
+            {backFromHold.map((p) => (
+              <ProposalCard key={p._id} proposal={p} onOpen={() => setOpenProposal(p)} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {followUp.length > 0 && (
         <section className="mb-7">

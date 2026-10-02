@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Lightbulb, Trash2, TriangleAlert } from 'lucide-react';
+import { BellRing, Lightbulb, Pause, Play, Trash2, TriangleAlert } from 'lucide-react';
 import { ApiError, api } from '../api/client';
 import type {
   Proposal,
@@ -17,19 +17,25 @@ import { useMe } from '../auth/AuthContext';
 import { formatDate, matchesQuery, sectorLabel } from '../lib/format';
 import {
   BOARD,
+  OPEN,
   RESPONSE_TONE,
   STATUS_LABEL,
   STATUS_TONE,
+  HOLD_PERIODS,
+  dateInDays,
+  holdState,
   isStale,
   lastActivity,
   orderedSides,
   personName,
   responseLabel,
   sinceLabel,
+  untilLabel,
 } from '../lib/proposals';
 import { useAsync } from '../lib/useAsync';
 import { cn } from '../lib/utils';
 import { Avatar, Badge, ErrorBox, Field, Modal, Spinner } from './ui';
+import { Checkbox } from './ui/checkbox';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Input } from './ui/input';
@@ -75,14 +81,19 @@ function PersonLine({ person }: { person: ProposalPerson | SuggestionPerson | nu
 export function ProposalCard({ proposal, onOpen }: { proposal: Proposal; onOpen: () => void }) {
   const sides = orderedSides(proposal);
   const stale = isStale(proposal);
+  const hold = holdState(proposal);
+  const unavailable = sides.filter((s) => s.single && proposal.hold?.unavailable.includes(s.single._id));
   return (
     <button
       type="button"
       data-stale={stale || undefined}
+      data-hold={hold === 'none' ? undefined : hold}
       className={cn(
         'flex w-full flex-col gap-2.5 rounded-lg border bg-card p-3.5 text-start text-card-foreground shadow-soft transition',
         'hover:-translate-y-px hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        stale && 'border-warning/40'
+        stale && 'border-warning/40',
+        hold === 'waiting' && 'bg-muted/60 shadow-none',
+        hold === 'due' && 'border-primary/50 ring-2 ring-primary/15'
       )}
       onClick={onOpen}
     >
@@ -106,7 +117,166 @@ export function ProposalCard({ proposal, onOpen }: { proposal: Proposal; onOpen:
         <small className="text-xs text-muted-foreground">{proposal.datesCount} פגישות</small>
       )}
       {stale && <small className="text-xs font-medium text-warning">לא היה עדכון כבר שבוע. כדאי לבדוק מה קורה</small>}
+      {hold === 'waiting' && proposal.hold && (
+        <small className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          <Badge tone="neutral">
+            <Pause aria-hidden />
+            בהמתנה · {untilLabel(proposal.hold.until)}
+          </Badge>
+          {unavailable.length > 0 && <span>{unavailable.map((s) => s.single!.firstName).join(' ו')} לא פנוי/ה</span>}
+        </small>
+      )}
+      {hold === 'due' && (
+        <small className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+          <BellRing className="size-3.5" aria-hidden />
+          זמן ההמתנה עבר. הזמן לחזור להצעה
+        </small>
+      )}
     </button>
+  );
+}
+
+/**
+ * Put a proposal on hold until a date (a side isn't available right now),
+ * snooze it again, or bring it back. Saves on its own, apart from the
+ * dialog's main save.
+ */
+function HoldPanel({ proposal, onChange }: { proposal: Proposal; onChange: (p: Proposal) => void }) {
+  const sides = orderedSides(proposal).filter((s) => s.single);
+  const state = holdState(proposal);
+  const [editing, setEditing] = useState(false);
+  const [until, setUntil] = useState(dateInDays(30));
+  const [unavailable, setUnavailable] = useState<string[]>(proposal.hold?.unavailable ?? []);
+  const [reason, setReason] = useState(proposal.hold?.reason ?? '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const tomorrow = dateInDays(1);
+
+  const send = async (hold: ProposalUpdate['hold']) => {
+    setBusy(true);
+    setError(null);
+    try {
+      onChange(await api.updateProposal(proposal._id, { hold }));
+    } catch (err) {
+      setError(errorText(err, 'השמירה נכשלה'));
+      setBusy(false);
+    }
+  };
+  // End of the chosen day, local time, so "until the 5th" includes the 5th
+  const putOnHold = () => send({ until: new Date(`${until}T23:59:59`).toISOString(), unavailable, reason });
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-3 rounded-lg border p-3.5',
+        state === 'due' ? 'border-primary/40 bg-primary-soft/60' : 'bg-muted/50'
+      )}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="m-0 flex items-center gap-1.5">
+            {state === 'due' ? <BellRing className="size-4 text-primary" aria-hidden /> : <Pause className="size-4" aria-hidden />}
+            {state === 'none' ? 'המתנה' : state === 'due' ? 'זמן ההמתנה עבר' : 'בהמתנה'}
+          </h3>
+          {proposal.hold && state !== 'none' ? (
+            <p className="m-0 mt-1 text-sm text-muted-foreground">
+              עד {formatDate(proposal.hold.until)}
+              {state === 'waiting' && <> ({untilLabel(proposal.hold.until)})</>}
+              {proposal.hold.unavailable.length > 0 && (
+                <>
+                  {' · '}
+                  {sides
+                    .filter((s) => proposal.hold!.unavailable.includes(s.single!._id))
+                    .map((s) => s.single!.firstName)
+                    .join(' ו')}{' '}
+                  לא פנוי/ה
+                </>
+              )}
+              {proposal.hold.reason && <> · {proposal.hold.reason}</>}
+            </p>
+          ) : (
+            <p className="m-0 mt-1 text-sm text-muted-foreground">אחד הצדדים לא פנוי כרגע? שמים בצד, וההצעה תקפוץ שוב בתאריך שבוחרים.</p>
+          )}
+        </div>
+        {!editing && (
+          <div className="flex flex-wrap gap-2">
+            {state !== 'none' && (
+              <Button size="sm" disabled={busy} onClick={() => send(null)}>
+                <Play aria-hidden />
+                {state === 'due' ? 'חוזרים לטפל' : 'להחזיר עכשיו'}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" disabled={busy} onClick={() => setEditing(true)}>
+              <Pause aria-hidden />
+              {state === 'none' ? 'לשים בהמתנה' : 'לדחות שוב'}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {editing && (
+        <div className="flex flex-col gap-3 border-t pt-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">מי לא פנוי/ה?</span>
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              {sides.map((s) => {
+                const id = s.single!._id;
+                return (
+                  <Checkbox
+                    key={id}
+                    checked={unavailable.includes(id)}
+                    onChange={(e) => setUnavailable(e.target.checked ? [...unavailable, id] : unavailable.filter((x) => x !== id))}
+                  >
+                    {personName(s.single)}
+                  </Checkbox>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">להקפיץ שוב בעוד</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {HOLD_PERIODS.map((p) => {
+                const value = dateInDays(p.days);
+                return (
+                  <button
+                    key={p.days}
+                    type="button"
+                    aria-pressed={until === value}
+                    onClick={() => setUntil(value)}
+                    className={cn(
+                      'rounded-full border px-3 py-1 text-[0.8125rem] transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      until === value ? 'border-primary/30 bg-primary-soft font-medium text-primary' : 'bg-card'
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+              <Input
+                type="date"
+                dir="ltr"
+                min={tomorrow}
+                className="h-8 w-auto"
+                value={until}
+                onChange={(e) => setUntil(e.target.value)}
+                aria-label="תאריך"
+              />
+            </div>
+          </div>
+          <Input placeholder="למה (לא חובה), למשל: בשירות עד אחרי החגים" value={reason} onChange={(e) => setReason(e.target.value)} />
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" disabled={busy || !until || until < tomorrow} onClick={putOnHold}>
+              {busy ? 'שומרים…' : `בהמתנה עד ${until ? formatDate(until) : '…'}`}
+            </Button>
+            <Button variant="ghost" size="sm" disabled={busy} onClick={() => setEditing(false)}>
+              ביטול
+            </Button>
+          </div>
+        </div>
+      )}
+      {error && <ErrorBox message={error} />}
+    </div>
   );
 }
 
@@ -158,6 +328,16 @@ export function ProposalDialog({
     }
   };
 
+  const holdPanel = (
+    <HoldPanel
+      proposal={proposal}
+      onChange={(p) => {
+        onChange(p);
+        onClose();
+      }}
+    />
+  );
+
   const remove = async () => {
     if (!window.confirm('למחוק את ההצעה? ההיסטוריה שלה תימחק.')) return;
     try {
@@ -172,6 +352,7 @@ export function ProposalDialog({
   return (
     <Modal title="מעקב הצעה" onClose={onClose} wide>
       <div className="flex flex-col gap-5">
+        {holdState(proposal) !== 'none' && holdPanel}
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">איפה זה עומד</span>
           <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 sm:grid-cols-6" role="radiogroup" aria-label="סטטוס">
@@ -269,6 +450,9 @@ export function ProposalDialog({
           </Field>
         </div>
 
+        {/* Not on hold: the option sits low; on hold it's the first thing to see */}
+        {holdState(proposal) === 'none' && OPEN.includes(proposal.status) && holdPanel}
+
         <div>
           <h3 className="mb-3">היסטוריה</h3>
           <ol className="m-0 flex list-none flex-col gap-2.5 border-s-2 p-0 ps-4">
@@ -277,7 +461,13 @@ export function ProposalDialog({
                 key={i}
                 className="relative flex flex-wrap items-center gap-2 text-sm before:absolute before:-start-[1.4rem] before:top-1.5 before:size-2.5 before:rounded-full before:border-2 before:border-primary before:bg-card before:content-['']"
               >
-                <StatusBadge status={h.status} />
+                {h.kind === 'hold' ? (
+                  <Badge tone="neutral">בהמתנה</Badge>
+                ) : h.kind === 'resume' ? (
+                  <Badge tone="ok">חזרה מהמתנה</Badge>
+                ) : (
+                  <StatusBadge status={h.status} />
+                )}
                 <span className="text-muted-foreground">{formatDate(h.at)}</span>
                 {h.note && <span>{h.note}</span>}
               </li>

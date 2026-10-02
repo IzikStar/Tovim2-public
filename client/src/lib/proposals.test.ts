@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Proposal } from '../api/types';
-import { isStale, orderedSides, responseLabel, sinceLabel } from './proposals';
+import { dateInDays, holdState, isStale, orderedSides, responseLabel, sinceLabel, untilLabel } from './proposals';
 
 const DAY = 86_400_000;
 const NOW = Date.parse('2026-10-02T12:00:00Z');
@@ -35,5 +35,22 @@ describe('proposal helpers', () => {
     expect(responseLabel('no', 'זכר')).toBe('לא מעוניין');
     expect(sinceLabel(new Date(NOW).toISOString(), NOW)).toBe('היום');
     expect(sinceLabel(new Date(NOW - 3 * DAY).toISOString(), NOW)).toBe('לפני 3 ימים');
+  });
+
+  it('tracks a hold: waiting, then due once the date passes', () => {
+    const hold = { until: new Date(NOW + 3 * DAY).toISOString(), since: new Date(NOW).toISOString(), unavailable: ['b'] };
+    expect(holdState(proposal(), NOW)).toBe('none');
+    expect(holdState(proposal({ hold }), NOW)).toBe('waiting');
+    expect(holdState(proposal({ hold }), NOW + 4 * DAY)).toBe('due');
+    // A closed proposal is never on hold, whatever is stored
+    expect(holdState(proposal({ hold, status: 'closed' }), NOW)).toBe('none');
+    // Waiting on hold isn't "stale", but a due one is a follow-up of its own
+    expect(isStale(proposal({ hold }), NOW)).toBe(false);
+    expect(untilLabel(hold.until, NOW)).toBe('עוד 3 ימים');
+    expect(untilLabel(new Date(NOW + DAY).toISOString(), NOW)).toBe('מחר');
+  });
+
+  it('dateInDays gives a local YYYY-MM-DD', () => {
+    expect(dateInDays(7, new Date(2026, 9, 28))).toBe('2026-11-04');
   });
 });

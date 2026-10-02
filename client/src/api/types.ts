@@ -219,8 +219,19 @@ export interface ProposalSide {
 
 export interface ProposalEvent {
   status: ProposalStatus;
+  /** A status change (default), or the proposal put on hold / taken off it */
+  kind?: 'status' | 'hold' | 'resume';
   at: string;
   note?: string;
+}
+
+/** Paused until a date because a side isn't available; the status is kept. */
+export interface ProposalHold {
+  until: string;
+  since: string;
+  /** Single ids of the sides that aren't available */
+  unavailable: string[];
+  reason?: string;
 }
 
 export interface Proposal {
@@ -231,6 +242,7 @@ export interface Proposal {
   datesCount: number;
   closeReason?: string;
   history: ProposalEvent[];
+  hold?: ProposalHold | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -242,6 +254,8 @@ export interface ProposalUpdate {
   datesCount?: number;
   closeReason?: string;
   sides?: { single: string; response?: SideResponse; note?: string }[];
+  /** Put on hold (or snooze again); null takes it off hold */
+  hold?: { until: string; unavailable?: string[]; reason?: string } | null;
 }
 
 export interface SuggestionPerson {

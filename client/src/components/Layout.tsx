@@ -1,6 +1,9 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { api } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { holdState } from '../lib/proposals';
+import { useAsync } from '../lib/useAsync';
 import { cn } from '../lib/utils';
 import { Avatar } from './ui';
 import { Button, buttonVariants } from './ui/button';
@@ -29,9 +32,17 @@ function Footer() {
   return <footer className="px-5 py-6 text-center text-sm text-muted-foreground">טובים · מערכת לשדכנים ושדכניות</footer>;
 }
 
+/** How many held proposals are due to come back; refreshed on every page change. */
+function useDueCount(loggedIn: boolean) {
+  const { pathname } = useLocation();
+  const proposals = useAsync(() => (loggedIn ? api.proposals() : Promise.resolve([])), [loggedIn, pathname]);
+  return (proposals.data ?? []).filter((p) => holdState(p) === 'due').length;
+}
+
 export function Layout() {
   const { me, logout } = useAuth();
   const navigate = useNavigate();
+  const due = useDueCount(Boolean(me));
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -45,7 +56,17 @@ export function Layout() {
             {me ? (
               <>
                 <NavLink to="/dashboard" className={navClass}>ראשי</NavLink>
-                <NavLink to="/proposals" className={navClass}>הצעות</NavLink>
+                <NavLink to="/proposals" className={navClass}>
+                  הצעות
+                  {due > 0 && (
+                    <span
+                      className="ms-1.5 inline-grid min-w-5 place-items-center rounded-full bg-primary px-1 text-[0.7rem] font-bold leading-5 text-primary-foreground"
+                      title={`${due} הצעות חוזרות מהמתנה`}
+                    >
+                      {due}
+                    </span>
+                  )}
+                </NavLink>
                 <NavLink to="/brainstorm" className={navClass}>סיעור מוחות</NavLink>
                 <NavLink to="/pool" className={navClass}>מאגר משותף</NavLink>
                 <NavLink to="/couples" className={navClass}>זוגות</NavLink>
