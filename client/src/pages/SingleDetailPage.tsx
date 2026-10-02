@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, api } from '../api/client';
-import type { Single } from '../api/types';
+import type { Proposal, Single } from '../api/types';
+import { NewProposalDialog, ProposalCard, ProposalDialog, SuggestionCard } from '../components/proposals';
 import { useMe } from '../auth/AuthContext';
 import { Avatar, Badge, ErrorBox, Modal, Spinner } from '../components/ui';
 import { ageFromBirthYear, ethnicityLabel, formatDate, genderize, sectorLabel } from '../lib/format';
@@ -103,6 +104,78 @@ function TransferDialog({ single, onClose, onSent }: { single: Single; onClose: 
   );
 }
 
+/** This single's proposals, plus automatic ideas for them. */
+function ProposalsSection({ single }: { single: Single }) {
+  const proposals = useAsync(() => api.proposals(single._id), [single._id]);
+  const suggestions = useAsync(
+    () => (single.isTaken ? Promise.resolve([]) : api.suggestions(single._id, 3)),
+    [single._id, single.isTaken]
+  );
+  const [creating, setCreating] = useState(false);
+  const [open, setOpen] = useState<Proposal | null>(null);
+  const list = proposals.data ?? [];
+  const upsert = (p: Proposal) => {
+    proposals.setData([p, ...list.filter((x) => x._id !== p._id)]);
+    suggestions.reload();
+  };
+  const { firstName } = single;
+
+  return (
+    <section className="card">
+      <div className="section__head section__head--row">
+        <h2>הצעות ל{firstName}</h2>
+        {!single.isTaken && (
+          <button type="button" className="btn btn--primary btn--sm" onClick={() => setCreating(true)}>
+            + הצעה חדשה
+          </button>
+        )}
+      </div>
+      {proposals.loading && !proposals.data ? (
+        <Spinner />
+      ) : proposals.error ? (
+        <ErrorBox message={proposals.error} onRetry={proposals.reload} />
+      ) : list.length === 0 ? (
+        <p className="muted">עוד לא הוצע ל{firstName} אף אחד.</p>
+      ) : (
+        <div className="proposal-list">
+          {list.map((p) => (
+            <ProposalCard key={p._id} proposal={p} onOpen={() => setOpen(p)} />
+          ))}
+        </div>
+      )}
+      {!!suggestions.data?.length && (
+        <>
+          <h3 className="subhead">אולי יתאים/תתאים</h3>
+          <div className="grid grid--suggestions">
+            {suggestions.data.map((sug) => (
+              <SuggestionCard key={sug.candidate._id} suggestion={sug} onCreated={upsert} />
+            ))}
+          </div>
+        </>
+      )}
+      {creating && (
+        <NewProposalDialog
+          single={single}
+          onClose={() => setCreating(false)}
+          onCreated={(p) => {
+            setCreating(false);
+            upsert(p);
+            setOpen(p);
+          }}
+        />
+      )}
+      {open && (
+        <ProposalDialog
+          proposal={open}
+          onClose={() => setOpen(null)}
+          onChange={upsert}
+          onDelete={(id) => proposals.setData(list.filter((x) => x._id !== id))}
+        />
+      )}
+    </section>
+  );
+}
+
 export function SingleDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
@@ -129,6 +202,15 @@ export function SingleDetailPage() {
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setNotice(err instanceof ApiError ? err.message : 'המחיקה נכשלה');
+    }
+  };
+
+  const toggleTaken = async () => {
+    if (!s.isTaken && !window.confirm(`לסמן את ${s.firstName} כתפוס/ה? הכרטיס יעבור לעמוד הזוגות ויוסר מהמאגר.`)) return;
+    try {
+      single.setData(await api.updateSingle(s._id, { isTaken: !s.isTaken } as Partial<Single>));
+    } catch (err) {
+      setNotice(err instanceof ApiError ? err.message : 'העדכון נכשל');
     }
   };
 
@@ -171,7 +253,13 @@ export function SingleDetailPage() {
             {s.numOfChildren > 0 && ` · ${s.numOfChildren} ילדים`}
           </p>
           <div className="single-card__flags">
-            {s.isPublic ? <Badge tone="ok">במאגר המשותף</Badge> : <Badge>פרטי</Badge>}
+            {s.isTaken ? (
+              <Badge tone="accent">{s.gender === 'נקבה' ? 'תפוסה' : 'תפוס'} 💍</Badge>
+            ) : s.isPublic ? (
+              <Badge tone="ok">במאגר המשותף</Badge>
+            ) : (
+              <Badge>פרטי</Badge>
+            )}
             {s.shareInWhatsappGroups && <Badge>מאשר/ת וואטסאפ</Badge>}
           </div>
           <dl className="contact">
@@ -196,6 +284,9 @@ export function SingleDetailPage() {
             <button type="button" className="btn btn--ghost" onClick={togglePublic}>
               {s.isPublic ? 'הסרה מהמאגר המשותף' : 'הצגה במאגר המשותף'}
             </button>
+            <button type="button" className="btn btn--ghost" onClick={toggleTaken}>
+              {s.isTaken ? 'החזרה לרשימה הפעילה' : 'סימון כתפוס/ה (התחתן/ה)'}
+            </button>
             <button type="button" className="btn btn--danger-ghost" onClick={remove}>
               מחיקה
             </button>
@@ -205,6 +296,7 @@ export function SingleDetailPage() {
         </aside>
 
         <div className="profile__main">
+          <ProposalsSection single={s} />
           <section className="card">
             <h2>רקע</h2>
             <dl>

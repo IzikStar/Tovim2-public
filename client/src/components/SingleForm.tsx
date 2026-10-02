@@ -132,7 +132,7 @@ export function SingleForm({
 
       <Section title="פרטי קשר" subtitle={you ? 'רק השדכן/ית יראו את הפרטים האלה.' : 'לא מוצגים במאגר המשותף.'}>
         {text('phoneNumber', 'טלפון', { required: true, type: 'tel', inputMode: 'tel', dir: 'ltr' })}
-        {text('email', 'אימייל', { required: true, type: 'email', inputMode: 'email', dir: 'ltr' })}
+        {text('email', 'אימייל', { type: 'email', inputMode: 'email', dir: 'ltr' })}
       </Section>
 
       <Section title="רקע">

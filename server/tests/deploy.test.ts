@@ -33,7 +33,7 @@ describe('demo data', () => {
     await seedDemo();
     expect(await hasDemoData()).toBe(true);
     expect(await MatchMaker.countDocuments()).toBe(2);
-    expect(await Single.countDocuments()).toBe(8);
+    expect(await Single.countDocuments()).toBe(10);
 
     await request(apiApp)
       .post('/auth/login')

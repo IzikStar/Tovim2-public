@@ -74,7 +74,7 @@ export const scorePair = (a: Candidate, b: Candidate): { score: number; reasons:
   }
   if (a.sector === b.sector) {
     score += 10;
-    reasons.push(`שניהם ${a.sector}`);
+    reasons.push('אותו מגזר');
   }
   if (a.desiredAgeRange || b.desiredAgeRange) {
     score += 10;

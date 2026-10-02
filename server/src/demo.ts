@@ -1,5 +1,5 @@
 /**
- * Demo data: two matchmakers and eight singles. Every person here is
+ * Demo data: two matchmakers, ten singles and a few proposals. Every person here is
  * invented; emails use the reserved `.example` TLD and phone numbers are
  * placeholders. Used by `npm run seed` and by SEED_DEMO on server start.
  */
@@ -217,6 +217,47 @@ const singles: SingleSeed[] = [
     desiredAgeRange: { min: 26, max: 33 },
     interests: [Interest.CYCLING, Interest.SCIENCE, Interest.CINEMA],
     isPublic: false,
+  },
+  {
+    owner: 1,
+    firstName: 'אליה',
+    lastName: 'אורני',
+    gender: Gender.MALE,
+    sector: Sector.DATI_LEUMI,
+    birthYear: 1999,
+    city: 'גוש עציון',
+    marriageStatus: MarriageStatus.SINGLE,
+    ethnicity: Ethnicity.ASHKENAZI,
+    height: 179,
+    currentOccupation: 'מורה למוזיקה',
+    basicDescription: 'מנגן, מטייל ולומד בכולל ערב. אוהב שקט ואנשים טובים.',
+    attributes: ['רגיש', 'שמח'],
+    lookingForAttributes: ['עדינות', 'אמונה'],
+    nonCompromisableAttributes: ['תורה', 'שמחה', 'כנות', 'רגישות'],
+    desiredSectors: [Sector.DATI_LEUMI_HARDAL, Sector.DATI_LEUMI],
+    desiredAgeRange: { min: 21, max: 27 },
+    interests: [Interest.MUSIC, Interest.NATURE, Interest.TORAH, Interest.HIKING],
+    isPublic: true,
+  },
+  {
+    owner: 1,
+    firstName: 'רבקה',
+    lastName: 'זיתוני',
+    gender: Gender.FEMALE,
+    sector: Sector.HAREDI_LITVAK,
+    birthYear: 2002,
+    city: 'ירושלים',
+    marriageStatus: MarriageStatus.SINGLE,
+    ethnicity: Ethnicity.ASHKENAZI,
+    currentOccupation: 'מורה בסמינר',
+    basicDescription: 'בת תורה, שקולה ושמחה. רוצה בית של לימוד.',
+    attributes: ['שקולה', 'נותנת'],
+    lookingForAttributes: ['מתמיד', 'מידות טובות'],
+    nonCompromisableAttributes: ['יראת שמיים', 'מידות טובות', 'לימוד תורה', 'צניעות'],
+    desiredSectors: [Sector.HAREDI_LITVAK],
+    desiredAgeRange: { min: 22, max: 28 },
+    interests: [Interest.TORAH, Interest.READING],
+    isPublic: true,
   },
 ];
 

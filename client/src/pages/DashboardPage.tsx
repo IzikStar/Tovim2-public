@@ -2,38 +2,61 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import { useMe } from '../auth/AuthContext';
+import type { Proposal } from '../api/types';
+import { AddSingleDialog, ShareRegistration } from '../components/AddSingleDialog';
+import { ProposalCard, ProposalDialog, SuggestionCard } from '../components/proposals';
 import { SingleCard } from '../components/SingleCard';
 import { Badge, EmptyState, ErrorBox, Spinner } from '../components/ui';
 import { matchesQuery } from '../lib/format';
+import { OPEN, isStale } from '../lib/proposals';
 import { useAsync } from '../lib/useAsync';
 
-function RegistrationLink({ matchMakerId }: { matchMakerId: string }) {
-  const url = `${window.location.origin}/register/${matchMakerId}`;
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      window.prompt('העתיקו את הקישור:', url);
-    }
-  };
+function Stat({ value, label, to }: { value: number | string; label: string; to?: string }) {
+  const body = (
+    <>
+      <strong className="stat__value">{value}</strong>
+      <span className="stat__label">{label}</span>
+    </>
+  );
+  return to ? (
+    <Link to={to} className="stat card">
+      {body}
+    </Link>
+  ) : (
+    <div className="stat card">{body}</div>
+  );
+}
+
+/** Automatic match ideas; saving one turns it into a proposal and drops it from the list. */
+function Suggestions({ onCreated }: { onCreated: (p: Proposal) => void }) {
+  const suggestions = useAsync(() => api.suggestions(undefined, 6), []);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const items = (suggestions.data ?? []).filter((s) => !hidden.has(s.single._id + s.candidate._id));
+  if (suggestions.loading && !suggestions.data) return <Spinner label="מחפשים התאמות…" />;
+  if (suggestions.error) return <ErrorBox message={suggestions.error} onRetry={suggestions.reload} />;
   return (
-    <div className="reglink card">
-      <div>
-        <strong>קישור ההרשמה שלך</strong>
-        <p>שולחים למועמד/ת, והם ממלאים את השאלון בעצמם. הכרטיס מגיע ישר לרשימה שלך.</p>
+    <section className="section">
+      <div className="section__head">
+        <h2>הצעות אוטומטיות</h2>
+        <p className="muted">זוגות שמתאימים לפי המגזר והגיל שכל צד ביקש, תחומי עניין ועיר. כוללות מועמדים מהמאגר המשותף.</p>
       </div>
-      <div className="reglink__row">
-        <code dir="ltr" className="reglink__url">
-          {url}
-        </code>
-        <button type="button" className="btn btn--primary btn--sm" onClick={copy}>
-          {copied ? 'הועתק ✓' : 'העתקה'}
-        </button>
-      </div>
-    </div>
+      {items.length === 0 ? (
+        <p className="muted">אין כרגע הצעות חדשות. כשיתווספו מועמדים, יופיעו כאן התאמות.</p>
+      ) : (
+        <div className="grid grid--suggestions">
+          {items.map((s) => (
+            <SuggestionCard
+              key={s.single._id + s.candidate._id}
+              suggestion={s}
+              onCreated={(p) => {
+                setHidden(new Set(hidden).add(s.single._id + s.candidate._id));
+                onCreated(p);
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -41,6 +64,9 @@ export function DashboardPage() {
   const me = useMe();
   const singles = useAsync(() => api.mySingles(me._id), [me._id]);
   const requests = useAsync(() => api.requests(), []);
+  const proposals = useAsync(() => api.proposals(), []);
+  const [adding, setAdding] = useState(false);
+  const [openProposal, setOpenProposal] = useState<Proposal | null>(null);
   const [query, setQuery] = useState('');
   const [gender, setGender] = useState('');
 
@@ -56,12 +82,19 @@ export function DashboardPage() {
   const pendingIncoming = requests.data?.incoming.filter((r) => r.status === 'pending').length ?? 0;
   const total = singles.data?.length ?? 0;
   const publicCount = singles.data?.filter((s) => s.isPublic).length ?? 0;
+  const allProposals = proposals.data ?? [];
+  const openCount = allProposals.filter((p) => OPEN.includes(p.status)).length;
+  const datingCount = allProposals.filter((p) => p.status === 'dating' || p.status === 'engaged').length;
+  const marriedCount = allProposals.filter((p) => p.status === 'married').length;
+  const followUp = allProposals.filter((p) => isStale(p)).slice(0, 3);
+  const upsert = (p: Proposal) =>
+    proposals.setData([p, ...allProposals.filter((x) => x._id !== p._id)]);
 
   return (
     <div className="page">
       <div className="page__head">
         <div>
-          <h1>המועמדים שלי</h1>
+          <h1>שלום, {me.firstName}</h1>
           <p className="muted">
             {total} מועמדים · {publicCount} במאגר המשותף
           </p>
@@ -72,13 +105,38 @@ export function DashboardPage() {
               בקשות ממתינות <Badge tone="accent">{pendingIncoming}</Badge>
             </Link>
           )}
-          <Link to="/singles/new" className="btn btn--primary">
-            + מועמד/ת חדש/ה
-          </Link>
+          <button type="button" className="btn btn--primary" onClick={() => setAdding(true)}>
+            + הוספת מועמד/ת
+          </button>
         </div>
       </div>
 
-      <RegistrationLink matchMakerId={me._id} />
+      <div className="stats">
+        <Stat value={total} label="מועמדים פעילים" />
+        <Stat value={openCount} label="הצעות פתוחות" to="/proposals" />
+        <Stat value={datingCount} label="נפגשים או מאורסים" to="/proposals" />
+        <Stat value={marriedCount} label="זוגות שהתחתנו" to="/couples" />
+      </div>
+
+      {followUp.length > 0 && (
+        <section className="section">
+          <div className="section__head">
+            <h2>מחכות לעדכון</h2>
+            <p className="muted">הצעות פתוחות שלא זזו כבר שבוע</p>
+          </div>
+          <div className="grid">
+            {followUp.map((p) => (
+              <ProposalCard key={p._id} proposal={p} onOpen={() => setOpenProposal(p)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <Suggestions onCreated={upsert} />
+
+      <div className="section__head section__head--list">
+        <h2>המועמדים שלי</h2>
+      </div>
 
       <div className="toolbar">
         <input
@@ -108,10 +166,8 @@ export function DashboardPage() {
         <ErrorBox message={singles.error} onRetry={singles.reload} />
       ) : total === 0 ? (
         <EmptyState title="עוד אין מועמדים">
-          <p>אפשר להוסיף מועמד/ת ידנית, לשלוח את קישור ההרשמה, או לאמץ מועמדים מהמאגר המשותף.</p>
-          <Link to="/singles/new" className="btn btn--primary">
-            הוספת מועמד/ת
-          </Link>
+          <p>שולחים למועמדים את השאלון, והם ממלאים אותו בעצמם. אפשר גם לאמץ מועמדים מהמאגר המשותף.</p>
+          <ShareRegistration matchMakerId={me._id} compact />
         </EmptyState>
       ) : list.length === 0 ? (
         <EmptyState title="אין תוצאות לחיפוש" />
@@ -131,6 +187,16 @@ export function DashboardPage() {
             </Link>
           ))}
         </div>
+      )}
+
+      {adding && <AddSingleDialog matchMakerId={me._id} onClose={() => setAdding(false)} />}
+      {openProposal && (
+        <ProposalDialog
+          proposal={openProposal}
+          onClose={() => setOpenProposal(null)}
+          onChange={upsert}
+          onDelete={(id) => proposals.setData(allProposals.filter((x) => x._id !== id))}
+        />
       )}
     </div>
   );

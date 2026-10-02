@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { Avatar } from './ui';
 
 export function Layout() {
   const { me, logout } = useAuth();
@@ -18,8 +19,10 @@ export function Layout() {
           <nav className="nav">
             {me ? (
               <>
-                <NavLink to="/dashboard">המועמדים שלי</NavLink>
+                <NavLink to="/dashboard">ראשי</NavLink>
+                <NavLink to="/proposals">הצעות</NavLink>
                 <NavLink to="/pool">מאגר משותף</NavLink>
+                <NavLink to="/couples">זוגות</NavLink>
                 <NavLink to="/requests">בקשות</NavLink>
               </>
             ) : (
@@ -29,7 +32,10 @@ export function Layout() {
           <div className="topbar__user">
             {me ? (
               <>
-                <span className="topbar__name">שלום, {me.firstName}</span>
+                <Link to="/profile" className="topbar__name" title="הפרופיל שלי">
+                  <Avatar firstName={me.firstName} lastName={me.lastName} size={30} />
+                  <span className="topbar__first">{me.firstName}</span>
+                </Link>
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm"

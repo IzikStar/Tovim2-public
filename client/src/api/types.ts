@@ -47,6 +47,9 @@ export interface MatchMaker {
   gender: Gender;
   sector: Sector;
   expertSectors: Sector[];
+  ageRange?: AgeRange | null;
+  priceRange?: AgeRange | null;
+  about?: string;
 }
 
 export type MatchMakerSummary = Pick<MatchMaker, '_id' | 'firstName' | 'lastName' | 'city'> &
@@ -62,6 +65,9 @@ export interface MatchMakerInput {
   gender: Gender | '';
   sector: Sector | '';
   expertSectors: Sector[];
+  ageRange?: AgeRange | null;
+  priceRange?: AgeRange | null;
+  about?: string;
 }
 
 export interface AgeRange {
@@ -74,7 +80,7 @@ export interface SingleFields {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  email: string;
+  email?: string;
   city: string;
   gender: Gender;
   sector: Sector;
@@ -115,6 +121,9 @@ export interface SingleFields {
 export interface Single extends SingleFields {
   _id: string;
   matchMakers: string[];
+  /** Married or engaged: off the active lists and the pool */
+  isTaken?: boolean;
+  marriedMatchmaker?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -168,4 +177,80 @@ export interface OutgoingRequest extends TransferRequestBase {
 export interface RequestsResponse {
   incoming: IncomingRequest[];
   outgoing: OutgoingRequest[];
+}
+
+// ---------- proposals ----------
+
+export const PROPOSAL_STATUSES = ['idea', 'proposed', 'dating', 'engaged', 'married', 'closed'] as const;
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
+
+export const SIDE_RESPONSES = ['pending', 'thinking', 'yes', 'no'] as const;
+export type SideResponse = (typeof SIDE_RESPONSES)[number];
+
+/** One side of a proposal as the server returns it (no images or contacts). */
+export interface ProposalPerson {
+  _id: string;
+  firstName: string;
+  /** Only for singles the matchmaker handles */
+  lastName?: string;
+  gender: Gender;
+  sector: Sector;
+  birthYear: number;
+  city: string;
+  currentOccupation?: string;
+  mine: boolean;
+}
+
+export interface ProposalSide {
+  /** null when the single was deleted */
+  single: ProposalPerson | null;
+  response: SideResponse;
+  note?: string;
+  respondedAt?: string;
+}
+
+export interface ProposalEvent {
+  status: ProposalStatus;
+  at: string;
+  note?: string;
+}
+
+export interface Proposal {
+  _id: string;
+  sides: ProposalSide[];
+  status: ProposalStatus;
+  notes?: string;
+  datesCount: number;
+  closeReason?: string;
+  history: ProposalEvent[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProposalUpdate {
+  status?: ProposalStatus;
+  statusNote?: string;
+  notes?: string;
+  datesCount?: number;
+  closeReason?: string;
+  sides?: { single: string; response?: SideResponse; note?: string }[];
+}
+
+export interface SuggestionPerson {
+  _id: string;
+  firstName: string;
+  lastName?: string;
+  gender: Gender;
+  sector: Sector;
+  age: number;
+  city: string;
+  currentOccupation?: string;
+  mine: boolean;
+}
+
+export interface Suggestion {
+  single: SuggestionPerson;
+  candidate: SuggestionPerson;
+  score: number;
+  reasons: string[];
 }

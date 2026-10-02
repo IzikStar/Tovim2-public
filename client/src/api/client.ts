@@ -2,10 +2,14 @@ import type {
   MatchMaker,
   MatchMakerInput,
   MatchMakerSummary,
+  Proposal,
+  ProposalStatus,
+  ProposalUpdate,
   PublicSingle,
   RequestsResponse,
   Single,
   SingleFields,
+  Suggestion,
 } from './types';
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '/api').replace(/\/$/, '');
@@ -81,6 +85,9 @@ const SERVER_MESSAGES: Record<string, string> = {
   'Payload too large': 'התמונות גדולות מדי. אפשר להעלות פחות תמונות או קטנות יותר',
   'Matchmaker not found': 'השדכן/ית לא נמצא/ה',
   'Single not found': 'המועמד/ת לא נמצא/ה',
+  'Proposal already exists': 'כבר יש הצעה פתוחה לזוג הזה',
+  'A proposal needs a man and a woman': 'הצעה היא בין בחור לבחורה',
+  'Single is already taken': 'אחד הצדדים כבר תפוס/ה',
 };
 
 export function translateError(status: number, serverMessage?: string): string {
@@ -104,6 +111,7 @@ export const api = {
   publicMatchMaker: (id: string) =>
     request<Pick<MatchMaker, '_id' | 'firstName' | 'lastName' | 'city'>>('GET', `/matchmakers/${id}/public`),
   mySingles: (id: string) => request<Single[]>('GET', `/matchmakers/${id}/singles`),
+  myCouples: (id: string) => request<Single[]>('GET', `/matchmakers/${id}/married`),
   otherMatchMakers: (id: string) => request<MatchMakerSummary[]>('GET', `/matchmakers/${id}/others`),
   adoptSingle: (id: string, singleId: string) =>
     request<Single>('POST', `/matchmakers/${id}/add-single/${singleId}`),
@@ -116,6 +124,15 @@ export const api = {
   deleteSingle: (id: string) => request<{ message: string }>('DELETE', `/singles/${id}`),
   registerSingle: (matchMakerId: string, fields: Partial<SingleFields>) =>
     request<Single>('POST', `/singles/register/${matchMakerId}`, fields),
+
+  proposals: (singleId?: string) =>
+    request<Proposal[]>('GET', `/proposals${singleId ? `?single=${singleId}` : ''}`),
+  createProposal: (singleIds: [string, string], status: ProposalStatus = 'idea', notes?: string) =>
+    request<Proposal>('POST', '/proposals', { singleIds, status, notes }),
+  updateProposal: (id: string, update: ProposalUpdate) => request<Proposal>('PUT', `/proposals/${id}`, update),
+  deleteProposal: (id: string) => request<{ message: string }>('DELETE', `/proposals/${id}`),
+  suggestions: (singleId?: string, limit = 12) =>
+    request<Suggestion[]>('GET', `/proposals/suggestions?limit=${limit}${singleId ? `&single=${singleId}` : ''}`),
 
   requests: () => request<RequestsResponse>('GET', '/requests'),
   sendRequest: (singleId: string, toMatchMakerId: string) =>

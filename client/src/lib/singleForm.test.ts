@@ -34,8 +34,13 @@ describe('validateSingleForm', () => {
   it('flags every missing required field on an empty form', () => {
     const errors = validateSingleForm(emptySingleForm(), NOW);
     expect(Object.keys(errors).sort()).toEqual(
-      ['birthYear', 'city', 'email', 'ethnicity', 'firstName', 'gender', 'lastName', 'nonCompromisableAttributes', 'phoneNumber', 'sector'].sort()
+      ['birthYear', 'city', 'ethnicity', 'firstName', 'gender', 'lastName', 'nonCompromisableAttributes', 'phoneNumber', 'sector'].sort()
     );
+  });
+
+  it('email is optional but must be valid when given', () => {
+    expect(validateSingleForm({ ...filled(), email: '' }, NOW)).toEqual({});
+    expect(validateSingleForm({ ...filled(), email: 'nope' }, NOW)).toHaveProperty('email');
   });
 
   it('requires all four non-negotiables', () => {
