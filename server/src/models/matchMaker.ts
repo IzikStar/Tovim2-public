@@ -12,7 +12,31 @@ export interface IMatchMaker {
   gender: Gender;
   sector: Sector;
   expertSectors: Sector[];
+  /** Ages of the singles this matchmaker usually works with */
+  ageRange?: NumberRange;
+  /** Typical fee for a match, in shekels */
+  priceRange?: NumberRange;
+  about?: string;
 }
+
+interface NumberRange {
+  min?: number;
+  max?: number;
+}
+
+const rangeSchema = (min: number) =>
+  new Schema<NumberRange>(
+    {
+      min: { type: Number, min },
+      max: { type: Number, min },
+    },
+    { _id: false }
+  );
+
+const validRange = {
+  validator: (v: NumberRange | null) => !v || v.min == null || v.max == null || v.min <= v.max,
+  message: 'min must be <= max',
+};
 
 const matchMakerSchema = new Schema<IMatchMaker>(
   {
@@ -39,6 +63,9 @@ const matchMakerSchema = new Schema<IMatchMaker>(
       enum: Object.values(Sector),
       default: [],
     },
+    ageRange: { type: rangeSchema(18), validate: validRange },
+    priceRange: { type: rangeSchema(0), validate: validRange },
+    about: { type: String, maxlength: 2000 },
     // MongoDB provides an _id field by default
   },
   {

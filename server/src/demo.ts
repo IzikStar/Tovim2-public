@@ -7,6 +7,7 @@ import { MatchMaker } from './models/matchMaker.js';
 import { Single, ISingle } from './models/single.js';
 import { Token } from './models/token.js';
 import { TransferRequest } from './models/transferRequest.js';
+import { Proposal, ProposalStatus, SideResponse } from './models/proposal.js';
 import {
   Ethnicity,
   Gender,
@@ -231,6 +232,7 @@ export const seedDemo = async (): Promise<void> => {
   await Promise.all([
     TransferRequest.deleteMany({ $or: [{ from: { $in: oldIds } }, { to: { $in: oldIds } }] }),
     Token.deleteMany({ matchMaker: { $in: oldIds } }),
+    Proposal.deleteMany({ matchMaker: { $in: oldIds } }),
     Single.deleteMany({ email: DEMO_EMAIL }),
   ]);
   await MatchMaker.deleteMany({ _id: { $in: oldIds } });
@@ -287,6 +289,45 @@ export const seedDemo = async (): Promise<void> => {
   });
   created[2].matchMakers.push(matchMakers[1]._id);
   await created[2].save();
+
+  // A few matches at different stages for the proposals page
+  const daysAgo = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000);
+  await Proposal.create([
+    {
+      matchMaker: matchMakers[0]._id,
+      sides: [
+        { single: created[0]._id, response: SideResponse.YES, note: 'שמחה לנסות, שמעה עליו טובות', respondedAt: daysAgo(12) },
+        { single: created[1]._id, response: SideResponse.YES, respondedAt: daysAgo(11) },
+      ],
+      status: ProposalStatus.DATING,
+      datesCount: 3,
+      notes: 'נפגשו בירושלים. אחרי הפגישה השלישית שניהם רוצים להמשיך.',
+      history: [
+        { status: ProposalStatus.IDEA, at: daysAgo(15) },
+        { status: ProposalStatus.PROPOSED, at: daysAgo(13) },
+        { status: ProposalStatus.DATING, at: daysAgo(9), note: 'פגישה ראשונה' },
+      ],
+    },
+    {
+      matchMaker: matchMakers[0]._id,
+      sides: [
+        { single: created[2]._id, response: SideResponse.YES, respondedAt: daysAgo(2) },
+        { single: created[5]._id, response: SideResponse.THINKING, note: 'ביקש לברר על הילד', respondedAt: daysAgo(1) },
+      ],
+      status: ProposalStatus.PROPOSED,
+      history: [
+        { status: ProposalStatus.IDEA, at: daysAgo(4) },
+        { status: ProposalStatus.PROPOSED, at: daysAgo(3) },
+      ],
+    },
+    {
+      matchMaker: matchMakers[0]._id,
+      sides: [{ single: created[3]._id }, { single: created[6]._id }],
+      status: ProposalStatus.IDEA,
+      notes: 'לברר אם היא פתוחה לליטאי',
+      history: [{ status: ProposalStatus.IDEA, at: daysAgo(1) }],
+    },
+  ]);
 
   console.log(`Seeded ${matchMakers.length} matchmakers and ${created.length} singles.`);
   for (const m of matchMakers) {
