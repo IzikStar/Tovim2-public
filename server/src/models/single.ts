@@ -22,7 +22,7 @@ export interface ISingle {
   firstName: string;
   lastName: string;
   phoneNumber: string;
-  email: string;
+  email?: string;
   city: string;
   gender: Gender;
   sector: Sector;
@@ -42,6 +42,10 @@ export interface ISingle {
   desiredSectors: Sector[];
   matchMakers: Types.ObjectId[];
   isPublic: boolean;
+  /** Married or engaged: hidden from the active lists and the public pool */
+  isTaken: boolean;
+  /** The matchmaker who made the match, when isTaken */
+  marriedMatchmaker?: Types.ObjectId;
   /** Base64-encoded image strings */
   images: string[];
   height?: number;
@@ -76,7 +80,14 @@ const singleSchema = new Schema<ISingle>(
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     phoneNumber: { type: String, required: true, match: phoneRegex },
-    email: { type: String, required: true, unique: true, match: emailRegex },
+    // Optional (not every single has one); sparse so many singles can leave it empty
+    email: {
+      type: String,
+      unique: true,
+      sparse: true,
+      match: emailRegex,
+      set: (v: unknown) => (v === "" || v === null ? undefined : v),
+    },
     city: { type: String, required: true },
     gender: { type: String, enum: Object.values(Gender), required: true },
     sector: { type: String, enum: Object.values(Sector), required: true },
@@ -111,6 +122,8 @@ const singleSchema = new Schema<ISingle>(
     },
     matchMakers: [{ type: Types.ObjectId, ref: "MatchMaker" }],
     isPublic: { type: Boolean, default: false },
+    isTaken: { type: Boolean, default: false },
+    marriedMatchmaker: { type: Types.ObjectId, ref: "MatchMaker" },
     images: {
       type: [String],
       default: [],

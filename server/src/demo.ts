@@ -1,5 +1,5 @@
 /**
- * Demo data: two matchmakers and eight singles. Every person here is
+ * Demo data: two matchmakers, ten singles and a few proposals. Every person here is
  * invented; emails use the reserved `.example` TLD and phone numbers are
  * placeholders. Used by `npm run seed` and by SEED_DEMO on server start.
  */
@@ -7,6 +7,7 @@ import { MatchMaker } from './models/matchMaker.js';
 import { Single, ISingle } from './models/single.js';
 import { Token } from './models/token.js';
 import { TransferRequest } from './models/transferRequest.js';
+import { Proposal, ProposalStatus, SideResponse } from './models/proposal.js';
 import {
   Ethnicity,
   Gender,
@@ -217,6 +218,47 @@ const singles: SingleSeed[] = [
     interests: [Interest.CYCLING, Interest.SCIENCE, Interest.CINEMA],
     isPublic: false,
   },
+  {
+    owner: 1,
+    firstName: 'אליה',
+    lastName: 'אורני',
+    gender: Gender.MALE,
+    sector: Sector.DATI_LEUMI,
+    birthYear: 1999,
+    city: 'גוש עציון',
+    marriageStatus: MarriageStatus.SINGLE,
+    ethnicity: Ethnicity.ASHKENAZI,
+    height: 179,
+    currentOccupation: 'מורה למוזיקה',
+    basicDescription: 'מנגן, מטייל ולומד בכולל ערב. אוהב שקט ואנשים טובים.',
+    attributes: ['רגיש', 'שמח'],
+    lookingForAttributes: ['עדינות', 'אמונה'],
+    nonCompromisableAttributes: ['תורה', 'שמחה', 'כנות', 'רגישות'],
+    desiredSectors: [Sector.DATI_LEUMI_HARDAL, Sector.DATI_LEUMI],
+    desiredAgeRange: { min: 21, max: 27 },
+    interests: [Interest.MUSIC, Interest.NATURE, Interest.TORAH, Interest.HIKING],
+    isPublic: true,
+  },
+  {
+    owner: 1,
+    firstName: 'רבקה',
+    lastName: 'זיתוני',
+    gender: Gender.FEMALE,
+    sector: Sector.HAREDI_LITVAK,
+    birthYear: 2002,
+    city: 'ירושלים',
+    marriageStatus: MarriageStatus.SINGLE,
+    ethnicity: Ethnicity.ASHKENAZI,
+    currentOccupation: 'מורה בסמינר',
+    basicDescription: 'בת תורה, שקולה ושמחה. רוצה בית של לימוד.',
+    attributes: ['שקולה', 'נותנת'],
+    lookingForAttributes: ['מתמיד', 'מידות טובות'],
+    nonCompromisableAttributes: ['יראת שמיים', 'מידות טובות', 'לימוד תורה', 'צניעות'],
+    desiredSectors: [Sector.HAREDI_LITVAK],
+    desiredAgeRange: { min: 22, max: 28 },
+    interests: [Interest.TORAH, Interest.READING],
+    isPublic: true,
+  },
 ];
 
 /** True once the demo matchmakers exist, so a restart doesn't re-seed. */
@@ -231,6 +273,7 @@ export const seedDemo = async (): Promise<void> => {
   await Promise.all([
     TransferRequest.deleteMany({ $or: [{ from: { $in: oldIds } }, { to: { $in: oldIds } }] }),
     Token.deleteMany({ matchMaker: { $in: oldIds } }),
+    Proposal.deleteMany({ matchMaker: { $in: oldIds } }),
     Single.deleteMany({ email: DEMO_EMAIL }),
   ]);
   await MatchMaker.deleteMany({ _id: { $in: oldIds } });
@@ -287,6 +330,45 @@ export const seedDemo = async (): Promise<void> => {
   });
   created[2].matchMakers.push(matchMakers[1]._id);
   await created[2].save();
+
+  // A few matches at different stages for the proposals page
+  const daysAgo = (d: number) => new Date(Date.now() - d * 24 * 60 * 60 * 1000);
+  await Proposal.create([
+    {
+      matchMaker: matchMakers[0]._id,
+      sides: [
+        { single: created[0]._id, response: SideResponse.YES, note: 'שמחה לנסות, שמעה עליו טובות', respondedAt: daysAgo(12) },
+        { single: created[1]._id, response: SideResponse.YES, respondedAt: daysAgo(11) },
+      ],
+      status: ProposalStatus.DATING,
+      datesCount: 3,
+      notes: 'נפגשו בירושלים. אחרי הפגישה השלישית שניהם רוצים להמשיך.',
+      history: [
+        { status: ProposalStatus.IDEA, at: daysAgo(15) },
+        { status: ProposalStatus.PROPOSED, at: daysAgo(13) },
+        { status: ProposalStatus.DATING, at: daysAgo(9), note: 'פגישה ראשונה' },
+      ],
+    },
+    {
+      matchMaker: matchMakers[0]._id,
+      sides: [
+        { single: created[2]._id, response: SideResponse.YES, respondedAt: daysAgo(2) },
+        { single: created[5]._id, response: SideResponse.THINKING, note: 'ביקש לברר על הילד', respondedAt: daysAgo(1) },
+      ],
+      status: ProposalStatus.PROPOSED,
+      history: [
+        { status: ProposalStatus.IDEA, at: daysAgo(4) },
+        { status: ProposalStatus.PROPOSED, at: daysAgo(3) },
+      ],
+    },
+    {
+      matchMaker: matchMakers[0]._id,
+      sides: [{ single: created[3]._id }, { single: created[6]._id }],
+      status: ProposalStatus.IDEA,
+      notes: 'לברר אם היא פתוחה לליטאי',
+      history: [{ status: ProposalStatus.IDEA, at: daysAgo(1) }],
+    },
+  ]);
 
   console.log(`Seeded ${matchMakers.length} matchmakers and ${created.length} singles.`);
   for (const m of matchMakers) {

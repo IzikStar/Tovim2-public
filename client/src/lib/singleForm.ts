@@ -100,7 +100,7 @@ export function singleToForm(s: Single): SingleFormState {
     firstName: s.firstName,
     lastName: s.lastName,
     phoneNumber: s.phoneNumber,
-    email: s.email,
+    email: str(s.email),
     city: s.city,
     gender: s.gender,
     sector: s.sector,
@@ -220,7 +220,7 @@ export function validateSingleForm(f: SingleFormState, now = new Date()): Record
     if (!String(f[key]).trim()) e[key] = `חסר ${label}`;
   }
   if (!PHONE.test(normalizePhone(f.phoneNumber))) e.phoneNumber = 'מספר טלפון לא תקין';
-  if (!EMAIL.test(f.email.trim())) e.email = 'כתובת אימייל לא תקינה';
+  if (f.email.trim() && !EMAIL.test(f.email.trim())) e.email = 'כתובת אימייל לא תקינה';
 
   const year = Number(f.birthYear);
   const thisYear = now.getFullYear();

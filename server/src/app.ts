@@ -5,7 +5,9 @@ import matchmakerRoutes from './routes/matchmakers.js';
 import singleRoutes from './routes/singles.js';
 import authRoutes from './routes/auth.js';
 import requestRoutes from './routes/requests.js';
+import proposalRoutes from './routes/proposals.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { requestLogger } from './middleware/requestLogger.js';
 
 /**
  * Allowed browser origins, from CLIENT_ORIGIN (comma-separated).
@@ -26,6 +28,10 @@ export const createApp = ({ clientDist }: { clientDist?: string } = {}) => {
   const app = express();
 
   app.disable('x-powered-by');
+  // Tests make thousands of requests; keep their output readable
+  if (process.env.NODE_ENV !== 'test') {
+    app.use(requestLogger);
+  }
   app.use(cors({ origin: allowedOrigins }));
   // Singles carry base64 images, so the limit is higher than the 100kb default
   app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || '10mb' }));
@@ -36,6 +42,7 @@ export const createApp = ({ clientDist }: { clientDist?: string } = {}) => {
   api.use('/matchmakers', matchmakerRoutes);
   api.use('/singles', singleRoutes);
   api.use('/requests', requestRoutes);
+  api.use('/proposals', proposalRoutes);
 
   api.get('/', (_req: Request, res: Response<HelloResponse>) => {
     res.send({ message: 'Hello from Express + TypeScript' });

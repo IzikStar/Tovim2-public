@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { connectDB } from './config/db.js';
 import { app } from './app.js';
 import { hasDemoData, seedDemo } from './demo.js';
+import logger from './utils/logger.js';
 
 const port = process.env.PORT || 3000;
 
@@ -19,9 +20,13 @@ const resolveMongoUri = async (): Promise<string | undefined> => {
   const server = await MongoMemoryServer.create({
     instance: { args: ['--wiredTigerCacheSizeGB', '0.25'] },
   });
-  console.warn('MONGO_URI is not set: using an in-memory demo database that resets on restart');
+  logger.warn('MONGO_URI is not set: using an in-memory demo database that resets on restart');
   return server.getUri('tovim');
 };
+
+process.on('unhandledRejection', (err) => {
+  logger.error('Unhandled promise rejection', err);
+});
 
 // Establish MongoDB connection before starting the server
 resolveMongoUri()
@@ -32,10 +37,10 @@ resolveMongoUri()
       await seedDemo();
     }
     app.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
+      logger.info(`Server listening on port ${port}`);
     });
   })
   .catch((err) => {
-    console.error('Failed to start server:', err);
+    logger.error('Failed to start server', err);
     process.exit(1);
   });

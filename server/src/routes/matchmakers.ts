@@ -17,6 +17,9 @@ const MATCHMAKER_FIELDS = [
   'gender',
   'sector',
   'expertSectors',
+  'ageRange',
+  'priceRange',
+  'about',
 ] as const;
 
 /** What one matchmaker may see about the others (no contacts, no password). */
@@ -26,6 +29,9 @@ const OTHER_MATCHMAKER_PROJECTION = {
   city: 1,
   sector: 1,
   expertSectors: 1,
+  ageRange: 1,
+  priceRange: 1,
+  about: 1,
 } as const;
 
 /** Shown to anyone holding a registration link. */
@@ -91,8 +97,19 @@ router.get('/:id/singles', authenticate, asyncHandler<AuthRequest>(async (req, r
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const singles = await Single.find({ matchMakers: req.params.id });
+  const singles = await Single.find({ matchMakers: req.params.id, isTaken: { $ne: true } });
   res.json(singles);
+}));
+
+// Singles who are now taken: matched by this matchmaker, or handled by them (the "couples" page)
+router.get('/:id/married', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  if (req.matchMakerId !== req.params.id) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const married = await Single.find({
+    $or: [{ marriedMatchmaker: req.params.id }, { matchMakers: req.params.id, isTaken: true }],
+  }).sort({ updatedAt: -1 });
+  res.json(married);
 }));
 
 router.get('/:id/others', authenticate, asyncHandler<AuthRequest>(async (req, res) => {

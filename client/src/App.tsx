@@ -5,7 +5,10 @@ import { EmptyState, Spinner } from './components/ui';
 import { DashboardPage } from './pages/DashboardPage';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
+import { CouplesPage } from './pages/CouplesPage';
 import { PoolPage } from './pages/PoolPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { ProposalsPage } from './pages/ProposalsPage';
 import { RegisterSinglePage } from './pages/RegisterSinglePage';
 import { RequestsPage } from './pages/RequestsPage';
 import { SignupPage } from './pages/SignupPage';
@@ -54,6 +57,9 @@ export default function App() {
               <Route element={<RequireAuth />}>
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="requests" element={<RequestsPage />} />
+                <Route path="proposals" element={<ProposalsPage />} />
+                <Route path="couples" element={<CouplesPage />} />
+                <Route path="profile" element={<ProfilePage />} />
                 <Route path="singles/new" element={<NewSinglePage />} />
                 <Route path="singles/:id" element={<SingleDetailPage />} />
                 <Route path="singles/:id/edit" element={<EditSinglePage />} />

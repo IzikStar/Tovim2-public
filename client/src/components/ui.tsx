@@ -88,10 +88,12 @@ export function Modal({
   title,
   onClose,
   children,
+  wide,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  wide?: boolean;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -100,7 +102,7 @@ export function Modal({
   }, [onClose]);
   return (
     <div className="modal" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal__panel" role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`modal__panel${wide ? ' modal__panel--wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal__head">
           <h2>{title}</h2>
           <button type="button" className="btn btn--ghost btn--icon" onClick={onClose} aria-label="סגירה">

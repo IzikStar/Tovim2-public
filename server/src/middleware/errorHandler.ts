@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import logger from '../utils/logger.js';
 
 interface HttpError extends Error {
   status?: number;
@@ -37,6 +38,6 @@ export const errorHandler = (
   if (status && status >= 400 && status < 500) {
     return res.status(status).json({ error: err.type === 'entity.too.large' ? 'Payload too large' : 'Bad request' });
   }
-  console.error(err);
+  logger.error(err.message, err);
   res.status(500).json({ error: 'Internal server error' });
 };
