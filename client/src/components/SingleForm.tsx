@@ -97,7 +97,7 @@ export function SingleForm({
     setErrors(found);
     if (Object.keys(found).length) {
       setFormError('יש שדות שצריך לתקן. הם מסומנים באדום.');
-      requestAnimationFrame(() => document.querySelector('.field--error')?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+      requestAnimationFrame(() => document.querySelector('[data-error]')?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
       return;
     }
     setSaving(true);
