@@ -60,7 +60,50 @@ export const sinceLabel = (iso: string, now = Date.now()) => {
   return m === 1 ? 'לפני חודש' : `לפני ${m} חודשים`;
 };
 
-/** An open proposal with no change for this many days is flagged for follow-up. */
+/**
+ * 'waiting': on hold and the date hasn't come yet; 'due': the hold date has
+ * passed and it's time to get back to it; 'none': not on hold.
+ */
+export function holdState(p: Proposal, now = Date.now()): 'none' | 'waiting' | 'due' {
+  if (!p.hold || !OPEN.includes(p.status)) return 'none';
+  return new Date(p.hold.until).getTime() > now ? 'waiting' : 'due';
+}
+
+/** An open proposal with no change for this many days is flagged for follow-up (unless it's waiting on hold). */
 export const STALE_DAYS = 7;
 export const isStale = (p: Proposal, now = Date.now()) =>
-  OPEN.includes(p.status) && daysSince(lastActivity(p), now) >= STALE_DAYS;
+  OPEN.includes(p.status) && holdState(p, now) === 'none' && daysSince(lastActivity(p), now) >= STALE_DAYS;
+
+/** Quick picks for how long to put a proposal on hold. */
+export const HOLD_PERIODS = [
+  { label: 'שבוע', days: 7 },
+  { label: 'שבועיים', days: 14 },
+  { label: 'חודש', days: 30 },
+  { label: '3 חודשים', days: 90 },
+  { label: 'חצי שנה', days: 182 },
+] as const;
+
+/** YYYY-MM-DD `days` from now, in local time (what <input type="date"> holds). */
+export function dateInDays(days: number, now = new Date()): string {
+  const d = new Date(now);
+  d.setDate(d.getDate() + days);
+  return localDate(d);
+}
+
+export const localDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/** "עוד 5 ימים" / "מחר" / "היום" until the hold ends. */
+export function untilLabel(iso: string, now = Date.now()) {
+  // Calendar days, so a hold until the end of a day two weeks out reads "14 days"
+  const day = (t: number) => {
+    const d = new Date(t);
+    return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+  const d = Math.round((day(new Date(iso).getTime()) - day(now)) / 86_400_000);
+  if (d <= 0) return 'היום';
+  if (d === 1) return 'מחר';
+  if (d < 30) return `עוד ${d} ימים`;
+  const m = Math.round(d / 30);
+  return m === 1 ? 'עוד חודש' : `עוד ${m} חודשים`;
+}

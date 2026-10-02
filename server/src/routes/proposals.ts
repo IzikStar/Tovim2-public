@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
-import { OPEN_STATUSES, Proposal, ProposalStatus, SideResponse } from '../models/proposal.js';
+import { OPEN_STATUSES, Proposal, ProposalEventKind, ProposalStatus, SideResponse } from '../models/proposal.js';
 import { Single } from '../models/single.js';
 import { suggestMatches } from '../services/suggestions.js';
 import { brainstorm, BRAINSTORM_MODES, BrainstormMode } from '../services/brainstorm.js';
@@ -49,7 +49,7 @@ const markTaken = async (singleIds: unknown[], matchMakerId: string) => {
       'sides.single': { $in: singleIds },
     },
     {
-      $set: { status: ProposalStatus.CLOSED, closeReason: 'התחתנו עם מישהו אחר' },
+      $set: { status: ProposalStatus.CLOSED, closeReason: 'התחתנו עם מישהו אחר', hold: null },
       $push: { history: { status: ProposalStatus.CLOSED, at: new Date(), note: 'נסגר אוטומטית: התחתנו' } },
     }
   );
@@ -141,6 +141,10 @@ router.post('/', asyncHandler<AuthRequest>(async (req, res) => {
  * Updates status, notes, datesCount, closeReason and each side's response
  * (sides: [{ single, response, note }]). Every status change is recorded in
  * the history with an optional statusNote.
+ *
+ * hold: { until, unavailable?: singleIds, reason? } puts the proposal on hold
+ * until a future date (again, to snooze it further); hold: null takes it off
+ * hold. Both go into the history. Closing or marrying clears the hold.
  */
 router.put('/:id', asyncHandler<AuthRequest>(async (req, res) => {
   const proposal = await Proposal.findById(req.params.id);
@@ -150,7 +154,7 @@ router.put('/:id', asyncHandler<AuthRequest>(async (req, res) => {
   if (proposal.matchMaker.toString() !== req.matchMakerId) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const { status, statusNote, notes, datesCount, closeReason, sides } = req.body ?? {};
+  const { status, statusNote, notes, datesCount, closeReason, sides, hold } = req.body ?? {};
 
   if (sides !== undefined) {
     if (!Array.isArray(sides)) {
@@ -183,8 +187,42 @@ router.put('/:id', asyncHandler<AuthRequest>(async (req, res) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
     proposal.status = status;
-    proposal.history.push({ status, at: new Date(), note: statusNote });
+    proposal.history.push({ status, kind: ProposalEventKind.STATUS, at: new Date(), note: statusNote });
     becameMarried = status === ProposalStatus.MARRIED;
+  }
+
+  if (hold === null && proposal.hold) {
+    proposal.hold = null;
+    proposal.history.push({ status: proposal.status, kind: ProposalEventKind.RESUME, at: new Date() });
+  } else if (hold !== undefined && hold !== null) {
+    if (!OPEN_STATUSES.includes(proposal.status)) {
+      return res.status(400).json({ error: 'Only an open proposal can be put on hold' });
+    }
+    const until = new Date(hold.until);
+    if (Number.isNaN(until.getTime()) || until.getTime() <= Date.now()) {
+      return res.status(400).json({ error: 'hold.until must be a future date' });
+    }
+    const unavailable: unknown[] = hold.unavailable ?? [];
+    const sideIds = proposal.sides.map((s) => s.single.toString());
+    if (!Array.isArray(unavailable) || unavailable.some((id) => !sideIds.includes(String(id)))) {
+      return res.status(400).json({ error: 'hold.unavailable must list sides of this proposal' });
+    }
+    const reason = typeof hold.reason === 'string' ? hold.reason.trim() : undefined;
+    proposal.hold = {
+      until,
+      since: proposal.hold?.since ?? new Date(),
+      unavailable: unavailable as any,
+      reason: reason || undefined,
+    };
+    proposal.history.push({
+      status: proposal.status,
+      kind: ProposalEventKind.HOLD,
+      at: new Date(),
+      note: reason || undefined,
+    });
+  }
+  if (!OPEN_STATUSES.includes(proposal.status)) {
+    proposal.hold = null;
   }
   await proposal.save();
   if (becameMarried) {

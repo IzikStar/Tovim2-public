@@ -5,11 +5,15 @@ import { ProposalCard, ProposalDialog } from '../components/proposals';
 import { EmptyState, ErrorBox, PageHeader, Spinner } from '../components/ui';
 import { Input } from '../components/ui/input';
 import { matchesQuery } from '../lib/format';
-import { BOARD, OPEN, STATUS_LABEL, isStale, lastActivity } from '../lib/proposals';
+import { BOARD, OPEN, STATUS_LABEL, holdState, isStale, lastActivity } from '../lib/proposals';
 import { useAsync } from '../lib/useAsync';
 import { cn } from '../lib/utils';
 
-const COLUMN_ACCENT: Record<ProposalStatus, string> = {
+/** Board columns: the statuses, plus a column for proposals waiting on hold. */
+type Column = ProposalStatus | 'hold';
+
+const COLUMN_ACCENT: Record<Column, string> = {
+  hold: 'border-t-muted-foreground/40',
   idea: 'border-t-input',
   proposed: 'border-t-warning/60',
   dating: 'border-t-primary',
@@ -42,11 +46,14 @@ export function ProposalsPage() {
     return c;
   }, [proposals.data]);
   const stale = (proposals.data ?? []).filter((p) => isStale(p)).length;
+  const waiting = (proposals.data ?? []).filter((p) => holdState(p) === 'waiting').length;
+  const due = (proposals.data ?? []).filter((p) => holdState(p) === 'due').length;
 
   const replace = (p: Proposal) => proposals.setData((proposals.data ?? []).map((x) => (x._id === p._id ? p : x)));
   const remove = (id: string) => proposals.setData((proposals.data ?? []).filter((x) => x._id !== id));
 
-  const columns = view === 'open' ? OPEN : view === 'all' ? BOARD : [view];
+  // Waiting proposals get their own column; once due they're back in their status column
+  const columns: Column[] = view === 'open' ? [...OPEN, 'hold'] : view === 'all' ? [...OPEN, 'hold', 'married', 'closed'] : [view];
 
   return (
     <div>
@@ -56,6 +63,8 @@ export function ProposalsPage() {
           <>
             {OPEN.reduce((n, s) => n + counts[s], 0)} פתוחות · {counts.married} התחתנו
             {stale > 0 && <> · {stale} מחכות לעדכון</>}
+            {waiting > 0 && <> · {waiting} בהמתנה</>}
+            {due > 0 && <> · {due} חוזרות לטיפול</>}
           </>
         }
       />
@@ -113,13 +122,20 @@ export function ProposalsPage() {
             'md:mx-0 md:grid md:snap-none md:overflow-visible md:px-0 md:pb-0',
             columns.length === 1
               ? 'md:grid-cols-1'
-              : 'md:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]'
+              : 'md:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]'
           )}
         >
           {columns.map((status) => {
             const items = list
-              .filter((p) => p.status === status)
-              .sort((a, b) => lastActivity(b).localeCompare(lastActivity(a)));
+              .filter((p) =>
+                status === 'hold' ? holdState(p) === 'waiting' : p.status === status && holdState(p) !== 'waiting'
+              )
+              .sort((a, b) =>
+                status === 'hold'
+                  ? a.hold!.until.localeCompare(b.hold!.until)
+                  : // Back from hold first, then most recent activity
+                    Number(holdState(b) === 'due') - Number(holdState(a) === 'due') || lastActivity(b).localeCompare(lastActivity(a))
+              );
             return (
               <section
                 key={status}
@@ -131,7 +147,7 @@ export function ProposalsPage() {
                 )}
               >
                 <h2 className="mx-1 my-0.5 flex items-center justify-between text-base">
-                  {STATUS_LABEL[status]} <span className="text-sm font-medium text-muted-foreground">{items.length}</span>
+                  {status === 'hold' ? 'בהמתנה' : STATUS_LABEL[status]} <span className="text-sm font-medium text-muted-foreground">{items.length}</span>
                 </h2>
                 {items.length === 0 ? (
                   <p className="my-3 text-center text-sm text-muted-foreground">אין כרגע</p>
