@@ -3,58 +3,79 @@ import { MatchMaker } from '../models/matchMaker.js';
 import { Single } from '../models/single.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { Token } from '../models/token.js';
+import { asyncHandler, pick } from '../utils/http.js';
 
 const router = Router();
 
-router.post('/', async (req, res) => {
-  try {
-    const matchMaker = await MatchMaker.create(req.body);
-    const { password, ...mm } = matchMaker.toObject();
-    res.status(201).json(mm);
-  } catch (err) {
-    res.status(400).json({ error: 'Failed to create matchmaker' });
-  }
-});
+const MATCHMAKER_FIELDS = [
+  'firstName',
+  'lastName',
+  'phoneNumber',
+  'email',
+  'password',
+  'city',
+  'gender',
+  'sector',
+  'expertSectors',
+] as const;
 
-router.put('/:id', authenticate, async (req: AuthRequest, res) => {
+/** What one matchmaker may see about the others (no contacts, no password). */
+const OTHER_MATCHMAKER_PROJECTION = {
+  firstName: 1,
+  lastName: 1,
+  city: 1,
+  sector: 1,
+  expertSectors: 1,
+} as const;
+
+router.post('/', asyncHandler(async (req, res) => {
+  const matchMaker = await MatchMaker.create(pick(req.body, MATCHMAKER_FIELDS));
+  res.status(201).json(matchMaker); // toJSON strips the password
+}));
+
+router.put('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const updated = await MatchMaker.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
-  if (!updated) {
+  const matchMaker = await MatchMaker.findById(req.params.id);
+  if (!matchMaker) {
     return res.status(404).json({ error: 'Not found' });
   }
-  res.json(updated);
-});
+  // Load + save (not findByIdAndUpdate) so validation and the password-hashing hook run
+  matchMaker.set(pick(req.body, MATCHMAKER_FIELDS));
+  await matchMaker.save();
+  res.json(matchMaker);
+}));
 
-router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   await MatchMaker.findByIdAndDelete(req.params.id);
   await Token.deleteMany({ matchMaker: req.params.id });
   res.json({ message: 'Deleted' });
-});
+}));
 
-router.get('/:id/singles', authenticate, async (req: AuthRequest, res) => {
+router.get('/:id/singles', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   const singles = await Single.find({ matchMakers: req.params.id });
   res.json(singles);
-});
+}));
 
-router.get('/:id/others', authenticate, async (req: AuthRequest, res) => {
+router.get('/:id/others', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const others = await MatchMaker.find({ _id: { $ne: req.params.id } });
+  const others = await MatchMaker.find(
+    { _id: { $ne: req.params.id } },
+    OTHER_MATCHMAKER_PROJECTION
+  ).lean();
   res.json(others);
-});
+}));
 
-router.post('/:id/add-single/:singleId', authenticate, async (req: AuthRequest, res) => {
+router.post('/:id/add-single/:singleId', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
@@ -67,6 +88,6 @@ router.post('/:id/add-single/:singleId', authenticate, async (req: AuthRequest, 
     await single.save();
   }
   res.json(single);
-});
+}));
 
 export default router;

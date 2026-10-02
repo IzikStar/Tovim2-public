@@ -1,11 +1,6 @@
-import {
-  Schema,
-  model,
-  Document,
-  CallbackWithoutResultAndOptionalError,
-} from 'mongoose';
-import crypto from 'crypto';
+import { Schema, model, Document, UpdateQuery } from 'mongoose';
 import { Gender, Sector } from './enums.js';
+import { hashPassword, isHashed } from '../utils/password.js';
 
 export interface IMatchMaker {
   firstName: string;
@@ -34,7 +29,8 @@ const matchMakerSchema = new Schema<IMatchMaker>(
       unique: true,
       match: /.+@.+\..+/, 
     },
-    password: { type: String, required: true },
+    // Never selected by default; use .select('+password') where it is really needed
+    password: { type: String, required: true, select: false },
     city: { type: String, required: true },
     gender: { type: String, enum: Object.values(Gender), required: true },
     sector: { type: String, enum: Object.values(Sector), required: true },
@@ -45,19 +41,35 @@ const matchMakerSchema = new Schema<IMatchMaker>(
     },
     // MongoDB provides an _id field by default
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      transform: (_doc, ret) => {
+        delete ret.password;
+        return ret;
+      },
+    },
+  }
 );
 
-matchMakerSchema.pre<
-  IMatchMaker & Document
->('save', function (this: IMatchMaker & Document, next: CallbackWithoutResultAndOptionalError) {
-  if (this.isModified('password')) {
-    this.password = crypto
-      .createHash('sha256')
-      .update(this.password)
-      .digest('hex');
+matchMakerSchema.pre<IMatchMaker & Document>('save', async function () {
+  if (this.isModified('password') && !isHashed(this.password)) {
+    this.password = await hashPassword(this.password);
   }
-  next();
+});
+
+// Defense in depth: hash passwords passed to query-based updates too
+// (findByIdAndUpdate / updateOne bypass the save hook).
+matchMakerSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], async function () {
+  const update = this.getUpdate() as UpdateQuery<IMatchMaker> | null;
+  if (!update || Array.isArray(update)) {
+    return;
+  }
+  for (const target of [update, update.$set]) {
+    if (target && typeof target.password === 'string' && !isHashed(target.password)) {
+      target.password = await hashPassword(target.password);
+    }
+  }
 });
 
 export const MatchMaker = model<IMatchMaker>('MatchMaker', matchMakerSchema);
