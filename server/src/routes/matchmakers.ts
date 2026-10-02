@@ -4,6 +4,7 @@ import { Single } from '../models/single.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { Token } from '../models/token.js';
 import { asyncHandler, isValidObjectId, pick } from '../utils/http.js';
+import { passwordProblem, verifyPassword } from '../utils/password.js';
 
 const router = Router();
 
@@ -41,7 +42,14 @@ const PUBLIC_MATCHMAKER_PROJECTION = {
   city: 1,
 } as const;
 
+/** 400 body for a weak password, in the same shape as a validation error. */
+const weakPassword = (problem: string) => ({ error: 'Validation failed', fields: { password: problem } });
+
 router.post('/', asyncHandler(async (req, res) => {
+  const problem = passwordProblem(req.body?.password);
+  if (problem) {
+    return res.status(400).json(weakPassword(problem));
+  }
   const matchMaker = await MatchMaker.create(pick(req.body, MATCHMAKER_FIELDS));
   res.status(201).json(matchMaker); // toJSON strips the password
 }));
@@ -74,13 +82,29 @@ router.put('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   if (req.matchMakerId !== req.params.id) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const matchMaker = await MatchMaker.findById(req.params.id);
+  const changingPassword = req.body?.password !== undefined;
+  const matchMaker = await MatchMaker.findById(req.params.id).select(changingPassword ? '+password' : '');
   if (!matchMaker) {
     return res.status(404).json({ error: 'Not found' });
+  }
+  if (changingPassword) {
+    // A stolen session alone must not be enough to take over the account
+    const current = req.body.currentPassword;
+    if (typeof current !== 'string' || !(await verifyPassword(current, matchMaker.password))) {
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+    const problem = passwordProblem(req.body.password);
+    if (problem) {
+      return res.status(400).json(weakPassword(problem));
+    }
   }
   // Load + save (not findByIdAndUpdate) so validation and the password-hashing hook run
   matchMaker.set(pick(req.body, MATCHMAKER_FIELDS));
   await matchMaker.save();
+  if (changingPassword) {
+    // Log out every other device; this one keeps its token
+    await Token.deleteMany({ matchMaker: matchMaker._id, token: { $ne: req.tokenHash } });
+  }
   res.json(matchMaker);
 }));
 

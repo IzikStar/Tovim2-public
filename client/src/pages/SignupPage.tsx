@@ -9,6 +9,7 @@ import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
+import { PASSWORD_HINT, passwordProblem } from '../lib/password';
 import { normalizePhone } from '../lib/singleForm';
 
 const EMPTY: MatchMakerInput = {
@@ -32,7 +33,8 @@ export function validateSignup(f: MatchMakerInput): Record<string, string> {
   if (!f.sector) e.sector = 'חסר מגזר';
   if (!/^\+?\d{7,15}$/.test(normalizePhone(f.phoneNumber))) e.phoneNumber = 'מספר טלפון לא תקין';
   if (!/.+@.+\..+/.test(f.email.trim())) e.email = 'כתובת אימייל לא תקינה';
-  if (f.password.length < 8) e.password = 'לפחות 8 תווים';
+  const weak = passwordProblem(f.password);
+  if (weak) e.password = weak;
   return e;
 }
 
@@ -68,7 +70,7 @@ export function SignupPage() {
   };
 
   const input = (k: 'firstName' | 'lastName' | 'city' | 'phoneNumber' | 'email' | 'password', label: string, type = 'text') => (
-    <Field label={label} error={errors[k]} required>
+    <Field label={label} error={errors[k]} hint={k === 'password' ? PASSWORD_HINT : undefined} required>
       {(id) => (
         <Input
           id={id}

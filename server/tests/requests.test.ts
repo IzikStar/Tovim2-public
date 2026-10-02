@@ -14,7 +14,7 @@ const send = (from: LoggedInMatchMaker, singleId: string, toMatchMakerId: string
   api().post('/requests').set(from.auth).send({ singleId, toMatchMakerId });
 
 describe('transfer requests', () => {
-  it('create -> approve adds the target matchmaker to the single', async () => {
+  it('create -> approve adds the target matchmaker and keeps the sender on the single', async () => {
     const { from, to, single } = await setup();
     const created = await send(from, single._id, to.id).expect(201);
     expect(created.body.status).toBe('pending');

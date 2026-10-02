@@ -79,6 +79,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
 const SERVER_MESSAGES: Record<string, string> = {
   'Invalid credentials': 'אימייל או סיסמה שגויים',
+  'Current password is incorrect': 'הסיסמה הנוכחית שגויה',
   'Duplicate value': 'כבר קיימת רשומה עם האימייל הזה',
   'Validation failed': 'חלק מהשדות לא תקינים',
   'A pending request already exists': 'כבר נשלחה בקשה ממתינה לשדכן/ית הזה/ו',
@@ -110,6 +111,8 @@ export const api = {
   me: () => request<MatchMaker>('GET', '/matchmakers/me'),
   updateMe: (id: string, input: Partial<MatchMakerInput>) =>
     request<MatchMaker>('PUT', `/matchmakers/${id}`, input),
+  changePassword: (id: string, currentPassword: string, password: string) =>
+    request<MatchMaker>('PUT', `/matchmakers/${id}`, { currentPassword, password }),
   publicMatchMaker: (id: string) =>
     request<Pick<MatchMaker, '_id' | 'firstName' | 'lastName' | 'city'>>('GET', `/matchmakers/${id}/public`),
   mySingles: (id: string) => request<Single[]>('GET', `/matchmakers/${id}/singles`),

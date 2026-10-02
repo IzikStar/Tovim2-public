@@ -9,7 +9,7 @@ describe('matchmakers', () => {
     const res = await api()
       .put(`/matchmakers/${mm.id}`)
       .set(mm.auth)
-      .send({ password: 'brand-new-password', city: 'Tel Aviv' })
+      .send({ password: 'brand-new-password', currentPassword: mm.password, city: 'Tel Aviv' })
       .expect(200);
     expect(res.body).not.toHaveProperty('password');
     expect(res.body.city).toBe('Tel Aviv');
@@ -23,6 +23,49 @@ describe('matchmakers', () => {
       .post('/auth/login')
       .send({ email: mm.email, password: 'brand-new-password' })
       .expect(200);
+  });
+
+  it('PUT changes the password only with the current one', async () => {
+    const mm = await createMatchMaker();
+    const missing = await api().put(`/matchmakers/${mm.id}`).set(mm.auth).send({ password: 'brand-new-1' }).expect(400);
+    expect(missing.body.error).toBe('Current password is incorrect');
+    await api()
+      .put(`/matchmakers/${mm.id}`)
+      .set(mm.auth)
+      .send({ password: 'brand-new-1', currentPassword: 'not it', city: 'Eilat' })
+      .expect(400);
+    // Nothing else in the body was saved either
+    const me = await api().get('/matchmakers/me').set(mm.auth).expect(200);
+    expect(me.body.city).toBe('Jerusalem');
+    await api().post('/auth/login').send({ email: mm.email, password: mm.password }).expect(200);
+  });
+
+  it('rejects weak passwords on signup and on change', async () => {
+    for (const password of ['short1', 'onlyletters', '1234567890']) {
+      const res = await api().post('/matchmakers').send(matchMakerData({ password })).expect(400);
+      expect(res.body.fields).toHaveProperty('password');
+    }
+    const mm = await createMatchMaker();
+    const res = await api()
+      .put(`/matchmakers/${mm.id}`)
+      .set(mm.auth)
+      .send({ password: 'abcdefgh', currentPassword: mm.password })
+      .expect(400);
+    expect(res.body.fields).toHaveProperty('password');
+    // Hebrew letters count as letters
+    await api().post('/matchmakers').send(matchMakerData({ password: 'שלוםעולם7' })).expect(201);
+  });
+
+  it('a password change logs out the other devices but keeps this one', async () => {
+    const mm = await createMatchMaker();
+    const other = await api().post('/auth/login').send({ email: mm.email, password: mm.password }).expect(200);
+    await api()
+      .put(`/matchmakers/${mm.id}`)
+      .set(mm.auth)
+      .send({ password: 'brand-new-2', currentPassword: mm.password })
+      .expect(200);
+    await api().get('/matchmakers/me').set(mm.auth).expect(200);
+    await api().get('/matchmakers/me').set({ Authorization: `Bearer ${other.body.token}` }).expect(401);
   });
 
   it('query-based updates hash the password too', async () => {
