@@ -26,10 +26,31 @@ export interface IProposalSide {
   respondedAt?: Date;
 }
 
+/** A history entry: a status change, or putting the proposal on hold / back. */
+export enum ProposalEventKind {
+  STATUS = 'status',
+  HOLD = 'hold',
+  RESUME = 'resume',
+}
+
 export interface IProposalEvent {
   status: ProposalStatus;
+  kind?: ProposalEventKind;
   at: Date;
   note?: string;
+}
+
+/**
+ * Paused because one or both sides aren't available right now (in the army,
+ * abroad, dating someone else). The proposal keeps its status and comes back
+ * to the matchmaker's attention once `until` passes.
+ */
+export interface IProposalHold {
+  until: Date;
+  since: Date;
+  /** The sides that aren't available; empty when it's not about one side */
+  unavailable: Types.ObjectId[];
+  reason?: string;
 }
 
 export interface IProposal {
@@ -43,6 +64,7 @@ export interface IProposal {
   /** Why it ended, when status is closed */
   closeReason?: string;
   history: IProposalEvent[];
+  hold?: IProposalHold | null;
 }
 
 const sideSchema = new Schema<IProposalSide>(
@@ -58,8 +80,19 @@ const sideSchema = new Schema<IProposalSide>(
 const eventSchema = new Schema<IProposalEvent>(
   {
     status: { type: String, enum: Object.values(ProposalStatus), required: true },
+    kind: { type: String, enum: Object.values(ProposalEventKind), default: ProposalEventKind.STATUS },
     at: { type: Date, default: Date.now },
     note: { type: String, maxlength: 2000 },
+  },
+  { _id: false }
+);
+
+const holdSchema = new Schema<IProposalHold>(
+  {
+    until: { type: Date, required: true },
+    since: { type: Date, default: Date.now },
+    unavailable: [{ type: Schema.Types.ObjectId, ref: 'Single' }],
+    reason: { type: String, maxlength: 1000 },
   },
   { _id: false }
 );
@@ -76,6 +109,7 @@ const proposalSchema = new Schema<IProposal>(
     datesCount: { type: Number, min: 0, default: 0 },
     closeReason: { type: String, maxlength: 2000 },
     history: { type: [eventSchema], default: [] },
+    hold: { type: holdSchema, default: null },
   },
   { timestamps: true }
 );
