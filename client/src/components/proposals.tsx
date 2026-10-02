@@ -13,7 +13,7 @@ import type {
 } from '../api/types';
 import { SIDE_RESPONSES } from '../api/types';
 import { useMe } from '../auth/AuthContext';
-import { ageFromBirthYear, formatDate, genderize, matchesQuery } from '../lib/format';
+import { formatDate, matchesQuery, sectorLabel } from '../lib/format';
 import {
   BOARD,
   RESPONSE_TONE,
@@ -37,7 +37,7 @@ export function StatusBadge({ status }: { status: ProposalStatus }) {
 
 function PersonLine({ person }: { person: ProposalPerson | SuggestionPerson | null }) {
   if (!person) return <span className="muted">מועמד/ת שנמחק/ה</span>;
-  const age = 'age' in person ? person.age : ageFromBirthYear(person.birthYear);
+  const age = person.age;
   const name = personName(person);
   return (
     <span className="person">
@@ -53,7 +53,7 @@ function PersonLine({ person }: { person: ProposalPerson | SuggestionPerson | nu
           </strong>
         )}
         <small className="muted">
-          {age} · {person.city} · {genderize(person.sector, person.gender)}
+          {age} · {person.city} · {sectorLabel(person)}
         </small>
       </span>
     </span>
@@ -336,7 +336,7 @@ export function NewProposalDialog({
     const all = [...own, ...pool.filter((s) => !ownIds.has(s._id)).map((s) => ({ ...s, lastName: undefined, mine: false }))];
     return all
       .filter((s) => s._id !== single._id && s.gender !== single.gender)
-      .filter((s) => matchesQuery(query, s.firstName, s.lastName, s.city, s.sector))
+      .filter((s) => matchesQuery(query, s.firstName, s.lastName, s.city, ...s.sectors))
       .map((s) => ({ ...s, score: scores.get(s._id) }))
       .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
   }, [data.data, query, single]);
@@ -379,7 +379,7 @@ export function NewProposalDialog({
                     {!s.mine && <small className="muted"> (מהמאגר)</small>}
                   </strong>
                   <small>
-                    {ageFromBirthYear(s.birthYear)} · {s.city} · {genderize(s.sector, s.gender)}
+                    {s.age} · {s.city} · {sectorLabel(s)}
                   </small>
                 </span>
                 {s.score !== undefined && <Badge tone="ok">התאמה {s.score}%</Badge>}

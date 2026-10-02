@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ApiError, api } from '../api/client';
 import type { IncomingRequest, OutgoingRequest, RequestStatus } from '../api/types';
 import { Badge, EmptyState, ErrorBox, Spinner } from '../components/ui';
-import { ageFromBirthYear, formatDate } from '../lib/format';
+import { formatDate } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 
 const STATUS: Record<RequestStatus, { label: string; tone: 'warn' | 'ok' | 'bad' }> = {
@@ -21,7 +21,7 @@ function SingleLine({ r }: { r: IncomingRequest | OutgoingRequest }) {
         {s.firstName} {s.lastName}
       </strong>{' '}
       <span className="muted">
-        · {ageFromBirthYear(s.birthYear)} · {s.city}
+        · {s.age} · {s.city}
       </span>
     </span>
   );

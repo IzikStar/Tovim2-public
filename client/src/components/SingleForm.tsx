@@ -123,7 +123,7 @@ export function SingleForm({
         {text('firstName', 'שם פרטי', { required: true })}
         {text('lastName', 'שם משפחה', { required: true })}
         {select('gender', 'מגדר', GENDERS, true)}
-        {text('birthYear', 'שנת לידה', { required: true, inputMode: 'numeric', hint: 'למשל 1997' })}
+        {text('birthDate', 'תאריך לידה', { required: true, type: 'date', dir: 'ltr' })}
         {text('city', 'עיר מגורים', { required: true })}
         {select('marriageStatus', 'מצב משפחתי', MARRIAGE_STATUSES, true)}
         {form.marriageStatus !== 'רווק/ה' && text('numOfChildren', 'מספר ילדים', { inputMode: 'numeric' })}
@@ -136,8 +136,10 @@ export function SingleForm({
       </Section>
 
       <Section title="רקע">
-        {select('sector', 'מגזר', SECTORS, true)}
-        {form.sector === 'אחר/ת' && text('customSector', 'פירוט מגזר')}
+        <Field label="מגזר" hint="אפשר לבחור יותר מאחד" required error={errors.sectors} wide>
+          {() => <ChipSelect label="מגזר" options={SECTORS} value={form.sectors as (typeof SECTORS)[number][]} onChange={(v) => set('sectors', v)} />}
+        </Field>
+        {form.sectors.includes('אחר/ת') && text('customSector', 'פירוט מגזר')}
         {select('ethnicity', 'מוצא', ETHNICITIES, true)}
         {form.ethnicity === 'אחר/ת' && text('customEthnicity', 'פירוט מוצא')}
         {text('currentOccupation', 'עיסוק נוכחי')}

@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import type { PublicSingle, Single } from '../api/types';
-import { ageFromBirthYear, genderize, sectorLabel } from '../lib/format';
+import { genderize, sectorLabel } from '../lib/format';
 import { Avatar } from './ui';
 
 type CardSingle = PublicSingle & Partial<Pick<Single, 'lastName' | 'images' | 'isPublic'>>;
 
 export function SingleCard({ single, actions, footer }: { single: CardSingle; actions?: ReactNode; footer?: ReactNode }) {
-  const age = ageFromBirthYear(single.birthYear);
+  const age = single.age;
   return (
     <article className={`card single-card single-card--${single.gender === 'נקבה' ? 'f' : 'm'}`}>
       <div className="single-card__head">

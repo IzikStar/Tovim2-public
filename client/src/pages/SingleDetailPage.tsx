@@ -5,7 +5,7 @@ import type { Proposal, Single } from '../api/types';
 import { NewProposalDialog, ProposalCard, ProposalDialog, SuggestionCard } from '../components/proposals';
 import { useMe } from '../auth/AuthContext';
 import { Avatar, Badge, ErrorBox, Modal, Spinner } from '../components/ui';
-import { ageFromBirthYear, ethnicityLabel, formatDate, genderize, sectorLabel } from '../lib/format';
+import { ethnicityLabel, formatDate, genderize, sectorLabel } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -249,7 +249,7 @@ export function SingleDetailPage() {
             {s.firstName} {s.lastName}
           </h1>
           <p className="muted">
-            {ageFromBirthYear(s.birthYear)} · {s.city} · {g(s.marriageStatus)}
+            {s.age} · {s.city} · {g(s.marriageStatus)}
             {s.numOfChildren > 0 && ` · ${s.numOfChildren} ילדים`}
           </p>
           <div className="single-card__flags">

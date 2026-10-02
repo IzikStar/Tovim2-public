@@ -74,7 +74,7 @@ export function DashboardPage() {
     () =>
       (singles.data ?? [])
         .filter((s) => !gender || s.gender === gender)
-        .filter((s) => matchesQuery(query, s.firstName, s.lastName, s.city, s.sector, s.currentOccupation))
+        .filter((s) => matchesQuery(query, s.firstName, s.lastName, s.city, s.currentOccupation, ...s.sectors))
         .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
     [singles.data, query, gender]
   );

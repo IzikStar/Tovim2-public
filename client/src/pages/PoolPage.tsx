@@ -5,7 +5,7 @@ import { SECTORS } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
 import { SingleCard } from '../components/SingleCard';
 import { EmptyState, ErrorBox, Spinner } from '../components/ui';
-import { ageFromBirthYear, matchesQuery } from '../lib/format';
+import { matchesQuery } from '../lib/format';
 import { useAsync } from '../lib/useAsync';
 
 export function PoolPage() {
@@ -26,10 +26,10 @@ export function PoolPage() {
     const min = Number(minAge) || 0;
     const max = Number(maxAge) || Infinity;
     return (pool.data ?? []).filter((s) => {
-      const age = ageFromBirthYear(s.birthYear);
+      const age = s.age;
       return (
         (!gender || s.gender === gender) &&
-        (!sector || s.sector === sector) &&
+        (!sector || s.sectors.includes(sector as never)) &&
         age >= min &&
         age <= max &&
         matchesQuery(query, s.firstName, s.city, s.currentOccupation, s.basicDescription, ...(s.interests ?? []))

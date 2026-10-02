@@ -8,8 +8,8 @@ const NOW = Date.parse('2026-10-02T12:00:00Z');
 const proposal = (overrides: Partial<Proposal> = {}): Proposal => ({
   _id: 'p1',
   sides: [
-    { single: { _id: 'b', firstName: 'נועה', gender: 'נקבה', sector: 'דתי/ה לאומי/ת', birthYear: 1998, city: 'ירושלים', mine: true }, response: 'pending' },
-    { single: { _id: 'a', firstName: 'אביתר', gender: 'זכר', sector: 'דתי/ה לאומי/ת', birthYear: 1995, city: 'מודיעין', mine: true }, response: 'yes' },
+    { single: { _id: 'b', firstName: 'נועה', gender: 'נקבה', sectors: ['דתי/ה לאומי/ת'], age: 28, city: 'ירושלים', mine: true }, response: 'pending' },
+    { single: { _id: 'a', firstName: 'אביתר', gender: 'זכר', sectors: ['דתי/ה לאומי/ת'], age: 31, city: 'מודיעין', mine: true }, response: 'yes' },
   ],
   status: 'proposed',
   datesCount: 0,

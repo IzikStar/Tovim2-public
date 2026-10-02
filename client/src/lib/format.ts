@@ -1,7 +1,12 @@
 import type { PublicSingle } from '../api/types';
 
-export const ageFromBirthYear = (birthYear: number, now = new Date()): number =>
-  now.getFullYear() - birthYear;
+/** Full years since birthDate (ISO string). */
+export function ageFromBirthDate(birthDate: string, now = new Date()): number {
+  const b = new Date(birthDate);
+  let age = now.getFullYear() - b.getFullYear();
+  if (now.getMonth() < b.getMonth() || (now.getMonth() === b.getMonth() && now.getDate() < b.getDate())) age -= 1;
+  return age;
+}
 
 /** "חסידי/ת" -> "חסידית" for a woman, "חסידי" for a man (and the same for statuses). */
 export function genderize(value: string, gender?: string): string {
@@ -17,8 +22,11 @@ export function genderize(value: string, gender?: string): string {
     .join(' ');
 }
 
-export const sectorLabel = (s: Pick<PublicSingle, 'sector' | 'customSector' | 'gender'>) =>
-  s.sector === 'אחר/ת' && s.customSector ? s.customSector : genderize(s.sector, s.gender);
+/** "חסידית, חרדית"; "other" shows the custom text when there is one. */
+export const sectorLabel = (s: Pick<PublicSingle, 'sectors' | 'gender'> & { customSector?: string }) =>
+  (s.sectors ?? [])
+    .map((x) => (x === 'אחר/ת' && s.customSector ? s.customSector : genderize(x, s.gender)))
+    .join(', ');
 
 export const ethnicityLabel = (s: Pick<PublicSingle, 'ethnicity' | 'customEthnicity' | 'gender'>) =>
   s.ethnicity === 'אחר/ת' && s.customEthnicity ? s.customEthnicity : genderize(s.ethnicity, s.gender);
