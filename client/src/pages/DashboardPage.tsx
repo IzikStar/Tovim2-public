@@ -6,7 +6,7 @@ import type { Proposal } from '../api/types';
 import { AddSingleDialog, ShareRegistration } from '../components/AddSingleDialog';
 import { ProposalCard, ProposalDialog, SuggestionCard } from '../components/proposals';
 import { SingleCard } from '../components/SingleCard';
-import { Plus } from 'lucide-react';
+import { Plus, Shuffle } from 'lucide-react';
 import { Badge, EmptyState, ErrorBox, PageHeader, Spinner } from '../components/ui';
 import { buttonVariants, Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -76,9 +76,15 @@ function Suggestions({ onCreated }: { onCreated: (p: Proposal) => void }) {
   if (suggestions.error) return <ErrorBox message={suggestions.error} onRetry={suggestions.reload} />;
   return (
     <section className="mb-7">
-      <SectionHead title="הצעות אוטומטיות">
-        זוגות שמתאימים לפי המגזר והגיל שכל צד ביקש, תחומי עניין ועיר. כוללות מועמדים מהמאגר המשותף.
-      </SectionHead>
+      <div className="flex flex-wrap items-start justify-between gap-x-4">
+        <SectionHead title="הצעות אוטומטיות">
+          זוגות שמתאימים לפי המגזר והגיל שכל צד ביקש, תחומי עניין ועיר. כוללות מועמדים מהמאגר המשותף.
+        </SectionHead>
+        <Link to="/brainstorm" className={cn(buttonVariants({ variant: 'soft', size: 'sm' }), 'mb-3')}>
+          <Shuffle aria-hidden />
+          לסיעור מוחות
+        </Link>
+      </div>
       {items.length === 0 ? (
         <p className="text-muted-foreground">אין כרגע הצעות חדשות. כשיתווספו מועמדים, יופיעו כאן התאמות.</p>
       ) : (

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './auth/AuthContext';
 import { BareLayout, Layout } from './components/Layout';
 import { EmptyState, Spinner } from './components/ui';
 import { buttonVariants } from './components/ui/button';
+import { BrainstormPage } from './pages/BrainstormPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -59,6 +60,7 @@ export default function App() {
                 <Route path="dashboard" element={<DashboardPage />} />
                 <Route path="requests" element={<RequestsPage />} />
                 <Route path="proposals" element={<ProposalsPage />} />
+                <Route path="brainstorm" element={<BrainstormPage />} />
                 <Route path="couples" element={<CouplesPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="singles/new" element={<NewSinglePage />} />

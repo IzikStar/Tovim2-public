@@ -46,6 +46,7 @@ export function Layout() {
               <>
                 <NavLink to="/dashboard" className={navClass}>ראשי</NavLink>
                 <NavLink to="/proposals" className={navClass}>הצעות</NavLink>
+                <NavLink to="/brainstorm" className={navClass}>סיעור מוחות</NavLink>
                 <NavLink to="/pool" className={navClass}>מאגר משותף</NavLink>
                 <NavLink to="/couples" className={navClass}>זוגות</NavLink>
                 <NavLink to="/requests" className={navClass}>בקשות</NavLink>

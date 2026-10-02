@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
+import { Lightbulb, Trash2, TriangleAlert } from 'lucide-react';
 import { ApiError, api } from '../api/client';
 import type {
   Proposal,
@@ -306,7 +306,16 @@ export function ProposalDialog({
 }
 
 /** One automatic suggestion with buttons to save it as an idea or mark it proposed. */
-export function SuggestionCard({ suggestion, onCreated }: { suggestion: Suggestion; onCreated: (p: Proposal) => void }) {
+export function SuggestionCard({
+  suggestion,
+  onCreated,
+  onDismiss,
+}: {
+  suggestion: Suggestion & { stretches?: string[]; note?: string };
+  onCreated: (p: Proposal) => void;
+  /** Shows a "not this time" button (brainstorm mode) */
+  onDismiss?: () => void;
+}) {
   const [busy, setBusy] = useState<ProposalStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const create = async (status: ProposalStatus) => {
@@ -324,19 +333,36 @@ export function SuggestionCard({ suggestion, onCreated }: { suggestion: Suggesti
       <div
         className="absolute end-4 top-3.5 rounded-full bg-success-soft px-2.5 py-0.5 text-lg font-bold leading-snug text-success"
         title="ציון התאמה"
-        dir="ltr"
       >
-        {suggestion.score}
-        <small className="text-xs">%</small>
+        <span dir="ltr">
+          {suggestion.score}
+          <small className="text-xs">%</small>
+        </span>
       </div>
       <div className="min-w-0 pe-16">
         <PersonLine person={suggestion.single} />
       </div>
       <PersonLine person={suggestion.candidate} />
+      {suggestion.note && (
+        <p className="m-0 flex items-center gap-1.5 text-sm font-medium text-primary">
+          <Lightbulb className="size-4 shrink-0" aria-hidden />
+          {suggestion.note}
+        </p>
+      )}
       {suggestion.reasons.length > 0 && (
         <ul className="m-0 list-disc space-y-0.5 ps-5 text-sm text-foreground/80 marker:text-primary/60">
           {suggestion.reasons.slice(0, 3).map((r) => (
             <li key={r}>{r}</li>
+          ))}
+        </ul>
+      )}
+      {suggestion.stretches && suggestion.stretches.length > 0 && (
+        <ul className="m-0 space-y-0.5 rounded-md bg-warning-soft px-3 py-2 text-sm text-warning">
+          {suggestion.stretches.map((r) => (
+            <li key={r} className="flex items-start gap-1.5">
+              <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+              {r}
+            </li>
           ))}
         </ul>
       )}
@@ -348,6 +374,11 @@ export function SuggestionCard({ suggestion, onCreated }: { suggestion: Suggesti
         <Button size="sm" disabled={!!busy} onClick={() => create('proposed')}>
           {busy === 'proposed' ? 'שומרים…' : 'הצעתי להם'}
         </Button>
+        {onDismiss && (
+          <Button variant="ghost" size="sm" className="ms-auto text-muted-foreground" disabled={!!busy} onClick={onDismiss}>
+            לא הפעם
+          </Button>
+        )}
       </div>
     </Card>
   );
