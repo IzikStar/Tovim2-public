@@ -83,6 +83,35 @@ describe('singles', () => {
     expect(await Single.countDocuments()).toBe(0);
   });
 
+  it('GET /:id returns the full profile to owners only', async () => {
+    const owner = await createMatchMaker();
+    const other = await createMatchMaker();
+    const single = await createSingle(owner);
+    const res = await api().get(`/singles/${single._id}`).set(owner.auth).expect(200);
+    expect(res.body.phoneNumber).toBe('0521112233');
+    expect(res.body.referencePhones).toEqual(['0547654321']);
+    await api().get(`/singles/${single._id}`).set(other.auth).expect(403);
+    await api().get(`/singles/${single._id}`).expect(401);
+    await api().get('/singles/000000000000000000000000').set(owner.auth).expect(404);
+  });
+
+  it('update can clear optional fields with null', async () => {
+    const owner = await createMatchMaker();
+    const single = await createSingle(owner, { height: 180, desiredAgeRange: { min: 22, max: 30 } });
+    const res = await api()
+      .put(`/singles/${single._id}`)
+      .set(owner.auth)
+      .send({ height: null, desiredAgeRange: null })
+      .expect(200);
+    expect(res.body.height).toBeNull();
+    expect(res.body.desiredAgeRange).toBeNull();
+    await api()
+      .put(`/singles/${single._id}`)
+      .set(owner.auth)
+      .send({ desiredAgeRange: { min: 30, max: 22 } })
+      .expect(400);
+  });
+
   describe('POST /register/:matchMakerId (public form)', () => {
     it('creates a single linked to the matchmaker, ignoring extra fields', async () => {
       const mm = await createMatchMaker();

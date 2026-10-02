@@ -3,7 +3,7 @@ import { MatchMaker } from '../models/matchMaker.js';
 import { Single } from '../models/single.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { Token } from '../models/token.js';
-import { asyncHandler, pick } from '../utils/http.js';
+import { asyncHandler, isValidObjectId, pick } from '../utils/http.js';
 
 const router = Router();
 
@@ -28,9 +28,40 @@ const OTHER_MATCHMAKER_PROJECTION = {
   expertSectors: 1,
 } as const;
 
+/** Shown to anyone holding a registration link. */
+const PUBLIC_MATCHMAKER_PROJECTION = {
+  firstName: 1,
+  lastName: 1,
+  city: 1,
+} as const;
+
 router.post('/', asyncHandler(async (req, res) => {
   const matchMaker = await MatchMaker.create(pick(req.body, MATCHMAKER_FIELDS));
   res.status(201).json(matchMaker); // toJSON strips the password
+}));
+
+// Profile of the logged-in matchmaker (the client only has the token after a reload)
+router.get('/me', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  const matchMaker = await MatchMaker.findById(req.matchMakerId);
+  if (!matchMaker) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.json(matchMaker);
+}));
+
+/**
+ * Public card for a registration link (/register/:matchMakerId): just enough
+ * for the single to see whose form they are filling in. No contact details.
+ */
+router.get('/:id/public', asyncHandler(async (req, res) => {
+  if (!isValidObjectId(req.params.id)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  const matchMaker = await MatchMaker.findById(req.params.id, PUBLIC_MATCHMAKER_PROJECTION).lean();
+  if (!matchMaker) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.json(matchMaker);
 }));
 
 router.put('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {

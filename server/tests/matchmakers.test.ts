@@ -107,4 +107,21 @@ describe('matchmakers', () => {
     await api().delete(`/matchmakers/${mm.id}`).set(mm.auth).expect(200);
     await api().get(`/matchmakers/${mm.id}/singles`).set(mm.auth).expect(401);
   });
+  it('GET /me returns the logged-in profile without the password', async () => {
+    const mm = await createMatchMaker({ firstName: 'Miriam' });
+    const res = await api().get('/matchmakers/me').set(mm.auth).expect(200);
+    expect(res.body._id).toBe(mm.id);
+    expect(res.body.firstName).toBe('Miriam');
+    expect(res.body).not.toHaveProperty('password');
+    await api().get('/matchmakers/me').expect(401);
+  });
+
+  it('GET /:id/public exposes only name and city, for registration links', async () => {
+    const mm = await createMatchMaker({ firstName: 'Miriam', city: 'Safed' });
+    const res = await api().get(`/matchmakers/${mm.id}/public`).expect(200);
+    expect(Object.keys(res.body).sort()).toEqual(['_id', 'city', 'firstName', 'lastName']);
+    expect(res.body.city).toBe('Safed');
+    await api().get('/matchmakers/000000000000000000000000/public').expect(404);
+    await api().get('/matchmakers/not-an-id/public').expect(404);
+  });
 });

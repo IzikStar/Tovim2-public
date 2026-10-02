@@ -153,7 +153,9 @@ const singleSchema = new Schema<ISingle>(
     desiredAgeRange: {
       type: ageRangeSchema,
       validate: {
-        validator: (v: AgeRange) => v.min <= v.max,
+        // null clears the range; an open-ended range (only min or max) is allowed
+        validator: (v: AgeRange | null) =>
+          !v || v.min == null || v.max == null || v.min <= v.max,
         message: "desiredAgeRange.min must be <= max",
       },
     },

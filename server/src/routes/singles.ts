@@ -43,6 +43,18 @@ router.get('/public', asyncHandler(async (_req, res) => {
   res.json(singles);
 }));
 
+// Full profile, for the matchmakers handling this single only
+router.get('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
+  const single = await Single.findById(req.params.id);
+  if (!single) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  if (!isOwner(single.matchMakers, req.matchMakerId)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  res.json(single);
+}));
+
 router.put('/:id', authenticate, asyncHandler<AuthRequest>(async (req, res) => {
   const single = await Single.findById(req.params.id);
   if (!single) {
