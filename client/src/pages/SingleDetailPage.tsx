@@ -62,7 +62,7 @@ function TransferDialog({ single, onClose, onSent }: { single: Single; onClose: 
   return (
     <Modal title={`שיתוף ${single.firstName} עם שדכן/ית`} onClose={onClose}>
       <p className="text-muted-foreground">
-        השדכן/ית יקבלו בקשה. אם יאשרו, הם יוכלו לראות את הכרטיס המלא ולטפל ב{single.firstName} יחד איתך.
+        השדכן/ית יקבלו בקשה. אם יאשרו, הם יוכלו לראות את הכרטיס המלא ולטפל ב{single.firstName} יחד איתך. {single.firstName} נשאר/ת גם ברשימה שלך.
       </p>
       {others.loading ? (
         <Spinner />

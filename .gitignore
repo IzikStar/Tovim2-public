@@ -426,3 +426,7 @@ server/.mongodb-binaries/
 
 # Client build output
 client/dist/
+
+# Playwright output
+test-results/
+playwright-report/

@@ -46,3 +46,20 @@ export const verifyPassword = async (
   const actual = await scrypt(password, Buffer.from(saltHex, 'hex'), expected.length);
   return crypto.timingSafeEqual(actual, expected);
 };
+
+export const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * Why a new password is too weak, or null if it is fine: at least 8 characters,
+ * with a letter and something that isn't a letter (digit, symbol or space).
+ * Same rule as client/src/lib/password.ts.
+ */
+export const passwordProblem = (password: unknown): string | null => {
+  if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+    return `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+  }
+  if (!/\p{L}/u.test(password) || !/[^\p{L}]/u.test(password)) {
+    return 'Password needs a letter and a digit or symbol';
+  }
+  return null;
+};

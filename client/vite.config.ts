@@ -16,6 +16,10 @@ export default defineConfig({
     },
   },
   test: {
+    // Pure logic tests run in node; component tests (*.test.tsx) ask for jsdom in their first line
     environment: 'node',
+    setupFiles: ['src/test/setup.ts'],
+    // e2e/ is Playwright's (npm run test:e2e)
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 });
